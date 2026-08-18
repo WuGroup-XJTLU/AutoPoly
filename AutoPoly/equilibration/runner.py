@@ -30,6 +30,15 @@ class MCParams:
     pair_cutoff: float = 2.5
     pair_shifted: bool = False
     pair_wca: bool = False
+    # Exclude bonded (1-2) pairs from the pair potential? True = LAMMPS
+    # default; False = Kremer-Grest convention (FENE + WCA on all pairs).
+    exclude_bonded: bool = True
+    # Generalized-LJ repulsive exponent (12.0 = standard KG WCA; smaller
+    # values are core-softened, used during ramp equilibration)
+    mie_n: float = 12.0
+    # Directed connectivity-move search radius / acceptance convention
+    swap_r_max: float = 1.3
+    swap_full_delta: bool = False
     # Bonds: "harmonic" (bond_k, bond_r0) or "fene" (bond_k, fene_r0max)
     bond_model: str = "harmonic"
     bond_k: float = 100.0
@@ -54,9 +63,10 @@ class MCParams:
 
     @classmethod
     def kremer_grest(cls, angle_k: float = 0.0) -> "MCParams":
-        """Canonical KG melt: FENE + WCA, T=1."""
+        """Canonical KG melt: FENE + WCA on ALL pairs, T=1."""
         return cls(
             pair_wca=True,
+            exclude_bonded=False,
             bond_model="fene",
             bond_k=30.0,
             fene_r0max=1.5,
@@ -92,6 +102,8 @@ class MCRunner:
             pair_cutoff=p.pair_cutoff,
             pair_shifted=p.pair_shifted,
             pair_wca=p.pair_wca,
+            mie_n=p.mie_n,
+            exclude_bonded=p.exclude_bonded,
             bond_model=p.bond_model,
             bond_k=p.bond_k,
             bond_r0=p.bond_r0,
@@ -100,6 +112,8 @@ class MCRunner:
             temperature=p.temperature,
             max_displacement=p.max_displacement,
             max_angle=p.max_angle,
+            swap_r_max=p.swap_r_max,
+            swap_full_delta=p.swap_full_delta,
             move_weights=p.move_weights,
         )
 

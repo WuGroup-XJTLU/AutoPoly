@@ -24,9 +24,16 @@ Created on 2026-08-18
 
 from .state import MeltState
 from .runner import MCRunner, MCParams
+from .schedule import GrowthAnnealer, LadderConfig, k_fene_for_mie, params_at_softness
+from . import certify
 
 __all__ = [
     "MeltState",
     "MCRunner",
     "MCParams",
+    "GrowthAnnealer",
+    "LadderConfig",
+    "k_fene_for_mie",
+    "params_at_softness",
+    "certify",
 ]

@@ -160,6 +160,19 @@ impl MeltState {
         }
     }
 
+    /// Full rebuild of chain_of / idx_in_chain. O(N); use after topology
+    /// operations that change the number of chains (join / split).
+    pub fn rebuild_index(&mut self) {
+        self.chain_of.fill(usize::MAX);
+        self.idx_in_chain.fill(usize::MAX);
+        for (c, chain) in self.chains.iter().enumerate() {
+            for (i, &b) in chain.iter().enumerate() {
+                self.chain_of[b] = c;
+                self.idx_in_chain[b] = i;
+            }
+        }
+    }
+
     #[allow(dead_code)] // Phase 1: connectivity moves
     pub fn add_bond(&mut self, i: usize, j: usize) {
         self.bonds_adj[i].push(j);

@@ -21,6 +21,15 @@ pub struct PairParams {
     pub cutoff: f64,
     pub shifted: bool,
     pub wca: bool,
+    /// Mie repulsive exponent (m = 6 attraction). 12.0 = standard
+    /// Lennard-Jones / KG WCA. Smaller values give the core-softened
+    /// potentials used in ramp equilibration (Dietz & Hoy 2022).
+    pub mie_n: f64,
+    /// If true, directly bonded (1-2) pairs are excluded from the pair
+    /// potential (LAMMPS default). If false, they interact like any
+    /// other pair — the standard Kremer-Grest convention, where the
+    /// bond-length equilibrium comes from FENE + WCA competition.
+    pub exclude_bonded: bool,
 }
 
 impl Default for PairParams {
@@ -31,15 +40,38 @@ impl Default for PairParams {
             cutoff: 2.5,
             shifted: false,
             wca: false,
+            mie_n: 12.0,
+            exclude_bonded: true,
         }
     }
+}
+
+/// Generalized-LJ (Dietz & Hoy 2022, Eq. 5) repulsive-branch energy,
+/// normalized so the minimum sits at r* = 2^(1/6) sigma with depth
+/// -epsilon for every n:
+///   U(r) = eps * [6*2^(n/6)/(n-6)] * (sig/r)^n
+///        - eps * [2n/(n-6)] * (sig/r)^6
+/// Reduces to 4*eps*[(sig/r)^12 - (sig/r)^6] at n = 12.
+#[inline]
+fn mie_core(r2: f64, sigma: f64, epsilon: f64, n: f64) -> f64 {
+    let sr2 = (sigma * sigma) / r2;
+    let sr6 = sr2 * sr2 * sr2;
+    let srn = sr2.powf(n / 2.0);
+    let c1 = 6.0 * (2f64).powf(n / 6.0) / (n - 6.0);
+    let c2 = 2.0 * n / (n - 6.0);
+    epsilon * (c1 * srn - c2 * sr6)
+}
+
+/// The generalized-LJ minimum is at 2^(1/6) sigma for every n.
+pub fn mie_rmin(_n: f64) -> f64 {
+    2f64.powf(1.0 / 6.0)
 }
 
 impl PairParams {
     /// Actual interaction distance cutoff in length units.
     pub fn r_cut(&self) -> f64 {
         if self.wca {
-            2f64.powf(1.0 / 6.0) * self.sigma
+            mie_rmin(self.mie_n) * self.sigma
         } else {
             self.cutoff * self.sigma
         }
@@ -72,14 +104,25 @@ pub fn pair_energy(r2: f64, p: &PairParams) -> f64 {
     }
     let sr2 = (p.sigma * p.sigma) / r2;
     let sr6 = sr2 * sr2 * sr2;
-    let sr12 = sr6 * sr6;
-    let base = 4.0 * p.epsilon * (sr12 - sr6);
+    let (base, shift) = if (p.mie_n - 12.0).abs() < 1e-12 {
+        (4.0 * p.epsilon * (sr6 * sr6 - sr6), p.epsilon)
+    } else {
+        (mie_core(r2, p.sigma, p.epsilon, p.mie_n), p.epsilon)
+    };
     if p.wca {
-        base + p.epsilon
+        base + shift
     } else if p.shifted {
+        // Attractive variant (Dietz & Hoy Eq. 6): generalized core for
+        // r < 2^(1/6) sigma, standard 12-6 LJ beyond.
+        let rstar2 = (2f64.powf(1.0 / 3.0)) * p.sigma * p.sigma;
+        let unshifted = if r2 <= rstar2 {
+            base
+        } else {
+            4.0 * p.epsilon * (sr6 * sr6 - sr6)
+        };
         let src2 = (p.sigma * p.sigma) / rc2;
         let src6 = src2 * src2 * src2;
-        base - 4.0 * p.epsilon * (src6 * src6 - src6)
+        unshifted - 4.0 * p.epsilon * (src6 * src6 - src6)
     } else {
         base
     }
@@ -243,12 +286,11 @@ pub fn local_energy(
             if in_moved(j) && j < i {
                 continue;
             }
-            // 1-2 exclusion. This uses the *topology*, not the distance,
+            // 1-2 exclusion (when the model uses one). Topology-based,
             // so the pair is excluded in both the old and the new
             // evaluation even when a stretched bond (r > cutoff) makes
-            // it LJ-active. Excluding it consistently keeps ΔU exact:
-            // a hard overlap then registers through the bond term alone.
-            if state.bonded(i, j) {
+            // it LJ-active.
+            if pair.exclude_bonded && state.bonded(i, j) {
                 continue;
             }
             let d = state.disp(i, j);
@@ -315,7 +357,7 @@ pub fn total_energy(
             if j <= i {
                 continue;
             }
-            if state.bonded(i, j) {
+            if pair.exclude_bonded && state.bonded(i, j) {
                 continue;
             }
             let d = state.disp(i, j);

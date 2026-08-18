@@ -36,6 +36,8 @@ fn parse_move_weights(obj: &Bound<'_, PyAny>) -> PyResult<Vec<(MoveKind, f64)>> 
             "reptation" => MoveKind::Reptation,
             "translation" | "chain_translation" => MoveKind::Translation,
             "rotation" | "chain_rotation" => MoveKind::Rotation,
+            "segment_exchange" => MoveKind::SegmentExchange,
+            "join" => MoveKind::Join,
             other => {
                 return Err(PyValueError::new_err(format!(
                     "unknown move kind: {other}"
@@ -83,6 +85,8 @@ impl PyEngine {
         pair_cutoff = 2.5,
         pair_shifted = false,
         pair_wca = false,
+        mie_n = 12.0,
+        exclude_bonded = true,
         bond_model = "harmonic",
         bond_k = 100.0,
         bond_r0 = 1.0,
@@ -91,6 +95,8 @@ impl PyEngine {
         temperature = 1.0,
         max_displacement = 0.5,
         max_angle = 0.3,
+        swap_r_max = 1.3,
+        swap_full_delta = true,
         move_weights = None,
     ))]
     #[allow(clippy::too_many_arguments)]
@@ -104,6 +110,8 @@ impl PyEngine {
         pair_cutoff: f64,
         pair_shifted: bool,
         pair_wca: bool,
+        mie_n: f64,
+        exclude_bonded: bool,
         bond_model: &str,
         bond_k: f64,
         bond_r0: f64,
@@ -112,6 +120,8 @@ impl PyEngine {
         temperature: f64,
         max_displacement: f64,
         max_angle: f64,
+        swap_r_max: f64,
+        swap_full_delta: bool,
         move_weights: Option<&Bound<'_, PyAny>>,
     ) -> PyResult<Self> {
         let pair = PairParams {
@@ -120,6 +130,8 @@ impl PyEngine {
             cutoff: pair_cutoff,
             shifted: pair_shifted,
             wca: pair_wca,
+            mie_n,
+            exclude_bonded,
         };
         let bond = match bond_model {
             "harmonic" => BondModel::Harmonic { k: bond_k, r0: bond_r0 },
@@ -145,7 +157,7 @@ impl PyEngine {
             ],
         };
         let state = MeltState::new(positions, chains, box_size).map_err(to_py_err)?;
-        let engine = RustEngine::new(
+        let mut engine = RustEngine::new(
             state,
             pair,
             bond,
@@ -158,6 +170,8 @@ impl PyEngine {
             weights,
         )
         .map_err(to_py_err)?;
+        engine.swap_r_max = swap_r_max;
+        engine.swap_full_delta = swap_full_delta;
         Ok(PyEngine {
             engine,
             rng: ChaCha8Rng::seed_from_u64(seed),
@@ -168,6 +182,19 @@ impl PyEngine {
     /// Run `n_steps` MC steps.
     fn run(&mut self, n_steps: usize) {
         self.engine.run(n_steps, &mut self.rng);
+    }
+
+    /// Attempt one proximity-directed end-to-end join of two equal-length
+    /// chains (growth ladder). When `level_len` is given, only chains of
+    /// that contour length are eligible. Returns True if accepted.
+    #[pyo3(signature = (max_r, level_len = None))]
+    fn try_join(&mut self, max_r: f64, level_len: Option<usize>) -> bool {
+        self.engine.try_join(max_r, level_len, &mut self.rng)
+    }
+
+    /// Per-chain contour lengths.
+    fn chain_lengths(&self) -> Vec<usize> {
+        self.engine.state.chains.iter().map(|c| c.len()).collect()
     }
 
 

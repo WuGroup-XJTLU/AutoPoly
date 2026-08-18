@@ -17,17 +17,25 @@ pub enum MoveKind {
     Reptation,
     Translation,
     Rotation,
+    /// Equal-length segment exchange between two chains (Phase 1).
+    /// Handled by a dedicated branch in the engine, not by `propose`.
+    SegmentExchange,
+    /// End-to-end chain join for the growth ladder (Phase 1).
+    /// Only invoked explicitly via `Engine::try_join`.
+    Join,
 }
 
 impl MoveKind {
     #[allow(dead_code)] // convenience for drivers
-    pub const ALL: [MoveKind; 6] = [
+    pub const ALL: [MoveKind; 8] = [
         MoveKind::Displacement,
         MoveKind::Pivot,
         MoveKind::Crankshaft,
         MoveKind::Reptation,
         MoveKind::Translation,
         MoveKind::Rotation,
+        MoveKind::SegmentExchange,
+        MoveKind::Join,
     ];
 
     pub fn name(self) -> &'static str {
@@ -38,6 +46,8 @@ impl MoveKind {
             MoveKind::Reptation => "reptation",
             MoveKind::Translation => "translation",
             MoveKind::Rotation => "rotation",
+            MoveKind::SegmentExchange => "segment_exchange",
+            MoveKind::Join => "join",
         }
     }
 }
@@ -133,6 +143,9 @@ pub fn propose<R: Rng>(
     let chain = &state.chains[c];
     let n = chain.len();
     match kind {
+        // Topology-changing moves live in dedicated engine methods.
+        MoveKind::SegmentExchange | MoveKind::Join => None,
+
         MoveKind::Displacement => {
             let i = rng.random_range(0..n);
             let bead = chain[i];
