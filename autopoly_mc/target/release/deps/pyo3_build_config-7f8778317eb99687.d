@@ -1,0 +1,14 @@
+/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/deps/pyo3_build_config-7f8778317eb99687.d: /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/lib.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/errors.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/impl_.rs /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config-file.txt /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config.txt
+
+/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/deps/libpyo3_build_config-7f8778317eb99687.rlib: /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/lib.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/errors.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/impl_.rs /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config-file.txt /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config.txt
+
+/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/deps/libpyo3_build_config-7f8778317eb99687.rmeta: /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/lib.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/errors.rs /home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/impl_.rs /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config-file.txt /home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config.txt
+
+/home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/lib.rs:
+/home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/errors.rs:
+/home/zhenghaowu/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/pyo3-build-config-0.26.0/src/impl_.rs:
+/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config-file.txt:
+/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out/pyo3-build-config.txt:
+
+# env-dep:CARGO_PKG_VERSION=0.26.0
+# env-dep:OUT_DIR=/home/zhenghaowu/autopoly_dev/AutoPoly/autopoly_mc/target/release/build/pyo3-build-config-5c2d920284d0bbe9/out

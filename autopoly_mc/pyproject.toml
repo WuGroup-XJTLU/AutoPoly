@@ -1,0 +1,12 @@
+[build-system]
+requires = ["maturin>=1.5"]
+build-backend = "maturin"
+
+[project]
+name = "autopoly_mc"
+version = "0.1.0"
+description = "Rust Monte Carlo kernel for AutoPoly melt equilibration"
+requires-python = ">=3.9"
+
+[tool.maturin]
+module-name = "autopoly_mc"
