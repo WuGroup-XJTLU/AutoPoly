@@ -83,6 +83,19 @@ class LadderConfig:
     ramp: List[float] = field(default_factory=lambda: list(DEFAULT_RAMP))
     # Steps per (level, ramp-point): local+swap MC steps.
     mix_steps: int = 20_000
+    # Phase-2 budget allocation (acceptance is 10-13% at the soft end,
+    # ~1.5-3% at n=12, so the topology annealing budget belongs there):
+    #   n_pair <= soft_until          -> soft_mix_steps
+    #   n_pair in mid_hold_ns         -> mid_hold_steps with heavier swaps
+    #   otherwise                     -> mix_steps
+    soft_until: float = 5.0
+    # None = uniform mix_steps everywhere (original behavior)
+    soft_mix_steps: Optional[int] = None
+    mid_hold_ns: tuple = (5.75, 6.5, 7.0)
+    mid_hold_steps: Optional[int] = None
+    mid_hold_swap_weight: float = 0.6
+    # Anneal steps after each growth level (None = mix_steps)
+    growth_anneal_steps: Optional[int] = None
     # Join search radius and per-level attempt budget multiplier.
     join_radius: float = 1.3
     join_rounds: int = 200
@@ -273,13 +286,32 @@ class GrowthAnnealer:
     # ------------------------------------------------------------------ #
     # Annealing
     # ------------------------------------------------------------------ #
+    def _budget_for(self, n_pair: float) -> tuple:
+        """(steps, move_weights) for a ramp point."""
+        cfg = self.config
+        if cfg.soft_mix_steps is not None and n_pair <= cfg.soft_until:
+            return cfg.soft_mix_steps, dict(cfg.anneal_weights)
+        if cfg.mid_hold_steps is not None and any(
+            abs(n_pair - m) < 1e-9 for m in cfg.mid_hold_ns
+        ):
+            w = dict(cfg.anneal_weights)
+            w.pop("segment_exchange", None)
+            total = sum(w.values())
+            w = {k: v / total * (1.0 - cfg.mid_hold_swap_weight)
+                 for k, v in w.items()}
+            w["segment_exchange"] = cfg.mid_hold_swap_weight
+            return cfg.mid_hold_steps, w
+        return cfg.mix_steps, dict(cfg.anneal_weights)
+
     def _anneal_level(self, n_pair: float) -> Dict[str, Any]:
-        self.runner = self._make_runner(n_pair, self.config.anneal_weights)
-        self.runner.run(self.config.mix_steps)
+        steps, weights = self._budget_for(n_pair)
+        self.runner = self._make_runner(n_pair, weights)
+        self.runner.run(steps)
         self._sync()
         rates = self.runner._engine.acceptance_rates()
         offset = self.runner.bookkeeping_offset()
-        return {"n_pair": n_pair, "acceptance": rates, "energy_offset": offset}
+        return {"n_pair": n_pair, "steps": steps,
+                "acceptance": rates, "energy_offset": offset}
 
     # ------------------------------------------------------------------ #
     # Full ladder
@@ -311,7 +343,13 @@ class GrowthAnnealer:
                         f"{rec['n_chains']} chains after {rec['join_rounds']} rounds")
             self.history.append({"stage": "join", **rec})
             # anneal at the new level (soft)
-            out = self._anneal_level(ramp_start)
+            self.runner = self._make_runner(ramp_start, self.config.anneal_weights)
+            gsteps = self.config.growth_anneal_steps or self.config.mix_steps
+            self.runner.run(gsteps)
+            self._sync()
+            out = {"n_pair": ramp_start, "steps": gsteps,
+                   "acceptance": self.runner._engine.acceptance_rates(),
+                   "energy_offset": self.runner.bookkeeping_offset()}
             self.history.append({"stage": "anneal", "level": 2 * level, **out})
             level *= 2
 
