@@ -1495,4 +1495,80 @@ mod tests {
             }
         }
     }
+
+    /// Detailed-balance distributional test (slow; run explicitly with
+    /// --ignored): the equilibrium radius-of-gyration distribution of a
+    /// chain must be identical with and without CBMC swaps at the same
+    /// potential. A biased acceptance ratio would skew the distribution.
+    #[test]
+    #[ignore]
+    fn detailed_balance_rg_distribution() {
+        let kbt = 0.9;
+        // run(steps, with_swaps) -> Rg samples of chain 0
+        let run = |n_blocks: usize, with_swaps: bool, seed: u64| -> Vec<f64> {
+            let (mut st, par) = fixture(3.0, true); // soft bonds/angles, LJ off
+            let tables = TypeTables::from_state(&st);
+            let cfg = CbmcConfig { n_trials: 12, n_psi: 72, ..CbmcConfig::default() };
+            let mut rng = ChaCha8Rng::seed_from_u64(seed);
+            let mut samples = Vec::new();
+            for _ in 0..n_blocks {
+                // local MC: displacement + torsion
+                let eng = AtomisticEngine::new(st.clone(), par.clone(), kbt);
+                let mut mc = crate::atomistic_mc::AtomisticMC::new(
+                    eng,
+                    crate::atomistic_mc::AMcParams::default(),
+                );
+                mc.run(200, &mut rng);
+                st.pos = mc.engine.state.pos.clone();
+                if with_swaps {
+                    let cells = ACellList::build(&st, 11.0);
+                    let cands: Vec<_> = (0..2)
+                        .map(|a| enumerate_cbmc_candidates(&st, &cells, a, cfg.r_reach, cfg.n_regrow))
+                        .collect();
+                    let all: Vec<_> = cands.into_iter().flatten().collect();
+                    if !all.is_empty() {
+                        let pr = all[rng.random_range(0..all.len())].clone();
+                        let n_fwd = all.len();
+                        cbmc_double_bridge_mtm(
+                            &mut st, &tables, &par, &pr, &cfg, kbt, n_fwd, 4, &mut rng,
+                        );
+                    }
+                }
+                // Rg of chain 0 (bond-walk unwrap)
+                let ch = &st.chains[0];
+                let l = st.box_size;
+                let mut p = vec![st.pos[ch[0]]];
+                for w in ch.windows(2) {
+                    let d = min_img(sub(st.pos[w[1]], st.pos[w[0]]), l);
+                    p.push(add(*p.last().unwrap(), d));
+                }
+                let com = p.iter().fold([0.0; 3], |a, &x| add(a, scale(x, 1.0 / p.len() as f64)));
+                let rg2 = p.iter().map(|&x| {
+                    let d = sub(x, com);
+                    dot(d, d)
+                }).sum::<f64>()
+                    / p.len() as f64;
+                samples.push(rg2.sqrt());
+            }
+            samples
+        };
+        let base = run(3000, false, 101);
+        let with = run(3000, true, 101);
+        let mean = |v: &[f64]| v.iter().sum::<f64>() / v.len() as f64;
+        let var = |v: &[f64]| {
+            let m = mean(v);
+            v.iter().map(|x| (x - m) * (x - m)).sum::<f64>() / (v.len() - 1) as f64
+        };
+        let (m0, v0) = (mean(&base), var(&base));
+        let (m1, v1) = (mean(&with), var(&with));
+        eprintln!("Rg local-only: {m0:.4} +- {v0:.4}; with-swaps: {m1:.4} +- {v1:.4}");
+        // correlated MC samples: effective sample size ~ n/20 (blocks are
+        // 200 local steps apart); require means within 4 combined SE
+        let n_eff = base.len() as f64 / 20.0;
+        let se = ((v0 + v1) / n_eff).sqrt();
+        assert!(
+            (m0 - m1).abs() < 4.0 * se + 1e-6,
+            "Rg means differ: {m0} vs {m1} (se {se})"
+        );
+    }
 }
