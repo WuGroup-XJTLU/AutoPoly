@@ -716,22 +716,41 @@ impl PyAtomisticMC {
         Ok(dict)
     }
 
-    /// MSID over backbone chains: list of (s, R^2(s)).
+    /// MSID over backbone chains: list of (s, R^2(s)). Chains are
+    /// unwrapped by walking bonds with minimum-image steps first — the
+    /// raw minimum-image span is wrong whenever a chain's true extent
+    /// exceeds half the box.
     #[pyo3(signature = (max_s = None))]
     fn msid(&self, max_s: Option<usize>) -> Vec<(usize, f64)> {
         let st = &self.mc.engine.state;
+        let l = st.box_size;
         let n_chain = st.chains.first().map(|c| c.len()).unwrap_or(0);
         let smax = max_s
             .unwrap_or(n_chain.saturating_sub(1))
             .min(n_chain.saturating_sub(1));
         let mut acc = vec![0.0f64; smax + 1];
         let mut cnt = vec![0u64; smax + 1];
+        let mi = |d: f64| d - l * (d / l).round();
         for chain in &st.chains {
             let n = chain.len();
+            if n < 2 {
+                continue;
+            }
+            // bond-walk unwrapped positions
+            let mut unp = Vec::with_capacity(n);
+            unp.push(st.pos[chain[0]]);
+            for w in chain.windows(2) {
+                let (pa, pb) = (st.pos[w[0]], st.pos[w[1]]);
+                let d = [mi(pb[0] - pa[0]), mi(pb[1] - pa[1]), mi(pb[2] - pa[2])];
+                let last = *unp.last().unwrap();
+                unp.push([last[0] + d[0], last[1] + d[1], last[2] + d[2]]);
+            }
             for s in 1..=smax.min(n - 1) {
                 for i in 0..n - s {
-                    let d = st.disp(chain[i], chain[i + s]);
-                    acc[s] += d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+                    let d0 = unp[i + s][0] - unp[i][0];
+                    let d1 = unp[i + s][1] - unp[i][1];
+                    let d2 = unp[i + s][2] - unp[i][2];
+                    acc[s] += d0 * d0 + d1 * d1 + d2 * d2;
                     cnt[s] += 1;
                 }
             }
