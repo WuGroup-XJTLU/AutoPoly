@@ -47,6 +47,7 @@ class AnnealConfig:
     soften_equil_steps: int = 200_000     # local MC after entering soft level
     harden_equil_steps: int = 100_000     # local MC per hardening rung
     n_attempts: int = 500                 # CBMC attempts at the soft level
+    harden_attempts: Tuple[int, ...] = (200, 100)  # CBMC attempts per hardening rung
     r_reach_soft: Optional[float] = None  # override reach at soft level
     seed: int = 12345
     log_every: int = 25
@@ -69,6 +70,11 @@ def anneal_connectivity(melt, cfg: AnnealConfig) -> Tuple[AnnealStats, Dict[str,
     """Run the soften -> CBMC-anneal -> harden protocol on `melt`
     (an AtomisticMelt; UA view for the UA-level anneal). Positions and
     topology are modified in place. Returns (stats, level_records).
+
+    CBMC attempts continue on the hardening rungs (at reduced
+    acceptance): connectivity sampling under a partially hardened
+    potential is what re-equilibrates the large-scale structure toward
+    the production potential — local MC alone cannot move it.
     """
     import numpy as _np
 
@@ -83,50 +89,54 @@ def anneal_connectivity(melt, cfg: AnnealConfig) -> Tuple[AnnealStats, Dict[str,
     def set_level(lj: float, dih: float) -> None:
         melt._engine.set_soft_params((eps0 * lj).tolist(), (dih0 * dih).tolist())
 
+    def run_attempts(n_att: int, tag: str) -> None:
+        t0 = time.time()
+        acc0 = stats.accepts
+        att0 = stats.attempts
+        while stats.attempts - att0 < n_att:
+            melt.run(cfg.local_between_attempts)
+            cands = [
+                c
+                for a in range(n_chains)
+                for c in melt._engine.cbmc_candidates(a, cfg.r_reach, cfg.k_regrow)
+            ]
+            if not cands:
+                stats.no_cand_rounds += 1
+                continue
+            a, b, s, flip = cands[int(rng.integers(len(cands)))]
+            ok, lr = melt._engine.cbmc_bridge_attempt(
+                a, b, s, flip, cfg.kbt, cfg.r_reach, cfg.n_trials, cfg.n_psi,
+                cfg.k_regrow, cfg.n_mtm,
+            )
+            stats.attempts += 1
+            stats.log_ratios.append(lr)
+            stats.accepts += int(ok)
+            if stats.attempts % cfg.log_every == 0:
+                print(f"  {tag} {stats.attempts - att0}/{n_att}: "
+                      f"acc +{stats.accepts - acc0}, "
+                      f"{(time.time()-t0)/max(stats.attempts-att0,1):.1f}s/att", flush=True)
+
     # ---- soften + equilibrate ----
     set_level(cfg.anneal_lj, cfg.anneal_dih)
     melt.run(cfg.soften_equil_steps)
     records.append({"stage": "soften", "lj": cfg.anneal_lj, "dih": cfg.anneal_dih,
                     "energy": melt.recompute_energy()})
 
-    # ---- anneal ----
-    reach = cfg.r_reach_soft or cfg.r_reach
-    t0 = time.time()
-    while stats.attempts < cfg.n_attempts:
-        melt.run(cfg.local_between_attempts)
-        cands = [
-            c
-            for a in range(n_chains)
-            for c in melt._engine.cbmc_candidates(a, reach, cfg.k_regrow)
-        ]
-        if not cands:
-            stats.no_cand_rounds += 1
-            continue
-        a, b, s, flip = cands[int(rng.integers(len(cands)))]
-        ok, lr = melt._engine.cbmc_bridge_attempt(
-            a, b, s, flip, cfg.kbt, reach, cfg.n_trials, cfg.n_psi,
-            cfg.k_regrow, cfg.n_mtm,
-        )
-        stats.attempts += 1
-        stats.log_ratios.append(lr)
-        stats.accepts += int(ok)
-        if stats.attempts % cfg.log_every == 0:
-            print(f"  anneal {stats.attempts}/{cfg.n_attempts}: "
-                  f"acc {stats.accepts} ({100.0*stats.acceptance:.1f}%), "
-                  f"no-cand {stats.no_cand_rounds}, "
-                  f"{(time.time()-t0)/stats.attempts:.1f}s/att", flush=True)
-    stats.wall_time_s = time.time() - t0
+    # ---- anneal at the soft level ----
+    run_attempts(cfg.n_attempts, "anneal")
     records.append({"stage": "anneal", "accepts": stats.accepts,
                     "attempts": stats.attempts,
                     "acceptance": stats.acceptance,
                     "energy": melt.recompute_energy()})
 
-    # ---- harden back to production ----
-    for lj, dih in cfg.harden_steps:
+    # ---- harden back to production, swaps stay ON ----
+    for (lj, dih), n_att in zip(cfg.harden_steps, cfg.harden_attempts):
         set_level(lj, dih)
         melt.run(cfg.harden_equil_steps)
+        run_attempts(n_att, f"harden-{lj}")
         records.append({"stage": "harden", "lj": lj, "dih": dih,
-                        "energy": melt.recompute_energy()})
+                        "energy": melt.recompute_energy(),
+                        "accepts_total": stats.accepts})
 
     stats.wall_time_s = time.time() - t_start
     return stats, {"records": records}
