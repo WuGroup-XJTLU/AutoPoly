@@ -597,7 +597,7 @@ impl PyAtomisticMC {
     fn cbmc_candidates(&self, a: usize, r_reach: f64, k_regrow: usize) -> Vec<(usize, usize, usize, bool)> {
         let cell_cutoff = self.mc.engine.params.lj_cut.max(self.mc.engine.params.coul_cut);
         let cells = atomistic_mc::ACellList::build(&self.mc.engine.state, cell_cutoff);
-        cbmc::enumerate_cbmc_candidates(&self.mc.engine.state, &cells, a, r_reach, k_regrow)
+        cbmc::enumerate_cbmc_candidates(&self.mc.engine.state, &cells, a, r_reach, k_regrow, false)
             .into_iter()
             .map(|p| (p.a, p.b, p.s, p.flip))
             .collect()
@@ -630,7 +630,7 @@ impl PyAtomisticMC {
         let cells = atomistic_mc::ACellList::build(&self.mc.engine.state, cell_cutoff);
         let n_fwd_total: usize = (0..self.mc.engine.state.chains.len())
             .map(|c| {
-                cbmc::enumerate_cbmc_candidates(&self.mc.engine.state, &cells, c, cfg.r_reach, k_regrow)
+                cbmc::enumerate_cbmc_candidates(&self.mc.engine.state, &cells, c, cfg.r_reach, k_regrow, cfg.allow_flip)
                     .len()
             })
             .sum();

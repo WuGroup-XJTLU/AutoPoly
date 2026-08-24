@@ -202,14 +202,6 @@ fn cone_point(
     wrap(add(p1, scale(dir, r)), box_size)
 }
 
-/// Uniform random direction on the sphere.
-#[allow(dead_code)]
-fn sphere_dir<R: Rng>(rng: &mut R) -> [f64; 3] {
-    let z = rng.random::<f64>() * 2.0 - 1.0;
-    let t = rng.random::<f64>() * 2.0 * std::f64::consts::PI;
-    let s = (1.0 - z * z).max(0.0).sqrt();
-    [s * t.cos(), s * t.sin(), z]
-}
 
 // ----------------------------------------------------------------------
 // CBMC configuration
@@ -218,10 +210,6 @@ fn sphere_dir<R: Rng>(rng: &mut R) -> [f64; 3] {
 pub struct CbmcConfig {
     /// trials per backbone atom (Rosenbluth k)
     pub n_trials: usize,
-    /// trials per regrown hydrogen
-    pub n_h_trials: usize,
-    /// Fibonacci grid size for the hydrogen direction conditional
-    pub n_h_dirs: usize,
     /// ψ grid size for the closure conditional
     pub n_psi: usize,
     /// candidate reach: stub-to-downstream distance [Å] within which a
@@ -229,26 +217,36 @@ pub struct CbmcConfig {
     pub r_reach: f64,
     /// upstream guide bias: equilibrium span to the closure target with
     /// m bonds remaining (index m), [Å]
-    pub guide_span: [f64; 5],
+    pub guide_span: [f64; 6],
     /// strength of the upstream guide bias [kcal/mol/Å²]
     pub guide_k: f64,
     /// backbone atoms regrown per junction (3 = trimer, 4 = quadmer);
     /// longer segments bridge larger inter-chain gaps at the price of
     /// more Rosenbluth dilution
     pub n_regrow: usize,
+    /// rotor grid size for the decoration cluster orientation
+    pub n_rotor: usize,
+    /// allow flipped (tail-reversed) joins. Currently ALWAYS false:
+    /// (i) for real polymers a flip joins a stub to a chemically capped
+    /// chain end (pentavalent) and is suppressed by the valence rule
+    /// anyway; (ii) the flip move's forward/reverse regrowth sets differ
+    /// (end k-mer vs cut-adjacent k-mer), and the mixed-buffer retrace
+    /// bookkeeping for that asymmetry is not implemented. The valence
+    /// rule is kept as cheap insurance for exotic homotypic systems.
+    pub allow_flip: bool,
 }
 
 impl Default for CbmcConfig {
     fn default() -> Self {
         CbmcConfig {
             n_trials: 30,
-            n_h_trials: 8,
-            n_h_dirs: 48,
             n_psi: 144,
             r_reach: 4.5,
-            guide_span: [0.0, 1.53, 2.55, 3.80, 5.00],
+            guide_span: [0.0, 1.53, 2.55, 3.80, 5.00, 6.20],
             guide_k: 10.0,
             n_regrow: 3,
+            n_rotor: 24,
+            allow_flip: false,
         }
     }
 }
@@ -349,17 +347,69 @@ impl<'a> TrialEnv<'a> {
             + 0.5 * ks[3] * (1.0 - (4.0 * phi).cos())
     }
 
-    /// Hydrogen reweight energy: every bonded term containing h except
-    /// its (single) bond, plus nonbonded.
-    fn h_reweight(&self, pos: &[[f64; 3]], h: usize, cells: &ACellList) -> f64 {
-        let mut e = self.nonbonded(pos, h, cells);
-        for &ti in &self.state.angles_of[h] {
-            let (i, j, k, t) = self.state.angles[ti];
-            e += self.angle_e(pos, i, j, k, t);
+    /// Angle + dihedral energy of every term involving `atom` (or one of
+    /// its decoration atoms `hs`) whose OTHER participants are all placed
+    /// (unmoved or already regrown) — i.e. no ghosted participant. Each
+    /// such term is counted exactly once: at the trial of its
+    /// latest-placed participant. Terms already covered by the regrowth
+    /// priors (the (a2,a1,atom) angle from the angle prior, the own
+    /// dihedral handled explicitly, and for the closing atom the terms in
+    /// the closure psi-bias) are skipped via `skip_angles`/`skip_dihs`.
+    /// Nonbonded is NOT included (handled separately, ghost-aware).
+    fn placed_bonded_weight(
+        &self,
+        pos: &[[f64; 3]],
+        owners: &[usize],
+        skip_angles: &HashSet<(usize, usize, usize)>,
+        skip_dihs: &HashSet<(usize, usize, usize, usize)>,
+        skip_atoms: &HashSet<usize>,
+        also_placed: &[usize],
+    ) -> f64 {
+        let ghosts = self.ghost.borrow();
+        let placed =
+            |x: usize| !ghosts.contains(&x) || also_placed.contains(&x);
+        let mut e = 0.0;
+        let mut seen: HashSet<usize> = HashSet::new();
+        for &owner in owners {
+            for &ti in &self.state.angles_of[owner] {
+                if !seen.insert(ti) {
+                    continue; // already counted (e.g. H-C-H angle)
+                }
+                let (i, j, k, t) = self.state.angles[ti];
+                if skip_angles.contains(&(i, j, k)) {
+                    continue;
+                }
+                if skip_atoms.contains(&i) || skip_atoms.contains(&j) || skip_atoms.contains(&k) {
+                    continue; // decoration-involving: counted in the rotor
+                }
+                if !(placed(i) && placed(j) && placed(k)) {
+                    continue; // counted at the later atom's trial
+                }
+                e += self.angle_e(pos, i, j, k, t);
+            }
         }
-        for &ti in &self.state.dihedrals_of[h] {
-            let (i, j, k, l, t) = self.state.dihedrals[ti];
-            e += self.dih_e(pos, i, j, k, l, t);
+        let mut seen: HashSet<usize> = HashSet::new();
+        for &owner in owners {
+            for &ti in &self.state.dihedrals_of[owner] {
+                if !seen.insert(ti) {
+                    continue;
+                }
+                let (i, j, k, l, t) = self.state.dihedrals[ti];
+                if skip_dihs.contains(&(i, j, k, l)) {
+                    continue;
+                }
+                if skip_atoms.contains(&i)
+                    || skip_atoms.contains(&j)
+                    || skip_atoms.contains(&k)
+                    || skip_atoms.contains(&l)
+                {
+                    continue;
+                }
+                if !(placed(i) && placed(j) && placed(k) && placed(l)) {
+                    continue;
+                }
+                e += self.dih_e(pos, i, j, k, l, t);
+            }
         }
         e
     }
@@ -413,6 +463,7 @@ pub fn enumerate_cbmc_candidates(
     a: usize,
     r_reach: f64,
     k_regrow: usize,
+    allow_flip: bool,
 ) -> Vec<BridgeProposal> {
     let chains = &state.chains;
     let n = chains[a].len();
@@ -460,7 +511,7 @@ pub fn enumerate_cbmc_candidates(
             if b == a || chains[b].len() != n {
                 continue;
             }
-            for flip in [false, true] {
+            for flip in [false, allow_flip] {
                 if flip && (!flip_ok(a) || !flip_ok(b)) {
                     continue;
                 }
@@ -504,6 +555,95 @@ fn rosenbluth_select<R: Rng>(logw: &[f64], rng: &mut R) -> (f64, usize) {
 }
 
 /// ψ-bias for the circle-sampled regrowth of one backbone atom.
+// ----------------------------------------------------------------------
+// Rigid local-frame transport of decoration atoms (H's, later fragments)
+//
+// Each regrown backbone atom carries an orthonormal frame built from its
+// local backbone bonds (deterministic function of the local geometry).
+// Its decoration cluster's local coordinates s_a = F_old^T (r_a - r_i)
+// are carried from the old configuration into every trial:
+// r_a' = r_trial + F_trial s_a -- a volume-preserving involution
+// (|det J| = 1), so decorations enter the Rosenbluth weights only via
+// their energy at the trial point, with no regrowth probability term.
+// Retrace consistency is automatic: at the included old trial the frame
+// is the old frame and decorations land exactly on their old positions.
+// ----------------------------------------------------------------------
+
+/// Orthonormal frame at a backbone atom: e1 along the bond to the
+/// previous backbone neighbor (a1), e2 the in-plane perp of the
+/// previous-previous direction (a2 side), e3 = e1 x e2. Columns.
+fn decor_frame(
+    p_atom: [f64; 3],
+    p_a1: [f64; 3],
+    p_a2: [f64; 3],
+    l: f64,
+) -> [[f64; 3]; 3] {
+    let e1 = unit(min_img(sub(p_a1, p_atom), l));
+    let w = min_img(sub(p_a2, p_a1), l);
+    let perp = sub(w, scale(e1, dot(w, e1)));
+    let e2 = if norm(perp) < 1e-8 { arb_perp(e1) } else { unit(perp) };
+    [e1, e2, cross(e1, e2)]
+}
+
+/// F^T v with F's columns given.
+fn frame_t_vec(f: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
+    [dot(f[0], v), dot(f[1], v), dot(f[2], v)]
+}
+/// F v.
+fn frame_vec(f: &[[f64; 3]; 3], v: [f64; 3]) -> [f64; 3] {
+    add(add(scale(f[0], v[0]), scale(f[1], v[1])), scale(f[2], v[2]))
+}
+
+/// Rotate v about `axis` (unit) by angle `a` (Rodrigues).
+fn rot_about(v: [f64; 3], axis: [f64; 3], a: f64) -> [f64; 3] {
+    let (c, s) = (a.cos(), a.sin());
+    add(
+        add(scale(v, c), scale(cross(axis, v), s)),
+        scale(axis, dot(axis, v) * (1.0 - c)),
+    )
+}
+
+/// Decoration atoms of one regrown backbone atom with their local
+/// coordinates in the atom's OLD frame.
+struct DecorData {
+    hs: Vec<usize>,
+    s: Vec<[f64; 3]>,
+    old_h: Vec<[f64; 3]>,
+}
+
+impl DecorData {
+    fn from_old(
+        state: &AtomisticState,
+        pos_old: &[[f64; 3]],
+        atom: usize,
+        a1: usize,
+        a2: usize,
+    ) -> Self {
+        let l = state.box_size;
+        let hs = non_backbone_neighbors(state, atom);
+        let f = decor_frame(pos_old[atom], pos_old[a1], pos_old[a2], l);
+        let s = hs
+            .iter()
+            .map(|&h| frame_t_vec(&f, min_img(sub(pos_old[h], pos_old[atom]), l)))
+            .collect();
+        let old_h = hs.iter().map(|&h| pos_old[h]).collect();
+        DecorData { hs, s, old_h }
+    }
+
+    /// Transported position of decoration `m` at the trial frame.
+    fn transported(
+        &self,
+        m: usize,
+        q_atom: [f64; 3],
+        p_a1: [f64; 3],
+        p_a2: [f64; 3],
+        l: f64,
+    ) -> [f64; 3] {
+        let f = decor_frame(q_atom, p_a1, p_a2, l);
+        wrap(add(q_atom, frame_vec(&f, self.s[m])), l)
+    }
+}
+
 enum PsiBias<'a> {
     /// Upstream atoms: quadratic pull toward the equilibrium remaining
     /// span to the closure target. Heuristic, exactly compensated by the
@@ -531,6 +671,7 @@ fn regrow_atom<R: Rng>(
     angle_t: usize,
     dih_t: Option<usize>,
     bias: &PsiBias,
+    decor: Option<&DecorData>,
     env: &TrialEnv,
     cfg: &CbmcConfig,
     kbt: f64,
@@ -550,7 +691,11 @@ fn regrow_atom<R: Rng>(
     };
     let mut logw = Vec::with_capacity(n);
     let mut pts = Vec::with_capacity(n);
+    let mut hpts: Vec<Vec<[f64; 3]>> = Vec::with_capacity(n);
     let saved = pos[atom];
+    let saved_h: Vec<[f64; 3]> = decor
+        .map(|d| d.hs.iter().map(|&h| pos[h]).collect())
+        .unwrap_or_default();
     for t in 0..n {
         // (r, θ) for this trial: sampled, or read off the included point
         let (r, th, included_q) = match include {
@@ -598,6 +743,8 @@ fn regrow_atom<R: Rng>(
             }
         };
         pos[atom] = q;
+        // u_rem: own dihedral only (Guide); decorations are carried
+        // ghosted and rotor-sampled after the segment completes
         let u_rem = match bias {
             PsiBias::Guide { .. } => {
                 // nonbonded already folded into the ψ-bias above
@@ -609,8 +756,54 @@ fn regrow_atom<R: Rng>(
             }
             PsiBias::Close(_) => 0.0,
         };
+        let htrial: Vec<[f64; 3]> = Vec::new();
+        if std::env::var("CBMC_DEBUG").is_ok() && included_q.is_some() {
+            if let Some(q) = included_q {
+                eprintln!(
+                    "      anchors: |p1-pos|={:.4} |p2-pos|={:.4} |q-atom|={:.4}",
+                    norm(min_img(sub(pos[p1], q), l)),
+                    norm(min_img(sub(pos[p2], q), l)),
+                    0.0
+                );
+                if let Some(d) = decor {
+                    for (m, &h) in d.hs.iter().enumerate() {
+                        let hp = d.transported(m, q, pos[p1], pos[p2], l);
+                        eprintln!(
+                            "        H{h}: |t-pos_old|={:.4} |t-buf|={:.4}",
+                            norm(min_img(sub(hp, d.old_h[m]), l)),
+                            norm(min_img(sub(hp, saved_h[m]), l))
+                        );
+                    }
+                }
+            }
+            let mut e_ang = 0.0;
+            let mut e_dih = 0.0;
+            let mut e_nb = 0.0;
+            if let Some(d) = decor {
+                for (m, &h) in d.hs.iter().enumerate() {
+                    let hp = d.transported(m, q, pos[p1], pos[p2], l);
+                    pos[h] = hp;
+                    for &ti in &env.state.angles_of[h] {
+                        let (i2, j2, k2, t2) = env.state.angles[ti];
+                        e_ang += env.angle_e(pos, i2, j2, k2, t2);
+                    }
+                    for &ti in &env.state.dihedrals_of[h] {
+                        let (i2, j2, k2, l2, t2) = env.state.dihedrals[ti];
+                        e_dih += env.dih_e(pos, i2, j2, k2, l2, t2);
+                    }
+                    e_nb += env.nonbonded(pos, h, &cells);
+                }
+                for (m, &h) in d.hs.iter().enumerate() {
+                    pos[h] = saved_h[m];
+                }
+            }
+            eprintln!(
+                "    included trial atom {atom}: log_zpsi={log_zpsi:.2} u_rem={u_rem:.2} (ang {e_ang:.2} dih {e_dih:.2} nb {e_nb:.2})"
+            );
+        }
         logw.push(log_zpsi - u_rem / kbt);
         pts.push(q);
+        hpts.push(htrial);
         pos[atom] = saved;
     }
     let (log_w, sel) = rosenbluth_select(&logw, rng);
@@ -619,6 +812,7 @@ fn regrow_atom<R: Rng>(
     } else {
         pos[atom] = saved;
     }
+    let _ = &hpts;
     log_w
 }
 
@@ -658,114 +852,9 @@ fn close_bias(
     e
 }
 
-/// Regrow one hydrogen on its (fixed) carbon: bond-prior radial ×
-/// uniform direction; weight = angles + dihedrals + nonbonded.
-#[allow(clippy::too_many_arguments)]
-/// Fibonacci-sphere direction set of size k (deterministic; randomly
-/// rotated per use for trial diversity).
-fn fib_sphere(k: usize) -> Vec<[f64; 3]> {
-    let golden = std::f64::consts::PI * (3.0 - 5.0f64.sqrt());
-    (0..k)
-        .map(|i| {
-            let z = 1.0 - 2.0 * (i as f64 + 0.5) / k as f64;
-            let s = (1.0 - z * z).max(0.0).sqrt();
-            let phi = i as f64 * golden;
-            [s * phi.cos(), s * phi.sin(), z]
-        })
-        .collect()
-}
 
-/// Rotate v by the unit quaternion (w, x, y, z).
-fn quat_rotate(q: [f64; 4], v: [f64; 3]) -> [f64; 3] {
-    let (w, x, y, z) = (q[0], q[1], q[2], q[3]);
-    let t = [
-        2.0 * (y * v[2] - z * v[1]),
-        2.0 * (z * v[0] - x * v[2]),
-        2.0 * (x * v[1] - y * v[0]),
-    ];
-    [
-        v[0] + w * t[0] + y * t[2] - z * t[1],
-        v[1] + w * t[1] + z * t[0] - x * t[2],
-        v[2] + w * t[2] + x * t[1] - y * t[0],
-    ]
-}
 
-/// Uniform random unit quaternion (Shoemake).
-fn rand_quat<R: Rng>(rng: &mut R) -> [f64; 4] {
-    let u1: f64 = rng.random();
-    let u2: f64 = rng.random::<f64>() * 2.0 * std::f64::consts::PI;
-    let u3: f64 = rng.random::<f64>() * 2.0 * std::f64::consts::PI;
-    let a = (1.0 - u1).sqrt();
-    let b = u1.sqrt();
-    [a * u2.sin(), a * u2.cos(), b * u3.sin(), b * u3.cos()]
-}
 
-fn regrow_h<R: Rng>(
-    pos: &mut Vec<[f64; 3]>,
-    h: usize,
-    carbon: usize,
-    bond_t: usize,
-    env: &TrialEnv,
-    cfg: &CbmcConfig,
-    kbt: f64,
-    include: Option<[f64; 3]>,
-    rng: &mut R,
-) -> f64 {
-    let bs = bond_sampler(env.par.bond_k[bond_t], env.par.bond_r0[bond_t], kbt);
-    let l = env.l();
-    let cutoff = env.par.lj_cut.max(env.par.coul_cut);
-    let cells = ACellList::build_from(pos, l, cutoff);
-    let n = cfg.n_h_trials + include.is_some() as usize;
-    let dirs = fib_sphere(cfg.n_h_dirs);
-    let solid_angle = 4.0 * std::f64::consts::PI / cfg.n_h_dirs as f64;
-    let mut logw = Vec::with_capacity(n);
-    let mut pts = Vec::with_capacity(n);
-    let saved = pos[h];
-    for t in 0..n {
-        // Sphere conditional: direction sampled ∝ exp(-β u_h) over a
-        // (randomly rotated) Fibonacci grid; the grid normalizer
-        // log(ΔΩ Σ exp(-β u)) is the trial's Rosenbluth weight, exactly
-        // compensating the directional bias. Bond length from the prior.
-        let (r, included_p) = match include {
-            Some(p) if t == n - 1 => {
-                let rr = norm(min_img(sub(p, pos[carbon]), l));
-                (rr, Some(p))
-            }
-            _ => (bs.sample(rng), None),
-        };
-        let quat = rand_quat(rng);
-        let mut logc = Vec::with_capacity(cfg.n_h_dirs);
-        for d in &dirs {
-            let dv = quat_rotate(quat, *d);
-            pos[h] = wrap(add(pos[carbon], scale(dv, r)), l);
-            logc.push(-env.h_reweight(pos, h, &cells) / kbt);
-        }
-        let lcmax = logc.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
-        let zsum: f64 = logc.iter().map(|&x| (x - lcmax).exp()).sum();
-        let log_zdir = lcmax + (solid_angle * zsum).ln();
-        let pt = match included_p {
-            Some(p) => p,
-            None => {
-                let (_, msel) = rosenbluth_select(&logc, rng);
-                wrap(add(pos[carbon], scale(quat_rotate(quat, dirs[msel]), r)), l)
-            }
-        };
-        pos[h] = pt;
-        logw.push(log_zdir);
-        pts.push(pt);
-        pos[h] = saved;
-    }
-    let (log_w, sel) = rosenbluth_select(&logw, rng);
-    if std::env::var("CBMC_DEBUG").is_ok() {
-        eprintln!("    H {h} on C{carbon}: logw = {log_w:.2}");
-    }
-    if include.is_none() {
-        pos[h] = pts[sel];
-    } else {
-        pos[h] = saved;
-    }
-    log_w
-}
 
 // ----------------------------------------------------------------------
 // Trimer and hydrogen sequences
@@ -805,12 +894,153 @@ fn non_backbone_neighbors(state: &AtomisticState, carbon: usize) -> Vec<usize> {
 /// already-retraced atoms at old positions, matching the reverse move's
 /// growth environment).
 #[allow(clippy::too_many_arguments)]
+/// Rotor-sample (or retrace) one decoration cluster after the segment
+/// backbone is complete: rotate the cluster about the frame's e1 bond
+/// axis and sample the orientation from its Boltzmann conditional over
+/// the full placed environment (rigid, volume-preserving 1-D dof;
+/// Z_alpha is the Rosenbluth weight). With `commit = false` (retrace),
+/// only the weight is evaluated and old positions are restored.
+#[allow(clippy::too_many_arguments)]
+fn cluster_rotor<R: Rng>(
+    pos: &mut Vec<[f64; 3]>,
+    atom: usize,
+    a1: usize,
+    a2: usize,
+    decor: &DecorData,
+    env: &TrialEnv,
+    cfg: &CbmcConfig,
+    kbt: f64,
+    commit: bool,
+    rng: &mut R,
+) -> f64 {
+    if decor.hs.is_empty() {
+        return 0.0;
+    }
+    let l = env.l();
+    let cutoff = env.par.lj_cut.max(env.par.coul_cut);
+    let cells = ACellList::build_from(pos, l, cutoff);
+    let f = decor_frame(pos[atom], pos[a1], pos[a2], l);
+    let axis = f[0];
+    let base: Vec<[f64; 3]> = (0..decor.hs.len()).map(|m| frame_vec(&f, decor.s[m])).collect();
+    let na = cfg.n_rotor;
+    let da = 2.0 * std::f64::consts::PI / na as f64;
+    let saved: Vec<[f64; 3]> = decor.hs.iter().map(|&h| pos[h]).collect();
+    let empty_angles: HashSet<(usize, usize, usize)> = HashSet::new();
+    let empty_dihs: HashSet<(usize, usize, usize, usize)> = HashSet::new();
+    let empty_atoms: HashSet<usize> = HashSet::new();
+    // the cluster and its carbon are placed by this rotor
+    let also_placed: Vec<usize> = std::iter::once(atom)
+        .chain(decor.hs.iter().copied())
+        .collect();
+    // joint rotor: each H gets its own rotation about the frame's e1
+    // bond axis. For CH2 the (alpha1, alpha2) pair spans exactly the
+    // decoration's physical dof (H-C-H angle + cluster orientation),
+    // with r_CH and the H-C-C angle to the defining bond preserved by
+    // construction. n_h >= 3 clusters are sampled with independent
+    // joint random trials (log-mean estimator of the same normalizer).
+    let nh = decor.hs.len();
+    let eval_u = |pos: &mut Vec<[f64; 3]>, alphas: &[f64]| -> f64 {
+        let mut u = 0.0;
+        for (mm, &h) in decor.hs.iter().enumerate() {
+            let hp = wrap(add(pos[atom], rot_about(base[mm], axis, alphas[mm])), l);
+            pos[h] = hp;
+            u += env.nonbonded(pos, h, &cells);
+        }
+        u += env.placed_bonded_weight(
+            pos, &decor.hs, &empty_angles, &empty_dihs, &empty_atoms, &also_placed,
+        );
+        for (mm, &h) in decor.hs.iter().enumerate() {
+            pos[h] = saved[mm];
+        }
+        u
+    };
+    let mut logc: Vec<f64> = Vec::new();
+    let mut hpts: Vec<Vec<[f64; 3]>> = Vec::new();
+    if nh <= 2 {
+        // full joint grid: na for 1 H, na x na for 2 H's
+        let mut alpha_sets: Vec<Vec<f64>> = Vec::new();
+        for m0 in 0..na {
+            let a0 = (m0 as f64 + 0.5) * da;
+            if nh == 1 {
+                alpha_sets.push(vec![a0]);
+            } else {
+                for m1 in 0..na {
+                    alpha_sets.push(vec![a0, (m1 as f64 + 0.5) * da]);
+                }
+            }
+        }
+        for alphas in &alpha_sets {
+            let u = eval_u(pos, alphas);
+            logc.push(-u / kbt);
+            hpts.push(
+                decor
+                    .hs
+                    .iter()
+                    .enumerate()
+                    .map(|(mm, &h)| {
+                        let _ = h;
+                        wrap(add(pos[atom], rot_about(base[mm], axis, alphas[mm])), l)
+                    })
+                    .collect(),
+            );
+        }
+    } else {
+        let n_trials = na * na; // match the 2-H grid size
+        for _ in 0..n_trials {
+            let alphas: Vec<f64> = (0..nh)
+                .map(|_| rng.random::<f64>() * 2.0 * std::f64::consts::PI)
+                .collect();
+            let u = eval_u(pos, &alphas);
+            logc.push(-u / kbt);
+            hpts.push(
+                decor
+                    .hs
+                    .iter()
+                    .enumerate()
+                    .map(|(mm, &h)| {
+                        let _ = h;
+                        wrap(add(pos[atom], rot_about(base[mm], axis, alphas[mm])), l)
+                    })
+                    .collect(),
+            );
+        }
+    }
+    let lcmax = logc.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    let zsum: f64 = logc.iter().map(|&x| (x - lcmax).exp()).sum();
+    // joint normalizer over the cluster's rotor dof's: (Δα)^nh Σ for the
+    // grid branch; Monte Carlo mean over the cube for the >=3 branch
+    let log_zrotor = if nh <= 2 {
+        lcmax + (da.powi(nh as i32) * zsum).ln()
+    } else {
+        let measure = (2.0 * std::f64::consts::PI).powi(nh as i32) / (na * na) as f64;
+        lcmax + (measure * zsum).ln()
+    };
+    if std::env::var("CBMC_DEBUG").is_ok() {
+        eprintln!("      rotor atom {atom}: log_zrotor={log_zrotor:.2} best_u={:.2}", -lcmax * kbt);
+    }
+    if commit {
+        let (_, msel) = rosenbluth_select(&logc, rng);
+        for (mm, &h) in decor.hs.iter().enumerate() {
+            pos[h] = hpts[msel][mm];
+        }
+    } else {
+        for (mm, &h) in decor.hs.iter().enumerate() {
+            pos[h] = saved[mm];
+        }
+    }
+    log_zrotor
+}
+
+#[allow(clippy::too_many_arguments)]
 fn regrow_segment<R: Rng>(
     pos: &mut Vec<[f64; 3]>,
     tail: &[usize],
     stub: usize,
     prev_chain: &[usize],
+    old_stub: usize,
+    old_prev_chain: &[usize],
     s: usize,
+    pos_old: &[[f64; 3]],
     state: &AtomisticState,
     tables: &TypeTables,
     env: &TrialEnv,
@@ -838,6 +1068,7 @@ fn regrow_segment<R: Rng>(
         cd2_t: resolve_dih(tables, state, tail[k - 2], tail[k - 1], d, dn.unwrap_or(d)),
         own_dt: Some(resolve_dih(tables, state, cl_a3, tail[k - 3], tail[k - 2], tail[k - 1])),
     };
+    let mut decors: Vec<(usize, usize, usize, DecorData)> = Vec::with_capacity(k);
     for (i, &atom) in tail[..k].iter().enumerate() {
         let (a1, a2, a3) = match i {
             0 => (p1, p2, p3),
@@ -861,45 +1092,59 @@ fn regrow_segment<R: Rng>(
             PsiBias::Close(&cl)
         };
         let dt = if i < k - 1 { a3.map(|q| resolve_dih(tables, state, q, a2, a1, atom)) } else { None };
-        let lw = regrow_atom(pos, atom, a1, a2, a3, bt, at, dt, &bias, env, cfg, kbt, include, rng);
+        // decoration frame anchors in the OLD topology. For flip=false
+        // the tail reads forward off its original stub; for flip=true
+        // the tail is reversed, so tail[0] is the chain END whose old
+        // neighbors lie in the forward direction (tail[1], tail[2]) —
+        // using the stub-side anchors there would transport its H's
+        // with a completely wrong frame.
+        let flipped = tail[0] != old_prev_chain[s];
+        let (oa1, oa2) = if flipped {
+            match i {
+                0 => (tail[1], tail[2]),
+                1 => (tail[2], tail[3]),
+                _ => (tail[i - 1], tail[i - 2]),
+            }
+        } else {
+            match i {
+                0 => (old_stub, old_prev_chain[s - 2]),
+                1 => (tail[0], old_stub),
+                _ => (tail[i - 1], tail[i - 2]),
+            }
+        };
+        let decor = DecorData::from_old(state, pos_old, atom, oa1, oa2);
+        let lw = regrow_atom(
+            pos, atom, a1, a2, a3, bt, at, dt, &bias, Some(&decor), env, cfg, kbt,
+            include, rng,
+        );
         if std::env::var("CBMC_DEBUG").is_ok() {
             eprintln!("  segment atom {i}/{k} (id {atom}): logw = {lw:.2}");
         }
         if let Some(rp) = retrace_pos {
             pos[atom] = rp[atom]; // retrace leaves old positions behind
+            for &h in &decor.hs {
+                pos[h] = rp[h];
+            }
         }
         env.ghost.borrow_mut().remove(&atom); // placed/retraced: now visible
+        decors.push((atom, a1, a2, decor));
         w += lw;
+    }
+    // decorations: rotor-sample each cluster now that the segment
+    // backbone is complete and every bonded term is visible
+    for (atom, a1, a2, decor) in &decors {
+        let commit = retrace_pos.is_none();
+        w += cluster_rotor(pos, *atom, *a1, *a2, decor, env, cfg, kbt, commit, rng);
+        {
+            let mut g = env.ghost.borrow_mut();
+            for &h in &decor.hs {
+                g.remove(&h);
+            }
+        }
     }
     w
 }
 
-/// Regrow (or retrace) all non-backbone substituents of one carbon, in
-/// sorted order for forward/reverse consistency.
-#[allow(clippy::too_many_arguments)]
-fn regrow_carbon_hydrogens<R: Rng>(
-    pos: &mut Vec<[f64; 3]>,
-    carbon: usize,
-    state: &AtomisticState,
-    tables: &TypeTables,
-    env: &TrialEnv,
-    cfg: &CbmcConfig,
-    kbt: f64,
-    retrace_pos: Option<&[[f64; 3]]>,
-    rng: &mut R,
-) -> f64 {
-    let mut w = 0.0;
-    for h in non_backbone_neighbors(state, carbon) {
-        let bt = resolve_bond(tables, state, carbon, h);
-        let include = retrace_pos.map(|rp| rp[h]);
-        w += regrow_h(pos, h, carbon, bt, env, cfg, kbt, include, rng);
-        if let Some(rp) = retrace_pos {
-            pos[h] = rp[h];
-        }
-        env.ghost.borrow_mut().remove(&h); // placed/retraced: now visible
-    }
-    w
-}
 
 // ----------------------------------------------------------------------
 // The CBMC double-bridge move
@@ -940,7 +1185,6 @@ fn forward_pass<R: Rng>(
     kbt: f64,
     rng: &mut R,
 ) -> (f64, Vec<[f64; 3]>) {
-    let k = cfg.n_regrow;
     let mut w = 0.0;
     let mut pos = pos_old.to_vec();
     let env = TrialEnv {
@@ -949,14 +1193,13 @@ fn forward_pass<R: Rng>(
         ghost: std::cell::RefCell::new(ghosts.clone()),
     };
     w += regrow_segment(
-        &mut pos, tail_b, ca[s - 1], ca, s, state, tables, &env, cfg, kbt, None, rng,
+        &mut pos, tail_b, ca[s - 1], ca, cb[s - 1], cb, s, pos_old, state, tables, &env,
+        cfg, kbt, None, rng,
     );
     w += regrow_segment(
-        &mut pos, tail_a, cb[s - 1], cb, s, state, tables, &env, cfg, kbt, None, rng,
+        &mut pos, tail_a, cb[s - 1], cb, ca[s - 1], ca, s, pos_old, state, tables, &env,
+        cfg, kbt, None, rng,
     );
-    for &carbon in tail_b[..k].iter().chain(tail_a[..k].iter()) {
-        w += regrow_carbon_hydrogens(&mut pos, carbon, state, tables, &env, cfg, kbt, None, rng);
-    }
     (w, pos)
 }
 
@@ -975,37 +1218,45 @@ fn reverse_pass<R: Rng>(
     cb: &[usize],
     s: usize,
     pos_start: &[[f64; 3]],
+    pos_old: &[[f64; 3]],
     ghosts: &HashSet<usize>,
     cfg: &CbmcConfig,
     kbt: f64,
     retrace_pos: Option<&[[f64; 3]]>,
     rng: &mut R,
 ) -> f64 {
-    let k = cfg.n_regrow;
     let mut w = 0.0;
     let env_old = TrialEnv {
         state: backup,
         par,
         ghost: std::cell::RefCell::new(ghosts.clone()),
     };
+    // The reverse move applies the same proposal to the NEW state, so
+    // its regrowth sequences are the reverse move's tails: for flip=false
+    // these are the given tails; for flip=true they are the ORIGINAL
+    // chains' forward tails (the given tails reversed back). Getting this
+    // wrong regrows the wrong atoms in the wrong order (fixture-only:
+    // production flips are suppressed by the valence rule).
+    let flip = tail_a.first() == ca.last() && tail_a.first() != Some(&ca[s]);
+    let (seq_a, seq_b): (Vec<usize>, Vec<usize>) = if flip {
+        (tail_a.iter().rev().copied().collect(), tail_b.iter().rev().copied().collect())
+    } else {
+        (tail_a.to_vec(), tail_b.to_vec())
+    };
     let mut posr = pos_start.to_vec();
     w += regrow_segment(
-        &mut posr, tail_a, ca[s - 1], ca, s, backup, tables, &env_old, cfg, kbt,
-        retrace_pos, rng,
+        &mut posr, &seq_a, ca[s - 1], ca, ca[s - 1], ca, s, pos_old, backup, tables,
+        &env_old, cfg, kbt, retrace_pos, rng,
     );
     w += regrow_segment(
-        &mut posr, tail_b, cb[s - 1], cb, s, backup, tables, &env_old, cfg, kbt,
-        retrace_pos, rng,
+        &mut posr, &seq_b, cb[s - 1], cb, cb[s - 1], cb, s, pos_old, backup, tables,
+        &env_old, cfg, kbt, retrace_pos, rng,
     );
-    for &carbon in tail_a[..k].iter().chain(tail_b[..k].iter()) {
-        w += regrow_carbon_hydrogens(
-            &mut posr, carbon, backup, tables, &env_old, cfg, kbt, retrace_pos, rng,
-        );
-    }
     w
 }
 
 #[allow(clippy::too_many_arguments)]
+#[allow(dead_code)] // used by the unit tests; production path is _mtm
 pub fn cbmc_double_bridge<R: Rng>(
     state: &mut AtomisticState,
     tables: &TypeTables,
@@ -1044,6 +1295,14 @@ pub fn cbmc_double_bridge_mtm<R: Rng>(
     };
     let s = proposal.s;
     let flip = proposal.flip;
+    if flip && !cfg.allow_flip {
+        return CbmcOutcome {
+            accepted: false,
+            log_accept_ratio: f64::NEG_INFINITY,
+            w_new: f64::NEG_INFINITY,
+            w_old: f64::NEG_INFINITY,
+        };
+    }
     let ca = state.chains[proposal.a].clone();
     let cb = state.chains[proposal.b].clone();
     let n = ca.len();
@@ -1090,13 +1349,13 @@ pub fn cbmc_double_bridge_mtm<R: Rng>(
     // into the old topology, all starting from the selected new config.
     let mut rev_w = Vec::with_capacity(r_mtm);
     rev_w.push(reverse_pass(
-        &backup, tables, par, &tail_a, &tail_b, &ca, &cb, s, &pos, &ghosts, cfg, kbt,
-        Some(&pos_old), rng,
+        &backup, tables, par, &tail_a, &tail_b, &ca, &cb, s, &pos, &pos_old, &ghosts,
+        cfg, kbt, Some(&pos_old), rng,
     ));
     for _ in 1..r_mtm {
         rev_w.push(reverse_pass(
-            &backup, tables, par, &tail_a, &tail_b, &ca, &cb, s, &pos, &ghosts, cfg, kbt,
-            None, rng,
+            &backup, tables, par, &tail_a, &tail_b, &ca, &cb, s, &pos, &pos_old, &ghosts,
+            cfg, kbt, None, rng,
         ));
     }
     let log_wsum_rev = logsumexp(&rev_w);
@@ -1111,7 +1370,7 @@ pub fn cbmc_double_bridge_mtm<R: Rng>(
     state.pos = pos.clone(); // tentative new geometry
     let cells_new = ACellList::build(state, cutoff);
     let n_rev_total: usize = (0..state.chains.len())
-        .map(|c| enumerate_cbmc_candidates(state, &cells_new, c, cfg.r_reach, cfg.n_regrow).len())
+        .map(|c| enumerate_cbmc_candidates(state, &cells_new, c, cfg.r_reach, cfg.n_regrow, cfg.allow_flip).len())
         .sum();
     let log_count = (n_rev_total.max(1) as f64 / n_fwd_total.max(1) as f64).ln();
 
@@ -1169,7 +1428,7 @@ mod tests {
         }
         let mut pos = chain.clone();
         for p in &chain {
-            pos.push([p[0], p[1] + separation, p[2]]);
+            pos.push([p[0] + separation, p[1], p[2]]);
         }
         let n = pos.len();
         let types = vec![1usize; n];
@@ -1234,7 +1493,7 @@ mod tests {
             }
         }
         let cells = ACellList::build(&st, 11.0);
-        let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow);
+        let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
         println!("{} reach candidates from chain 0", cands.len());
         for c in &cands {
             println!("  cand a={} b={} s={} flip={}", c.a, c.b, c.s, c.flip);
@@ -1261,7 +1520,7 @@ mod tests {
         let cfg = CbmcConfig::default();
         let mut rng = ChaCha8Rng::seed_from_u64(37);
         let cells = ACellList::build(&st, 11.0);
-        let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow);
+        let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
         let pr = cands[0].clone();
         // wait for first accept
         let mut fwd_tries = 0;
@@ -1313,6 +1572,646 @@ mod tests {
         println!("reverse w_new:     {}", stats(&mut rev_wnew));
     }
 
+    /// H-bearing fixture: each carbon gets ideal sp3 H's (2 interior,
+    /// 3 at ends). Types: 1 = C, 2 = H. Bond types: 1 = C-C, 2 = C-H.
+    /// Angle types: 1 = C-C-C, 2 = C-C-H, 3 = H-C-H. Dih types:
+    /// 1 = C-C-C-C, 2 = C-C-C-H, 3 = H-C-C-H. No LJ (decoration energy
+    /// enters via angles/dihedrals only).
+    fn fixture_h(separation: f64, soft: bool) -> (AtomisticState, AtomisticParams) {
+        let (mut st, _par0) = fixture(separation, soft);
+        let l = st.box_size;
+        let n_c = st.pos.len();
+        let chains = st.chains.clone();
+        let cc_bonds = st.bonds.clone();
+        // ideal H placement using the FF angle values below
+        let l_ch = 1.09;
+        let hch_half = 107.8f64.to_radians() / 2.0;
+        let hcc = 110.7f64.to_radians();
+        let mut h_of_carbon: Vec<Vec<usize>> = vec![Vec::new(); n_c];
+        let mut adj: std::collections::HashMap<usize, Vec<usize>> = std::collections::HashMap::new();
+        for &(i, j, _) in &cc_bonds {
+            adj.entry(i).or_default().push(j);
+            adj.entry(j).or_default().push(i);
+        }
+        let mut hpos: Vec<[f64; 3]> = Vec::new();
+        for chain in &chains {
+            for (idx, &c) in chain.iter().enumerate() {
+                let nbs = &adj[&c];
+                let cpos = st.pos[c];
+                let hs: Vec<[f64; 3]> = if nbs.len() == 2 {
+                    let n1 = add(cpos, min_img(sub(st.pos[nbs[0]], cpos), l));
+                    let n2 = add(cpos, min_img(sub(st.pos[nbs[1]], cpos), l));
+                    let u1 = unit(sub(n1, cpos));
+                    let u2 = unit(sub(n2, cpos));
+                    let bis = unit(scale(add(u1, u2), -1.0));
+                    let perp = unit(cross(u1, u2));
+                    let d1 = add(scale(bis, hch_half.cos()), scale(perp, hch_half.sin()));
+                    let d2 = sub(scale(bis, hch_half.cos()), scale(perp, hch_half.sin()));
+                    vec![
+                        wrap(add(cpos, scale(d1, l_ch)), l),
+                        wrap(add(cpos, scale(d2, l_ch)), l),
+                    ]
+                } else {
+                    // end CH3: three H's at hcc to the back-direction
+                    let n1 = add(cpos, min_img(sub(st.pos[nbs[0]], cpos), l));
+                    let u = unit(sub(n1, cpos));
+                    let back = scale(u, -1.0);
+                    let a = if u[0].abs() < 0.9 { [1.0, 0.0, 0.0] } else { [0.0, 1.0, 0.0] };
+                    let e1 = unit(cross(u, a));
+                    let e2 = unit(cross(u, e1));
+                    (0..3)
+                        .map(|m| {
+                            let phi = (120.0 * m as f64).to_radians();
+                            let d = add(
+                                scale(back, hcc.cos()),
+                                scale(
+                                    add(scale(e1, phi.cos()), scale(e2, phi.sin())),
+                                    hcc.sin(),
+                                ),
+                            );
+                            wrap(add(cpos, scale(d, l_ch)), l)
+                        })
+                        .collect()
+                };
+                let _ = idx;
+                for hp in hs {
+                    h_of_carbon[c].push(n_c + hpos.len());
+                    hpos.push(hp);
+                }
+            }
+        }
+        // append H's to the state
+        st.pos.extend_from_slice(&hpos);
+        let n_all = st.pos.len();
+        st.types = vec![1usize; n_c].into_iter().chain(vec![2usize; n_all - n_c]).collect();
+        st.charges = vec![0.0; n_all];
+        st.mol = (0..n_c)
+            .map(|i| st.mol[i])
+            .chain((n_c..n_all).map(|h| {
+                let c = (0..n_c).find(|&c| h_of_carbon[c].contains(&h)).unwrap();
+                st.mol[c]
+            }))
+            .collect();
+        for (c, hs) in h_of_carbon.iter().enumerate() {
+            for &h in hs {
+                st.bonds.push((c, h, 2));
+            }
+        }
+        // regenerate angles/dihedrals from the full bond graph
+        let mut adj2: Vec<Vec<usize>> = vec![Vec::new(); n_all];
+        for &(i, j, _) in &st.bonds {
+            adj2[i].push(j);
+            adj2[j].push(i);
+        }
+        let mut angles = Vec::new();
+        for j in 0..n_all {
+            let nb = &adj2[j];
+            for a in 0..nb.len() {
+                for b in a + 1..nb.len() {
+                    let (i, k) = (nb[a], nb[b]);
+                    let t = match (st.types[i], st.types[j], st.types[k]) {
+                        (1, 1, 1) => 1,
+                        (2, 1, 2) => 3,
+                        _ => 2,
+                    };
+                    angles.push((i, j, k, t));
+                }
+            }
+        }
+        let mut dihs = Vec::new();
+        for &(j, k, _) in &st.bonds.clone() {
+            for &i in &adj2[j] {
+                if i == k {
+                    continue;
+                }
+                for &l2 in &adj2[k] {
+                    if l2 == j || l2 == i {
+                        continue;
+                    }
+                    let t = match (st.types[i], st.types[j], st.types[k], st.types[l2]) {
+                        (1, 1, 1, 1) => 1,
+                        (2, 1, 1, 2) => 3,
+                        _ => 2,
+                    };
+                    dihs.push((i, j, k, l2, t));
+                }
+            }
+        }
+        st.angles = angles;
+        st.dihedrals = dihs;
+        let chains2 = chains;
+        st.chains = chains2;
+        let mut st = AtomisticState::new(
+            st.pos, l, st.types, st.charges, st.mol, st.bonds, st.angles, st.dihedrals,
+            st.chains,
+        );
+        let (bk, ak) = if soft { (20.0, 5.0) } else { (268.0, 58.35) };
+        let par = AtomisticParams {
+            pair_eps: vec![0.0, 0.0, 0.0],
+            pair_sig: vec![0.0, 3.5, 2.5],
+            bond_k: vec![0.0, bk, 268.0],
+            bond_r0: vec![0.0, 1.529, 1.09],
+            angle_k: vec![0.0, ak, 58.35, 58.35],
+            angle_t0: vec![
+                0.0,
+                112.7f64.to_radians(),
+                110.7f64.to_radians(),
+                107.8f64.to_radians(),
+            ],
+            dih_k: vec![
+                [0.0; 4],
+                [1.1, -0.2, 0.2, 0.0],
+                [1.1, -0.2, 0.2, 0.0],
+                [1.1, -0.2, 0.2, 0.0],
+            ],
+            lj_cut: 11.0,
+            coul_cut: 11.0,
+            scale14_lj: 0.5,
+            scale14_coul: 0.5,
+        };
+        // relax the analytic H placement to equilibrium (the bisector
+        // construction is only approximately consistent with the FF)
+        let mut rng = ChaCha8Rng::seed_from_u64(3);
+        let kbt_relax = 0.9;
+        let eng = AtomisticEngine::new(st.clone(), par.clone(), kbt_relax);
+        let mut mc = crate::atomistic_mc::AtomisticMC::new(
+            eng,
+            crate::atomistic_mc::AMcParams::default(),
+        );
+        mc.run(20_000, &mut rng);
+        st.pos = mc.engine.state.pos.clone();
+        // duplicate chain A (atoms 0..half, in id order) as chain B at the
+        // given separation: identical relaxed coils -> symmetric,
+        // feasible flip=false junction spans
+        // layout: carbons 0..16 (A: 0..8, B: 8..16), then H's per chain
+        // in order (A: 16..34, B: 34..52)
+        for i in 0..8 {
+            let p = st.pos[i];
+            st.pos[8 + i] = wrap([p[0] + separation, p[1], p[2]], l);
+        }
+        for i in 16..34 {
+            let p = st.pos[i];
+            st.pos[18 + i] = wrap([p[0] + separation, p[1], p[2]], l);
+        }
+        (st, par)
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_fixture_decoration_energy() {
+        let (st, par) = fixture_h(2.0, false);
+        let cells = ACellList::build(&st, 11.0);
+        let env = TrialEnv {
+            state: &st,
+            par: &par,
+            ghost: std::cell::RefCell::new(std::collections::HashSet::new()),
+        };
+        let mut e_ang = 0.0;
+        let mut e_dih = 0.0;
+        let mut e_nb = 0.0;
+        for h in 0..st.pos.len() {
+            if st.types[h] != 2 {
+                continue;
+            }
+            for &ti in &st.angles_of[h] {
+                let (i, j, k, t) = st.angles[ti];
+                e_ang += env.angle_e(&st.pos, i, j, k, t);
+            }
+            for &ti in &st.dihedrals_of[h] {
+                let (i, j, k, l2, t) = st.dihedrals[ti];
+                e_dih += env.dih_e(&st.pos, i, j, k, l2, t);
+            }
+            e_nb += env.nonbonded(&st.pos, h, &cells);
+        }
+        eprintln!(
+            "old decoration: angles {:.2} dihs {:.2} nonbonded {:.2} total {:.2} kcal/mol = {:.1} kT",
+            e_ang, e_dih, e_nb, e_ang + e_dih + e_nb, (e_ang + e_dih + e_nb) / 0.9
+        );
+    }
+
+    #[test]
+    fn transport_identity_segment_anchors() {
+        let (st, _par) = fixture_h(2.0, false);
+        let l = st.box_size;
+        let pos = &st.pos;
+        let s = 3usize;
+        for chain in &st.chains {
+            let stub = chain[s - 1];
+            let stub_prev = chain[s - 2];
+            let tail: Vec<usize> = chain[s..].to_vec();
+            for (i, &atom) in tail[..3].iter().enumerate() {
+                let (oa1, oa2) = match i {
+                    0 => (stub, stub_prev),
+                    1 => (tail[0], stub),
+                    _ => (tail[1], tail[0]),
+                };
+                let d = DecorData::from_old(&st, pos, atom, oa1, oa2);
+                for (m, &h) in d.hs.iter().enumerate() {
+                    let hp = d.transported(m, pos[atom], pos[oa1], pos[oa2], l);
+                    let dv = min_img(sub(hp, pos[h]), l);
+                    assert!(
+                        norm(dv) < 1e-9,
+                        "identity violated: atom {atom} (i={i}) H{h} off by {:?}",
+                        dv
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn transport_identity_at_old_frame() {
+        let (st, _par) = fixture_h(2.0, false);
+        let l = st.box_size;
+        let pos = &st.pos;
+        // pick an interior carbon with 2 H's and an end carbon with 3
+        for chain in &st.chains {
+            for (i, &c) in chain.iter().enumerate() {
+                let hs = non_backbone_neighbors(&st, c);
+                if hs.is_empty() {
+                    continue;
+                }
+                let (oa1, oa2) = if i == 0 {
+                    (chain[0], chain[0]) // degenerate; skip ends for now
+                } else if i == 1 {
+                    (chain[0], chain[0])
+                } else {
+                    (chain[i - 1], chain[i - 2])
+                };
+                if oa1 == oa2 {
+                    continue;
+                }
+                let d = DecorData::from_old(&st, pos, c, oa1, oa2);
+                for (m, &h) in d.hs.iter().enumerate() {
+                    let hp = d.transported(m, pos[c], pos[oa1], pos[oa2], l);
+                    let dv = min_img(sub(hp, pos[h]), l);
+                    assert!(
+                        norm(dv) < 1e-9,
+                        "transport identity violated for C{c} H{h}: {:?}",
+                        dv
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_hfree_spans() {
+        let (st, _par) = fixture(2.0, false);
+        let l = st.box_size;
+        for s in 2..5usize {
+            let a1 = st.chains[0][s - 1];
+            let b1 = st.chains[1][s - 1];
+            let da = st.chains[0][s + 3];
+            let db = st.chains[1][s + 3];
+            let ra = norm(min_img(sub(st.pos[a1], st.pos[db]), l));
+            let rb = norm(min_img(sub(st.pos[b1], st.pos[da]), l));
+            eprintln!("hfree s={s}: reach_a={ra:.2} reach_b={rb:.2}");
+        }
+        let cells = ACellList::build(&st, 11.0);
+        let cfg = CbmcConfig::default();
+        for a in 0..2 {
+            let c = enumerate_cbmc_candidates(&st, &cells, a, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+            eprintln!("chain {a}: {} candidates", c.len());
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_fixture_ch_lengths() {
+        let (st, _par) = fixture_h(2.0, true);
+        let l = st.box_size;
+        for &(i, j, t) in &st.bonds {
+            if t != 2 { continue; }
+            let r = norm(min_img(sub(st.pos[i], st.pos[j]), l));
+            if (r - 1.09).abs() > 0.08 {
+                eprintln!("stretched C-H: ({i},{j}) r = {r:.4}");
+            }
+        }
+        eprintln!("checked");
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_fixture_dup_check() {
+        let (st, _par) = fixture_h(1.5, false);
+        eprintln!("A0 {:?}", st.pos[0]);
+        eprintln!("B0 {:?}", st.pos[8]);
+        eprintln!("A2 {:?}", st.pos[2]);
+        eprintln!("B2 {:?}", st.pos[10]);
+        let d = min_img(sub(st.pos[8], st.pos[0]), st.box_size);
+        eprintln!("B-A offset = {d:?}");
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_fixture_spans() {
+        for sep in [1.5, 2.0, 2.5] {
+            let (st, _par) = fixture_h(sep, false);
+            let l = st.box_size;
+            eprintln!("sep {sep}:");
+            for s in 2..5usize {
+                let a1 = st.chains[0][s - 1];
+                let b1 = st.chains[1][s - 1];
+                let da = st.chains[0][s + 4];
+                let db = st.chains[1][s + 4];
+                let ra = norm(min_img(sub(st.pos[a1], st.pos[db]), l));
+                let rb = norm(min_img(sub(st.pos[b1], st.pos[da]), l));
+                eprintln!("  s={s}: reach_a={ra:.2} reach_b={rb:.2}");
+            }
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_double_count_check() {
+        let (st, par) = fixture_h(2.0, false);
+        let cells = ACellList::build(&st, 11.0);
+        let env = TrialEnv {
+            state: &st,
+            par: &par,
+            ghost: std::cell::RefCell::new(std::collections::HashSet::new()),
+        };
+        let sa: HashSet<(usize, usize, usize)> = HashSet::new();
+        let sd: HashSet<(usize, usize, usize, usize)> = HashSet::new();
+        let empty: HashSet<usize> = HashSet::new();
+        // carbon 2 (interior, 2 H's)
+        let c = 2usize;
+        let hs = non_backbone_neighbors(&st, c);
+        let hs_skip: HashSet<usize> = hs.iter().copied().collect();
+        let with = env.placed_bonded_weight(&st.pos, &[c], &sa, &sd, &empty, &[]);
+        let without = env.placed_bonded_weight(&st.pos, &[c], &sa, &sd, &hs_skip, &[]);
+        let hpart = env.placed_bonded_weight(&st.pos, &hs, &sa, &sd, &empty, &[]);
+        eprintln!("atom-only (no skip): {with:.3}");
+        eprintln!("atom-only (skip hs): {without:.3}");
+        eprintln!("hs part:             {hpart:.3}");
+        eprintln!("with - without = {:.3} (should equal hs part)", with - without);
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_h_fixture_weights() {
+        let (mut st, par) = fixture_h(2.0, true);
+        let tables = TypeTables::from_state(&st);
+        let cfg = CbmcConfig { n_regrow: 4, r_reach: 7.0, ..CbmcConfig::default() };
+        let mut rng = ChaCha8Rng::seed_from_u64(41);
+        let cells = ACellList::build(&st, 11.0);
+        let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+        eprintln!("candidates: {}", cands.len());
+        let pr = cands[0].clone();
+        for _ in 0..10 {
+            let out = cbmc_double_bridge(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, &mut rng);
+            eprintln!(
+                "acc={} w_new={:.2} w_old={:.2} lr={:.2}",
+                out.accepted, out.w_new, out.w_old, out.log_accept_ratio
+            );
+        }
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_mtm_h_positions() {
+        let (mut st, par) = fixture_h(2.0, true);
+        let tables = TypeTables::from_state(&st);
+        let cfg = CbmcConfig { n_regrow: 4, r_reach: 7.0, ..CbmcConfig::default() };
+        let mut rng = ChaCha8Rng::seed_from_u64(41);
+        let l = st.box_size;
+        for att in 0..400 {
+            let cells = ACellList::build(&st, 11.0);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+            if cands.is_empty() {
+                continue;
+            }
+            let pr = cands[rng.random_range(0..cands.len())].clone();
+            let pos_before = st.pos.clone();
+            let out = cbmc_double_bridge_mtm(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, 8, &mut rng);
+            if !out.accepted {
+                continue;
+            }
+            eprintln!("accept at {att}: pr = ({}, {}, {}, {})", pr.a, pr.b, pr.s, pr.flip);
+            for &(i, j, t) in &st.bonds.clone() {
+                if t != 2 {
+                    continue;
+                }
+                let rn = norm(min_img(sub(st.pos[i], st.pos[j]), l));
+                let ro = norm(min_img(sub(pos_before[i], pos_before[j]), l));
+                if (rn - ro).abs() > 1e-9 {
+                    let moved_by_transport = (2..7).contains(&i);
+                    eprintln!(
+                        "  C-H ({i},{j}): {ro:.4} -> {rn:.4}  carbon in tail[..4]? {}",
+                        moved_by_transport
+                    );
+                }
+            }
+        }
+        eprintln!("done");
+    }
+
+    #[test]
+    fn transport_preserves_r1() {
+        let (mut st, par) = fixture_h(2.0, true);
+        let tables = TypeTables::from_state(&st);
+        let cfg = CbmcConfig { n_regrow: 4, r_reach: 7.0, ..CbmcConfig::default() };
+        let mut rng = ChaCha8Rng::seed_from_u64(47);
+        let l = st.box_size;
+        for _ in 0..200 {
+            let cells = ACellList::build(&st, 11.0);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+            if cands.is_empty() {
+                continue;
+            }
+            let pr = cands[rng.random_range(0..cands.len())].clone();
+            let ch_before: Vec<f64> = st
+                .bonds
+                .iter()
+                .map(|&(i, j, _)| norm(min_img(sub(st.pos[i], st.pos[j]), l)))
+                .collect();
+            let out = cbmc_double_bridge(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, &mut rng);
+            if !out.accepted {
+                for (bi, &(i, j, t)) in st.bonds.iter().enumerate() {
+                    let r = norm(min_img(sub(st.pos[i], st.pos[j]), l));
+                    assert!((r - ch_before[bi]).abs() < 1e-9, "reject corrupted ({i},{j})");
+                }
+                continue;
+            }
+            for (bi, &(i, j, t)) in st.bonds.clone().iter().enumerate() {
+                if t != 2 {
+                    continue;
+                }
+                let r_new = norm(min_img(sub(st.pos[i], st.pos[j]), l));
+                if (r_new - ch_before[bi]).abs() >= 1e-9 {
+                    eprintln!("accept: bond ({i},{j}) r: {} -> {r_new}", ch_before[bi]);
+                    panic!("R=1 transport violated");
+                }
+            }
+            eprintln!("accept ok");
+            return;
+        }
+        eprintln!("no accepts in 200 (r1)");
+    }
+
+    #[test]
+    #[ignore]
+    fn debug_fixture_r016() {
+        let (st, _par) = fixture_h(2.0, true);
+        let l = st.box_size;
+        let r = norm(min_img(sub(st.pos[0], st.pos[16]), l));
+        eprintln!("fixture r(0,16) = {r}");
+        eprintln!("pos[0] = {:?}", st.pos[0]);
+        eprintln!("pos[16] = {:?}", st.pos[16]);
+    }
+
+    #[test]
+    fn reject_restores_exactly_seed41() {
+        let (mut st, par) = fixture_h(2.0, true);
+        let tables = TypeTables::from_state(&st);
+        let cfg = CbmcConfig { n_regrow: 4, r_reach: 7.0, ..CbmcConfig::default() };
+        let mut rng = ChaCha8Rng::seed_from_u64(41);
+        let l = st.box_size;
+        for att in 0..14 {
+            let cells = ACellList::build(&st, 11.0);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+            if cands.is_empty() {
+                continue;
+            }
+            let pr = cands[rng.random_range(0..cands.len())].clone();
+            let pos_before = st.pos.clone();
+            let bonds_before = st.bonds.clone();
+            let out = cbmc_double_bridge_mtm(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, 8, &mut rng);
+            if out.accepted {
+                eprintln!("att {att}: ACCEPTED");
+                continue;
+            }
+            for i in 0..pos_before.len() {
+                let d = norm(min_img(sub(st.pos[i], pos_before[i]), l));
+                assert!(d < 1e-12, "att {att}: reject moved atom {i} by {d}");
+            }
+            assert_eq!(st.bonds, bonds_before, "att {att}: reject changed topology");
+            eprintln!("att {att}: reject ok");
+        }
+    }
+
+    #[test]
+    #[ignore] // long stress test; run explicitly
+    fn transport_preserves_ch_and_frame_angle() {
+        // After accepted swaps, every transported H must keep its C-H
+        // length (rigid map) and its H-C-C angle to the frame-defining
+        // backbone bond.
+        let (mut st, par) = fixture_h(2.0, true); // soft: accepts happen
+        let tables = TypeTables::from_state(&st);
+        let cfg = CbmcConfig { n_regrow: 4, r_reach: 7.0, ..CbmcConfig::default() };
+        let mut rng = ChaCha8Rng::seed_from_u64(41);
+        let l = st.box_size;
+        let mut n_acc = 0;
+        for att in 0..300 {
+            let cells = ACellList::build(&st, 11.0);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
+            if cands.is_empty() {
+                continue;
+            }
+            let pr = cands[rng.random_range(0..cands.len())].clone();
+            // pair-keyed snapshot: apply_bridge rebuilds the bond list, so
+            // index-keyed comparison would misalign
+            let ch_before: std::collections::HashMap<(usize, usize), f64> = st
+                .bonds
+                .iter()
+                .map(|&(i, j, _)| {
+                    ((i.min(j), i.max(j)), norm(min_img(sub(st.pos[i], st.pos[j]), l)))
+                })
+                .collect();
+            let out = cbmc_double_bridge_mtm(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, 8, &mut rng);
+            if !out.accepted {
+                continue;
+            }
+            n_acc += 1;
+            for &(i, j, t) in &st.bonds.clone() {
+                if t != 2 {
+                    continue;
+                }
+                let r_new = norm(min_img(sub(st.pos[i], st.pos[j]), l));
+                let r_old = ch_before[&(i.min(j), i.max(j))];
+                if (r_new - r_old).abs() >= 1e-9 {
+                    eprintln!(
+                        "att {att}: bond ({i},{j}) types ({},{}) r: {r_old} -> {r_new}",
+                        st.types[i], st.types[j]
+                    );
+                    panic!("C-H not preserved");
+                }
+            }
+        }
+        assert!(n_acc > 0, "no accepts on the H fixture");
+        if n_acc >= 2 {
+            return; // early exit: preservation verified on accepts
+        }
+    }
+
+    #[test]
+    fn detailed_balance_rg_with_transport() {
+        // Distribution of chain Rg with vs without swaps on the
+        // H-bearing fixture (soft variant): the transport must preserve
+        // the equilibrium distribution.
+        let kbt = 0.9;
+        let run = |n_blocks: usize, with_swaps: bool, seed: u64| -> (f64, f64) {
+            let (mut st, par) = fixture_h(3.0, true);
+            let tables = TypeTables::from_state(&st);
+            let cfg = CbmcConfig { n_trials: 12, n_psi: 72, n_regrow: 5, r_reach: 8.5, ..CbmcConfig::default() };
+            let mut rng = ChaCha8Rng::seed_from_u64(seed);
+            let mut samples = Vec::new();
+            for _ in 0..n_blocks {
+                let eng = AtomisticEngine::new(st.clone(), par.clone(), kbt);
+                let mut mc = crate::atomistic_mc::AtomisticMC::new(
+                    eng,
+                    crate::atomistic_mc::AMcParams::default(),
+                );
+                mc.run(200, &mut rng);
+                st.pos = mc.engine.state.pos.clone();
+                if with_swaps {
+                    let cells = ACellList::build(&st, 11.0);
+                    let all: Vec<_> = (0..2)
+                        .flat_map(|a| {
+                            enumerate_cbmc_candidates(&st, &cells, a, cfg.r_reach, cfg.n_regrow, cfg.allow_flip)
+                        })
+                        .collect();
+                    if !all.is_empty() {
+                        let pr = all[rng.random_range(0..all.len())].clone();
+                        let n_fwd = all.len();
+                        cbmc_double_bridge_mtm(
+                            &mut st, &tables, &par, &pr, &cfg, kbt, n_fwd, 4, &mut rng,
+                        );
+                    }
+                }
+                let ch = &st.chains[0];
+                let l = st.box_size;
+                let mut p = vec![st.pos[ch[0]]];
+                for w in ch.windows(2) {
+                    let d = min_img(sub(st.pos[w[1]], st.pos[w[0]]), l);
+                    p.push(add(*p.last().unwrap(), d));
+                }
+                let com = p.iter().fold([0.0; 3], |a, &x| add(a, scale(x, 1.0 / p.len() as f64)));
+                let rg2 = p
+                    .iter()
+                    .map(|&x| {
+                        let d = sub(x, com);
+                        dot(d, d)
+                    })
+                    .sum::<f64>()
+                    / p.len() as f64;
+                samples.push(rg2.sqrt());
+            }
+            let m = samples.iter().sum::<f64>() / samples.len() as f64;
+            let v = samples.iter().map(|x| (x - m) * (x - m)).sum::<f64>()
+                / (samples.len() - 1) as f64;
+            (m, v)
+        };
+        let (m0, v0) = run(2000, false, 101);
+        let (m1, v1) = run(2000, true, 101);
+        eprintln!("Rg with transport: local {m0:.4} +- {v0:.4}; swaps {m1:.4} +- {v1:.4}");
+        let n_eff = 2000.0 / 20.0;
+        let se = ((v0 + v1) / n_eff).sqrt();
+        assert!((m0 - m1).abs() < 4.0 * se + 1e-6, "Rg differs: {m0} vs {m1}");
+    }
+
     #[test]
     fn bond_sampler_follows_boltzmann() {
         let (k, r0, kbt) = (268.0, 1.529, 0.9);
@@ -1353,7 +2252,7 @@ mod tests {
         // be finite — the circle closure always closes here.
         let (mut st, par) = fixture(2.0, false);
         let tables = TypeTables::from_state(&st);
-        let cfg = CbmcConfig::default();
+        let cfg = CbmcConfig { r_reach: 5.5, ..CbmcConfig::default() };
         let mut rng = ChaCha8Rng::seed_from_u64(13);
         let pr = BridgeProposal { a: 0, b: 1, s: 3, flip: false };
         let out = cbmc_double_bridge(&mut st, &tables, &par, &pr, &cfg, 0.9, 8, &mut rng);
@@ -1368,7 +2267,7 @@ mod tests {
         // state fully restored.
         let (mut st, par) = fixture(30.0, false);
         let tables = TypeTables::from_state(&st);
-        let cfg = CbmcConfig::default();
+        let cfg = CbmcConfig { r_reach: 5.5, ..CbmcConfig::default() };
         let mut rng = ChaCha8Rng::seed_from_u64(13);
         let pos_before = st.pos.clone();
         let bonds_before = st.bonds.clone();
@@ -1386,13 +2285,13 @@ mod tests {
         // outcome, the state must stay consistent.
         let (mut st, par) = fixture(2.0, false);
         let tables = TypeTables::from_state(&st);
-        let cfg = CbmcConfig::default();
+        let cfg = CbmcConfig { r_reach: 5.5, ..CbmcConfig::default() };
         let mut rng = ChaCha8Rng::seed_from_u64(17);
         for _ in 0..200 {
             let pos_before = st.pos.clone();
             let bonds_before = st.bonds.clone();
             let cells = ACellList::build(&st, 11.0);
-            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
             assert!(!cands.is_empty(), "fixture must have reach candidates");
             let pr = cands[rng.random_range(0..cands.len())].clone();
             let out =
@@ -1425,7 +2324,7 @@ mod tests {
         let run = |n_mtm: usize, rounds: usize, seed: u64| -> (usize, usize) {
             let (mut st, par) = fixture(2.0, false);
             let tables = TypeTables::from_state(&st);
-            let cfg = CbmcConfig::default();
+            let cfg = CbmcConfig { r_reach: 5.5, ..CbmcConfig::default() };
             let mut rng = ChaCha8Rng::seed_from_u64(seed);
             let mut att = 0usize;
             let mut acc = 0usize;
@@ -1440,7 +2339,7 @@ mod tests {
                 st.pos = mc.engine.state.pos.clone();
                 let cells = ACellList::build(&st, 11.0);
                 let cands =
-                    enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow);
+                    enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
                 if cands.is_empty() {
                     continue;
                 }
@@ -1473,11 +2372,11 @@ mod tests {
         // the ψ-conditional should essentially never produce strain.
         let (mut st, par) = fixture(2.0, false);
         let tables = TypeTables::from_state(&st);
-        let cfg = CbmcConfig::default();
+        let cfg = CbmcConfig { r_reach: 5.5, ..CbmcConfig::default() };
         let mut rng = ChaCha8Rng::seed_from_u64(29);
         for _ in 0..50 {
             let cells = ACellList::build(&st, 11.0);
-            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow);
+            let cands = enumerate_cbmc_candidates(&st, &cells, 0, cfg.r_reach, cfg.n_regrow, cfg.allow_flip);
             assert!(!cands.is_empty());
             let pr = cands[rng.random_range(0..cands.len())].clone();
             let out =
@@ -1523,7 +2422,7 @@ mod tests {
                 if with_swaps {
                     let cells = ACellList::build(&st, 11.0);
                     let cands: Vec<_> = (0..2)
-                        .map(|a| enumerate_cbmc_candidates(&st, &cells, a, cfg.r_reach, cfg.n_regrow))
+                        .map(|a| enumerate_cbmc_candidates(&st, &cells, a, cfg.r_reach, cfg.n_regrow, cfg.allow_flip))
                         .collect();
                     let all: Vec<_> = cands.into_iter().flatten().collect();
                     if !all.is_empty() {
