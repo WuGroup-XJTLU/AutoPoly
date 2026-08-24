@@ -540,6 +540,10 @@ pub fn enumerate_cbmc_candidates(
 /// (log Σ exp(logw), selected index).
 fn rosenbluth_select<R: Rng>(logw: &[f64], rng: &mut R) -> (f64, usize) {
     let lmax = logw.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+    if !lmax.is_finite() {
+        // every trial has zero weight (e.g. no sphere-sphere intersection)
+        return (f64::NEG_INFINITY, logw.len() - 1);
+    }
     let w: Vec<f64> = logw.iter().map(|&l| (l - lmax).exp()).collect();
     let wsum: f64 = w.iter().sum();
     let mut r = rng.random::<f64>() * wsum;
@@ -646,9 +650,11 @@ impl DecorData {
 
 enum PsiBias<'a> {
     /// Upstream atoms: quadratic pull toward the equilibrium remaining
-    /// span to the closure target. Heuristic, exactly compensated by the
-    /// Z_ψ factor in the Rosenbluth weight.
-    Guide { d: usize, r_opt: f64, k_guide: f64 },
+    /// span to the closure target, plus a one-sided wall keeping the
+    /// second-to-last atom inside the closure's intersection window.
+    /// Heuristic, exactly compensated by the Z_ψ factor in the
+    /// Rosenbluth weight.
+    Guide { d: usize, r_opt: f64, k_guide: f64, wall_d: f64 },
     /// Closing atom: the full ψ-dependent bonded terms + nonbonded.
     Close(&'a Closure),
 }
@@ -678,6 +684,14 @@ fn regrow_atom<R: Rng>(
     include: Option<[f64; 3]>,
     rng: &mut R,
 ) -> f64 {
+    // exact two-torsion closure replaces the guided cone path for the
+    // closing atom
+    if let PsiBias::Close(cl) = bias {
+        return regrow_closing_exact(
+            pos, atom, p1, p2, p3, bond_t, angle_t, dih_t, cl, env, cfg, kbt,
+            include, rng,
+        );
+    }
     let bs = bond_sampler(env.par.bond_k[bond_t], env.par.bond_r0[bond_t], kbt);
     let as_ = angle_sampler(env.par.angle_k[angle_t], env.par.angle_t0[angle_t], kbt);
     let l = env.l();
@@ -716,14 +730,18 @@ fn regrow_atom<R: Rng>(
             let q = circle(o, rho, psi);
             pos[atom] = q;
             let ub = match bias {
-                PsiBias::Guide { d, r_opt, k_guide } => {
+                PsiBias::Guide { d, r_opt, k_guide, wall_d } => {
                     let dist = norm(min_img(sub(q, pos[*d]), l));
                     let dev = dist - r_opt;
-                    // sterically aware guide: span pull + nonbonded, so
-                    // upstream atoms are not placed into LJ cores in a
-                    // dense melt (nonbonded is exactly compensated via
-                    // Z_ψ; u_rem drops it below)
-                    k_guide * dev * dev + env.nonbonded(pos, atom, &cells)
+                    // sterically aware guide: span pull + intersection
+                    // window wall + nonbonded (exactly compensated via
+                    // Z_ψ; u_rem drops the nonbonded below)
+                    let mut ub = k_guide * dev * dev;
+                    if dist > *wall_d {
+                        let w = dist - wall_d;
+                        ub += 200.0 * w * w;
+                    }
+                    ub + env.nonbonded(pos, atom, &cells)
                 }
                 PsiBias::Close(cl) => {
                     close_bias(env, pos, atom, p1, p2, p3, cl)
@@ -826,6 +844,122 @@ struct Closure {
     cd1_t: usize,         // dih p2-p1-q-d
     cd2_t: usize,         // dih p1-q-d-dn
     own_dt: Option<usize>, // dih q-p1-p2-p3
+}
+
+/// Exact two-torsion closure (Karayiannis-style, sphere-sphere form):
+/// the closing atom is placed on the intersection circle of the two
+/// spheres centered at q_{k-2} (radius r2, sampled from its bond prior)
+/// and at the anchor d (radius r3, the closure bond, sampled from its
+/// prior) — BOTH bonds are satisfied exactly. The circle angle χ is
+/// sampled from the conditional of all remaining closure terms (three
+/// angles, dihedrals, nonbonded). Rosenbluth weight per trial:
+/// log Z_χ − log(r2·r3·D), where the second term is the geometric
+/// measure of the (r2, r3, χ) parametrization (coarea formula:
+/// dq = (r2·r3/D) dχ dr2 dr3) relative to the r²-scaled bond priors.
+/// Trials whose spheres do not intersect get zero weight.
+#[allow(clippy::too_many_arguments)]
+fn regrow_closing_exact<R: Rng>(
+    pos: &mut Vec<[f64; 3]>,
+    atom: usize,
+    p1: usize,
+    p2: usize,
+    p3: Option<usize>,
+    bond_t: usize,
+    angle_t: usize,
+    dih_t: Option<usize>,
+    cl: &Closure,
+    env: &TrialEnv,
+    cfg: &CbmcConfig,
+    kbt: f64,
+    include: Option<[f64; 3]>,
+    rng: &mut R,
+) -> f64 {
+    let l = env.l();
+    let cutoff = env.par.lj_cut.max(env.par.coul_cut);
+    let cells = ACellList::build_from(pos, l, cutoff);
+    let bs2 = bond_sampler(env.par.bond_k[bond_t], env.par.bond_r0[bond_t], kbt);
+    let bs3 = bond_sampler(env.par.bond_k[cl.cb_t], env.par.bond_r0[cl.cb_t], kbt);
+    let n = cfg.n_trials + include.is_some() as usize;
+    let dchi = 2.0 * std::f64::consts::PI / cfg.n_psi as f64;
+    let dvec = min_img(sub(pos[cl.d], pos[p1]), l);
+    let dist_d = norm(dvec);
+    let u_ax = if dist_d > 1e-12 { scale(dvec, 1.0 / dist_d) } else { [1.0, 0.0, 0.0] };
+    let e1c = arb_perp(u_ax);
+    let e2c = unit(cross(u_ax, e1c));
+    let mut logw = Vec::with_capacity(n);
+    let mut pts = Vec::with_capacity(n);
+    let saved = pos[atom];
+    for t in 0..n {
+        let (r2, r3, included_q) = match include {
+            Some(q) if t == n - 1 => {
+                let r2 = norm(min_img(sub(q, pos[p1]), l));
+                let r3 = norm(min_img(sub(q, pos[cl.d]), l));
+                (r2, r3, Some(q))
+            }
+            _ => (bs2.sample(rng), bs3.sample(rng), None),
+        };
+        // sphere-sphere intersection circle
+        if std::env::var("CBMC_DEBUG").is_ok() && t < 3 {
+            eprintln!("      closing atom {atom} t{t}: D={dist_d:.3} r2={r2:.3} r3={r3:.3}");
+        }
+        let a = (r2 * r2 - r3 * r3 + dist_d * dist_d) / (2.0 * dist_d.max(1e-12));
+        let rho2 = r2 * r2 - a * a;
+        if rho2 <= 0.0 || dist_d < (r2 - r3).abs() || dist_d > r2 + r3 || dist_d < 1e-9 {
+            logw.push(f64::NEG_INFINITY);
+            pts.push(saved);
+            continue;
+        }
+        let rho = rho2.sqrt();
+        let center = add(pos[p1], scale(u_ax, a));
+        if std::env::var("CBMC_DEBUG").is_ok() && t == 0 {
+            eprintln!("      closing atom {atom}: D={dist_d:.3} r2={r2:.3} r3={r3:.3}");
+        }
+        // χ conditional over all remaining closure terms
+        let mut logc = Vec::with_capacity(cfg.n_psi);
+        let mut qps = Vec::with_capacity(cfg.n_psi);
+        for m in 0..cfg.n_psi {
+            let chi = (m as f64 + 0.5) * dchi;
+            let q = wrap(
+                add(center, add(scale(e1c, rho * chi.cos()), scale(e2c, rho * chi.sin()))),
+                l,
+            );
+            pos[atom] = q;
+            let mut u = env.angle_e(pos, p2, p1, atom, angle_t);
+            u += env.angle_e(pos, p1, atom, cl.d, cl.ca1_t);
+            if let Some(dn) = cl.dn {
+                u += env.angle_e(pos, atom, cl.d, dn, cl.ca2_t);
+                u += env.dih_e(pos, p1, atom, cl.d, dn, cl.cd2_t);
+            }
+            u += env.dih_e(pos, p2, p1, atom, cl.d, cl.cd1_t);
+            if let (Some(q3), Some(dt)) = (p3, dih_t) {
+                u += env.dih_e(pos, atom, p1, p2, q3, dt);
+            }
+            u += env.nonbonded(pos, atom, &cells);
+            logc.push(-u / kbt);
+            qps.push(q);
+        }
+        let lcmax = logc.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let zsum: f64 = logc.iter().map(|&x| (x - lcmax).exp()).sum();
+        let log_zchi = lcmax + (dchi * zsum).ln();
+        let q = match included_q {
+            Some(q) => q,
+            None => {
+                let (_, msel) = rosenbluth_select(&logc, rng);
+                qps[msel]
+            }
+        };
+        pos[atom] = q;
+        logw.push(log_zchi - (r2 * r3 * dist_d).ln());
+        pts.push(q);
+        pos[atom] = saved;
+    }
+    let (log_w, sel) = rosenbluth_select(&logw, rng);
+    if include.is_none() {
+        pos[atom] = pts[sel];
+    } else {
+        pos[atom] = saved;
+    }
+    log_w
 }
 
 /// All ψ-dependent bonded terms of the closing atom (the ψ-bias energy).
@@ -1080,13 +1214,20 @@ fn regrow_segment<R: Rng>(
         let at = resolve_angle(tables, state, a2, a1, atom);
         let include = retrace_pos.map(|rp| rp[atom]);
         // upstream atoms are ψ-guided toward the equilibrium span to the
-        // closure target for the number of bonds remaining after this
-        // atom (atom i: k-1-i bonds -> guide_span[k-1-i]).
+        // closure target for the number of bonds from this atom to the
+        // anchor (atom i: k-i bonds -> guide_span[k-i]; the second-to-last
+        // atom must sit at the TWO-bond span 2.55, not 1.53 — one index
+        // too small under-extends the whole regrowth).
+        // the second-to-last atom (i = k-2) must stay inside the
+        // sphere-sphere intersection window (D <= ~2.95) or the exact
+        // closure has no solution; other upstream atoms get no wall.
+        let wall_d = if i == k - 2 { 2.95 } else { f64::INFINITY };
         let bias = if i < k - 1 {
             PsiBias::Guide {
                 d,
-                r_opt: cfg.guide_span[k - 1 - i],
+                r_opt: cfg.guide_span[k - i],
                 k_guide: cfg.guide_k,
+                wall_d,
             }
         } else {
             PsiBias::Close(&cl)
