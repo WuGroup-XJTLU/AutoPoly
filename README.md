@@ -601,6 +601,16 @@ If you use AutoPoly in your research, please cite:
 }
 ```
 
+## Acknowledgements
+
+The **Reactor** module (reactive MD via `fix bond/react`) is adapted from
+[AutoREACTER](https://github.com/NanoCIPHER-Lab/AutoREACTER) (NanoCIPHER
+Lab, MIT license): the reaction-detection logic, functional-group SMARTS
+library, reaction library, and template-walking algorithm are
+reimplementations of AutoREACTER's `ReactionDetector`, `PrepareReactions`,
+and `walker` modules, integrated into AutoPoly's own typing and packing
+pipeline. If you use the Reactor in your work, please also cite AutoREACTER.
+
 ## License
 
 MIT License - see [license.md](license.md) for details.
