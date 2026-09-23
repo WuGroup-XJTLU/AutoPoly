@@ -377,8 +377,11 @@ cd reactor_out/melt && lmp -in in.bond_react
 
 Supported reaction families include polyesterification, polyamidation,
 polyurethane formation, and polyanhydride/polythioester condensation, with a
-custom reaction/functional-group library API. Inspired by
-[AutoREACTER](https://github.com/NanoCIPHER-Lab/AutoREACTER).
+custom reaction/functional-group library API. The reaction and
+functional-group SMARTS libraries and the reaction detection/mapping logic
+are adapted from [AutoREACTER](https://github.com/NanoCIPHER-Lab/AutoREACTER)
+(NanoCIPHER Lab, MIT License); the AutoREACTER copyright notice and license
+text are reproduced in [AutoPoly/reactor/LICENSE](AutoPoly/reactor/LICENSE).
 
 [Full example: examples/example_reactor_polyester.py →](examples/example_reactor_polyester.py) · [Guide: Reactive MD →](https://wugroup-xjtlu.github.io/AutoPoly/guides/reactor/)
 
@@ -600,6 +603,20 @@ If you use AutoPoly in your research, please cite:
   url={https://github.com/WuGroup-XJTLU/AutoPoly}
 }
 ```
+
+## Acknowledgements
+
+The **Reactor** module (reactive MD via `fix bond/react`) contains code
+adapted from [AutoREACTER](https://github.com/NanoCIPHER-Lab/AutoREACTER)
+(NanoCIPHER Lab, MIT License): the functional-group SMARTS library, the
+reaction library, the reaction-detection logic, and the template-walking
+algorithm reimplement AutoREACTER's `functional_groups_library`,
+`reactions_library`, `ReactionDetector`, `PrepareReactions`, and `walker`
+modules, integrated into AutoPoly's own typing and packing pipeline. The
+AutoREACTER copyright notice and full MIT license text are reproduced in
+[AutoPoly/reactor/LICENSE](AutoPoly/reactor/LICENSE) and in the header
+comments of the affected modules. If you use the Reactor in your work,
+please also cite AutoREACTER.
 
 ## License
 

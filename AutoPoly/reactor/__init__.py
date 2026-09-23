@@ -14,6 +14,14 @@ Public API:
 - :func:`detect_monomer_roles`, :func:`detect_reactions`,
   :func:`prepare_reactions` — stage-level helpers for custom workflows.
 
+Portions of this package (``functional_groups``, ``reaction_library``,
+``detector``, ``mapper``, and ``reactor`` modules) contain code copied or
+adapted from the AutoREACTER project
+(https://github.com/NanoCIPHER-Lab/AutoREACTER), Copyright (c) 2026 Janitha
+Mahanthe, used under the MIT License. The AutoREACTER copyright notice and
+full license text are reproduced in the ``LICENSE`` file in this directory
+and in the header comments of the affected modules.
+
 Created on 2026-08-04
 @author: zwu
 """
