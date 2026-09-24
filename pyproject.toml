@@ -55,6 +55,14 @@ docs = [
     "mkdocstrings[python]>=0.26.0",
     "pymdown-extensions>=10.0",
 ]
+# Optional OpenFF (SMIRNOFF) force field backend with NAGL GNN charges.
+# openff-nagl depends on DGL, which has no Python 3.13 wheels — on 3.13 the
+# toolkit alone still works with charge_method="gasteiger". The recommended
+# install is conda: conda install -c conda-forge openff-toolkit openff-nagl
+openff = [
+    "openff-toolkit>=0.16.6",
+    "openff-nagl>=0.5.2; python_version<'3.13'",
+]
 
 [project.urls]
 Homepage = "https://github.com/WuGroup-XJTLU/AutoPoly"

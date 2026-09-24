@@ -1,6 +1,6 @@
 # Force Fields
 
-AutoPoly supports six force fields. Pass one as the `force_field` string to `generate`:
+AutoPoly supports six built-in force fields plus an optional OpenFF backend. Pass one as the `force_field` string to `generate`:
 
 | Force Field | Value | Best For | Limitations |
 |------------|-------|----------|-------------|
@@ -10,6 +10,7 @@ AutoPoly supports six force fields. Pass one as the `force_field` string to `gen
 | **GAFF2** | `"gaff2"` | Updated GAFF, improved parameters | Newer, less extensively tested |
 | **DREIDING** | `"dreiding"` | Generic systems, metals, inorganics | Generic parameters, less accurate for organics |
 | **COMPASS** | `"compass"` | Commercial polymers, condensed phases | Class II — needs the LAMMPS CLASS2 package |
+| **OpenFF (Sage)** | `"openff"` | SMIRNOFF direct chemical perception, broad organic coverage | Optional dependency (openff-toolkit; NAGL needs Python ≤ 3.12); no `topology="ring"` yet; not supported by the reactor |
 
 ## The force fields in detail
 
@@ -46,6 +47,34 @@ A generic force field with near-universal element coverage, including metals and
 A Class II force field (with cross-terms) validated extensively against commercial polymers — excellent densities and mechanical properties for polyolefins, polyesters, and polyamides. Requires LAMMPS built with the CLASS2 package.
 
 *Citation: Sun, J. Phys. Chem. B 1998, 102, 7338–7364.*
+
+### OpenFF (Sage) — `"openff"` (optional)
+
+The [Open Force Field](https://github.com/openforcefield/openff-toolkit) SMIRNOFF force field (Sage family) — parameters are assigned by direct chemical perception (SMARTS matching on the whole molecule) instead of fixed atom types, and partial charges come from the [NAGL](https://github.com/openforcefield/openff-nagl) graph neural network (AM1-BCC quality, no QM needed). A good choice for novel chemistries where type-based tables lack coverage, and when you want AM1-BCC-like charges without an AmberTools license.
+
+```python
+generate(system, "peo_openff", [polymer], force_field="openff")
+# optional overrides:
+# generate(..., force_field="openff",
+#          typer_options={"offxml": "openff-2.2.1.offxml",
+#                         "charge_method": "nagl"})   # "am1bcc" | "gasteiger"
+```
+
+Install separately (not an AutoPoly dependency):
+
+```bash
+conda install -c conda-forge openff-toolkit openff-nagl   # recommended
+# or: pip install "AutoPoly[openff]"
+```
+
+Notes:
+
+- **Charges**: NAGL GNN by default; `charge_method="am1bcc"` (AmberTools) or `"gasteiger"` (RDKit) are fallbacks. Gasteiger is the only option on Python 3.13, where NAGL's DGL dependency has no wheels.
+- **Ring polymers** (`topology="ring"`) are not supported yet (raises `ValidationError`).
+- The **reactor** (bond-breaking workflows) does not support `openff`.
+- Under the hood each system gets a generated `openff.lt` parameter file and all bonded terms are written explicitly (no "By Type" inference), so the LAMMPS output contains exactly the interactions SMIRNOFF assigned.
+
+*Citations: Mobley et al., J. Chem. Theory Comput. 2018, 14, 6076–6092 (SMIRNOFF); Boothroyd et al., J. Chem. Theory Comput. 2023, 19, 3566–3576 (Sage).*
 
 ## Choosing: a decision tree
 

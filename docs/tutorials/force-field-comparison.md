@@ -1,6 +1,6 @@
 # Force Field Comparison
 
-The same polymer — poly(ethylene oxide), 10 chains of 10 monomers — built with **all six supported force fields** in one script. This is the fastest way to see how force field choice changes the generated files.
+The same polymer — poly(ethylene oxide), 10 chains of 10 monomers — built with **all six built-in force fields** in one script. This is the fastest way to see how force field choice changes the generated files.
 
 | Force field | Notes |
 |---|---|
@@ -10,6 +10,7 @@ The same polymer — poly(ethylene oxide), 10 chains of 10 monomers — built wi
 | `gaff2` | Updated GAFF |
 | `dreiding` | Generic; requires external charges for production |
 | `compass` | Class II; requires LAMMPS built with the CLASS2 package |
+| `openff` | SMIRNOFF (Sage) + NAGL GNN charges; optional install (`conda install -c conda-forge openff-toolkit openff-nagl`), see `example_peo_openff.py` |
 
 You will learn:
 

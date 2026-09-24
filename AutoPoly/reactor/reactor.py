@@ -111,6 +111,13 @@ class Reactor:
         self.init_path = self.project_dir / "system.in.init"
 
         self.force_field = force_field or self._infer_force_field()
+        if self.force_field == "openff":
+            raise GenerationError(
+                "Reactor does not support force_field='openff' yet: the "
+                "reactor's force-field tables parser and SMARTS typing expect "
+                "a type-based force field (oplsaa/lopls/gaff/gaff2/dreiding/"
+                "compass)."
+            )
         self._monomer_inputs = monomers
 
         # Parsed lazily by build(); exposed for inspection/tests

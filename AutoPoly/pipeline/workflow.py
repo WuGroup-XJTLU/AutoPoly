@@ -47,6 +47,7 @@ def generate(
     substrate: Optional[SubstrateSpec] = None,
     subtract: Optional[list] = None,
     box_dims: Optional[tuple] = None,
+    typer_options: Optional[dict] = None,
 ) -> PlacementResult:
     """
     Generate a complete LAMMPS system in one call (three-stage pipeline).
@@ -87,6 +88,11 @@ def generate(
         box_dims: Optional per-axis box sides (lx, ly, lz) in Angstrom;
             any element may be None (auto-sized). Overrides box_size per
             axis where given.
+        typer_options: Optional force-field-specific typing options, forwarded
+            to the stage-2 typer. Currently only used for
+            force_field="openff" (OpenFFTyper kwargs: ``offxml``,
+            ``charge_method`` ("nagl"/"am1bcc"/"gasteiger"), ``nagl_model``,
+            ``neutralize``).
 
     Returns:
         PlacementResult from the packing stage.
@@ -123,7 +129,9 @@ def generate(
         ).build(models, substrate_models=substrate_models)
 
         # Stage 2: force-field typing on the stored geometry
-        units = UnitTyper(geometry_result.dir, force_field).type()
+        units = UnitTyper(
+            geometry_result.dir, force_field, typer_options=typer_options
+        ).type()
 
         # Stage 3: box packing + moltemplate
         result = BoxPacker(

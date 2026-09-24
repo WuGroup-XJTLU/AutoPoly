@@ -13,7 +13,11 @@ Beyond the bulk-melt default, `generate()` also accepts:
 - `subtract=[CutAbove(...) / Cylinder(...) / ...]` — whole-instance carve
   regions applied after placement;
 - `box_dims=(lx, ly, lz)` — rectangular boxes (per-axis auto-sizing with
-  `None`).
+  `None`);
+- `typer_options={...}` — force-field-specific typing options. Used by
+  `force_field="openff"`: `{"offxml": "openff-2.2.1.offxml",
+  "charge_method": "nagl"}` (charge backends: `"nagl"` default,
+  `"am1bcc"`, `"gasteiger"`).
 
 See the [Substrates & Films guide](../guides/substrates.md) for the full
 surface-simulation workflow.

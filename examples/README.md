@@ -29,6 +29,7 @@ Output directories are git-ignored — just re-run a script to regenerate them.
 | `example_gasteiger_charges.py` | PMMA | GAFF | Automatic Gasteiger charge assignment |
 | `example_commodity_polymers_10.py` | PE, PP, PS, PVC, PVAc, PMMA, PAN, PB, PI, PEO | OPLS-AA | Batch generation of 10 polymers, CLI selection |
 | `example_peo_all_forcefields.py` | PEO | all 6 | Force field comparison (oplsaa, lopls, gaff, gaff2, dreiding, compass) |
+| `example_peo_openff.py` | PEO | OpenFF (Sage) | Optional backend: SMIRNOFF typing + NAGL GNN charges (needs openff-toolkit) |
 | `example_peo_mc_placement.py` | PEO | OPLS-AA | Placement methods: grid vs MC random vs MC chain growth |
 | `example_film_on_substrate.py` | PE film on ethanol slab | GAFF | **Surfaces:** physical substrate (`SubstrateSpec`), `box_dims`, carve subtract (`Cylinder`) |
 | `example_film_on_quartz.py` | PE film on alpha-quartz(0001) | GAFF | **Built-in silica:** `builder="alpha_quartz"`, hydroxylated Q2 slab, INTERFACE FF |
@@ -132,6 +133,7 @@ See `example_pla_condensation.py`.
 | `lopls` | Long hydrocarbon chains | Optimized for alkanes |
 | `dreiding` | Generic/organic | Requires external charges |
 | `compass` | Class II systems | Requires LAMMPS CLASS2 package |
+| `openff` | SMIRNOFF (Sage) typing, novel chemistries | Optional: `conda install -c conda-forge openff-toolkit openff-nagl`; NAGL GNN charges by default (see `example_peo_openff.py`) |
 
 Gasteiger charges are assigned automatically (see
 `example_gasteiger_charges.py`). For production runs, replace them with
