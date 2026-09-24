@@ -223,10 +223,28 @@ class BoxPacker:
         if self.substrate is not None and self.substrate.is_builder:
             self._build_substrate_slab(units.force_field)
 
+    def _ff_lt_for_styles(self, force_field: str) -> Optional[Path]:
+        """
+        Path of the force field .lt whose style declarations to read.
+
+        For openff this is the per-system file generated into the build dir
+        and copied here by _prepare_moltemplate_dir (no bundled extern file
+        exists). Returns None when unavailable.
+        """
+        if force_field == "openff":
+            generated = self.moltemplate_dir / FORCE_FIELD_REGISTRY[force_field]["lt_file"]
+            return generated if generated.is_file() else None
+        return (
+            Path(self.path_master) / "moltemplate" / "force_fields"
+            / FORCE_FIELD_REGISTRY[force_field]["lt_file"]
+        )
+
     def _film_bond_substyle(self, force_field: str) -> Optional[str]:
         """'harmonic' if the film force field uses a hybrid bond style."""
-        entry = FORCE_FIELD_REGISTRY[force_field]
-        ff_lt = Path(self.path_master) / "moltemplate" / "force_fields" / entry["lt_file"]
+        if force_field == "openff" and self._ff_lt_for_styles(force_field) is None:
+            # openff.lt always declares 'bond_style hybrid harmonic'.
+            return "harmonic"
+        ff_lt = self._ff_lt_for_styles(force_field)
         for line in ff_lt.read_text().splitlines():
             ls = line.strip()
             if ls.startswith("bond_style") and not ls.startswith("#"):
@@ -243,8 +261,11 @@ class BoxPacker:
         pair coefficients in the data file, which the slab writers do
         not support.
         """
-        entry = FORCE_FIELD_REGISTRY[force_field]
-        ff_lt = Path(self.path_master) / "moltemplate" / "force_fields" / entry["lt_file"]
+        if force_field == "openff" and self._ff_lt_for_styles(force_field) is None:
+            # openff.lt always declares a hybrid pair style with an LJ
+            # sub-style (lj/charmm/coul/long or lj/cut/coul/long).
+            return "lj/charmm/coul/long"
+        ff_lt = self._ff_lt_for_styles(force_field)
         pair_style = ""
         for line in ff_lt.read_text().splitlines():
             ls = line.strip()
@@ -263,7 +284,7 @@ class BoxPacker:
                     return token
             raise WorkflowError(
                 f"Could not find an LJ sub-style in the pair_style line "
-                f"of {entry['lt_file']}: '{pair_style}'"
+                f"of {ff_lt.name}: '{pair_style}'"
             )
         return None
 
@@ -512,7 +533,7 @@ run             10000
         """Run moltemplate and validate the output."""
         logger.info("Running moltemplate")
         self.invoke_moltemplate()
-        self._validate_moltemplate_output()
+        self._validate_moltemplate_output(force_field)
         self._check_required_files()
         self._log_gaff_charges_warning(force_field)
 
@@ -552,7 +573,7 @@ run             10000
         except Exception as e:
             raise WorkflowError(f"Error running Moltemplate: {str(e)}") from e
 
-    def _validate_moltemplate_output(self) -> None:
+    def _validate_moltemplate_output(self, force_field: str = "") -> None:
         """Validate that moltemplate created the required output files."""
         output_ttree_dir = self.moltemplate_dir / "output_ttree"
         if not output_ttree_dir.exists():
@@ -561,7 +582,10 @@ run             10000
                 f"{output_ttree_dir}"
             )
 
-        required_data_files = ["Data Atoms", "Data Bond List"]
+        # openff builds write typed "Data Bonds" sections (never the untyped
+        # "Data Bond List"), so the required bond section differs by FF.
+        bond_section = "Data Bonds" if force_field == "openff" else "Data Bond List"
+        required_data_files = ["Data Atoms", bond_section]
         missing_data_files = []
 
         for data_file in required_data_files:

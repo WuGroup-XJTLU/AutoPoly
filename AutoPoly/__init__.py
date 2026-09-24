@@ -70,6 +70,7 @@ __all__ = [
     "get_strategy",
     "Reactor",
     "ReactorResult",
+    "OpenFFTyper",
     "mc",
     "__version__",
     "__author__",
@@ -115,6 +116,10 @@ try:
     )
     from .reactor import Reactor, ReactorResult
     from . import mc
+    # OpenFFTyper imports the openff packages lazily (only when used), so the
+    # class itself is always importable; parameterization without the optional
+    # openff-toolkit installed raises GenerationError with install hints.
+    from .forcefields.openff_typing import OpenFFTyper
 except ImportError as e:
     import warnings
     warnings.warn(
@@ -128,4 +133,5 @@ except ImportError as e:
     generate = None
     Reactor = None
     ReactorResult = None
+    OpenFFTyper = None
     mc = None

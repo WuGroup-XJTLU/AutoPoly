@@ -447,7 +447,8 @@ The [examples directory](examples/) contains 18 runnable scripts covering:
 - **Condensation polymers** — PLA with GAFF ([example_pla_condensation.py](examples/example_pla_condensation.py))
 - **Polymer solutions** — PEO in explicit water ([example_peo_solution.py](examples/example_peo_solution.py))
 - **Batch generation** — 10 commodity polymers ([example_commodity_polymers_10.py](examples/example_commodity_polymers_10.py))
-- **Force field comparison** — all 6 force fields on PEO ([example_peo_all_forcefields.py](examples/example_peo_all_forcefields.py))
+- **Force field comparison** — all 6 built-in force fields on PEO ([example_peo_all_forcefields.py](examples/example_peo_all_forcefields.py))
+- **OpenFF (SMIRNOFF)** — PEO with Sage parameters + NAGL GNN charges (optional backend) ([example_peo_openff.py](examples/example_peo_openff.py))
 - **Placement methods** — grid vs MC random vs MC chain growth ([example_peo_mc_placement.py](examples/example_peo_mc_placement.py))
 - **Bead-spring models** — coarse-grained homo/block/ring polymers ([example_bead_spring.py](examples/example_bead_spring.py))
 - **Bead-spring architectures** — comb/graft with side groups, MonomerTemplate, moltemplate backend ([example_bead_spring_side_groups.py](examples/example_bead_spring_side_groups.py))
@@ -515,6 +516,7 @@ generate(
 | GAFF2 | `"gaff2"` | Updated GAFF |
 | DREIDING | `"dreiding"` | Generic, metals, inorganics |
 | COMPASS | `"compass"` | Commercial polymers |
+| OpenFF (Sage) | `"openff"` | SMIRNOFF direct perception + NAGL GNN charges (optional install) |
 
 [Force field selection guide →](https://wugroup-xjtlu.github.io/AutoPoly/guides/force-fields/)
 
@@ -580,7 +582,7 @@ lmp -in your_run.in   # with: include system.in.init / system.in.settings
 **Documentation:**
 - 📖 [Complete API Reference](https://wugroup-xjtlu.github.io/AutoPoly/reference/) - All classes and methods
 - 🧬 [Complement SMILES Guide](https://wugroup-xjtlu.github.io/AutoPoly/guides/complement-smiles/) - Deep dive on SMILES format
-- ⚙️ [Force Field Guide](https://wugroup-xjtlu.github.io/AutoPoly/guides/force-fields/) - Detailed comparison of all 6 force fields
+- ⚙️ [Force Field Guide](https://wugroup-xjtlu.github.io/AutoPoly/guides/force-fields/) - Detailed comparison of all 6 built-in force fields + the optional OpenFF backend
 - 🐛 [Troubleshooting](https://wugroup-xjtlu.github.io/AutoPoly/guides/troubleshooting/) - Solutions to common issues
 - 📝 [Examples Directory](examples/) - 18 working examples
 
@@ -600,6 +602,16 @@ If you use AutoPoly in your research, please cite:
   url={https://github.com/WuGroup-XJTLU/AutoPoly}
 }
 ```
+
+## Acknowledgements
+
+The **Reactor** module (reactive MD via `fix bond/react`) is adapted from
+[AutoREACTER](https://github.com/NanoCIPHER-Lab/AutoREACTER) (NanoCIPHER
+Lab, MIT license): the reaction-detection logic, functional-group SMARTS
+library, reaction library, and template-walking algorithm are
+reimplementations of AutoREACTER's `ReactionDetector`, `PrepareReactions`,
+and `walker` modules, integrated into AutoPoly's own typing and packing
+pipeline. If you use the Reactor in your work, please also cite AutoREACTER.
 
 ## License
 

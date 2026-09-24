@@ -26,7 +26,7 @@ Output directories are git-ignored — just re-run a script to regenerate them.
 | [Condensation Polymer (PLA)](pla-condensation.md) | PLA | GAFF | Step-growth polymers, ester backbone |
 | `example_gasteiger_charges.py` | PMMA | GAFF | Automatic Gasteiger charge assignment |
 | `example_commodity_polymers_10.py` | 10 commodity polymers | OPLS-AA | Batch generation, CLI selection |
-| [Force Field Comparison](force-field-comparison.md) | PEO | all 6 | The six force fields side by side |
+| [Force Field Comparison](force-field-comparison.md) | PEO | all 6 | The six built-in force fields side by side (OpenFF: see `example_peo_openff.py`) |
 | [MC Placement Methods](mc-placement.md) | PEO | OPLS-AA | grid vs MC random vs MC chain growth |
 
 ### Molecules and mixtures

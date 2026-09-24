@@ -43,6 +43,8 @@ FORCE_FIELD_DESCRIPTIONS = {
     "gaff2": "GAFF2. Updated GAFF with improved parameters.",
     "dreiding": "DREIDING. Generic, element-based. Good for unusual chemistry.",
     "compass": "COMPASS. Optimized for condensed-phase properties.",
+    "openff": "OpenFF SMIRNOFF (Sage). Direct chemical perception; NAGL GNN "
+              "charges by default. Optional: requires openff-toolkit.",
 }
 
 # Central registry of per-force-field file/class mappings.
@@ -78,6 +80,15 @@ FORCE_FIELD_REGISTRY = {
         "lt_file": "compass_published.lt",
         "inherits": "COMPASS",
         "fdefn": "compass_lt.fdefn",
+    },
+    # OpenFF is different in kind: no static .lt ships in extern/ and no
+    # .fdefn SMARTS table is used. Typing runs through the openff-toolkit
+    # (label_molecules) in pipeline/typing.py, which *generates* a per-system
+    # openff.lt into the build directory (see forcefields/openff_typing.py).
+    "openff": {
+        "lt_file": "openff.lt",
+        "inherits": "OPENFF",
+        "fdefn": None,
     },
 }
 

@@ -52,7 +52,7 @@ class TestGenerateWiring:
 
         # Stage 2: typing runs on the stage-1 geometry dir with the force field
         stages["typer_cls"].assert_called_once_with(
-            stages["geometry_result"].dir, "oplsaa"
+            stages["geometry_result"].dir, "oplsaa", typer_options=None
         )
 
         # Stage 3: packing consumes the stage-2 units

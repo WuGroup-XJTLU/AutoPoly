@@ -240,7 +240,14 @@ class SMARTSTyper:
 
         # Locate .fdefn file for this force field
         module_dir = Path(__file__).parent.parent
-        fdef_name = FORCE_FIELD_FDEFN.get(force_field, FORCE_FIELD_FDEFN['oplsaa'])
+        fdef_name = FORCE_FIELD_FDEFN.get(force_field)
+        if fdef_name is None:
+            raise AtomTypingError(
+                f"SMARTSTyper does not support force field '{force_field}'. "
+                f"Supported: {sorted(FORCE_FIELD_FDEFN)}. "
+                "(force_field='openff' is typed by the OpenFFTyper in the "
+                "pipeline typing stage, not by SMARTS tables.)"
+            )
         self.fdef_path = str(module_dir / 'extern' / 'rdlt_data' / fdef_name)
         
         # Load charge dictionary
@@ -1218,6 +1225,12 @@ def write_lt_header(f, class_name: str, force_field: str) -> None:
         f.write('import "loplsaa.lt"    # <-- defines the L-OPLS force field (long chains)\n')
         f.write('# L-OPLS: Sui et al., J.Chem.Theory.Comp (2012), 8(4), 1459\n')
         f.write(f'{class_name} inherits OPLSAA {{\n\n')
+    elif force_field == 'openff':
+        f.write('import "openff.lt"    # <-- per-system SMIRNOFF parameters (generated)\n')
+        f.write('# NOTE: bonded terms are written explicitly below (typed by the\n')
+        f.write('#       openff-toolkit via direct chemical perception); charges\n')
+        f.write('#       are per-atom (NAGL GNN by default).\n')
+        f.write(f'{class_name} inherits OPENFF {{\n\n')
     else:
         f.write('import "oplsaa.lt"    # <-- defines the OPLS-AA force field\n')
         f.write(f'{class_name} inherits OPLSAA {{\n\n')
