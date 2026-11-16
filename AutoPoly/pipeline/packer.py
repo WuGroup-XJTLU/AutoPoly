@@ -16,6 +16,10 @@ The BoxPacker:
 4. Runs the selected packing strategy -> system.lt
 5. Runs moltemplate (-nocheck), validates output, post-processes
    (get_rid_of_lj_cut_coul_long, mv_files)
+6. Inorganic components: writes explicit organic-inorganic cross pair
+   coefficients (fillers), component groups (system.in.groups) from the
+   moltemplate instance assignments, a run template (in.run) and the
+   force-field compatibility report (ff_compatibility.json/.md)
 
 Created on 2026-07-30
 @author: zwu
@@ -65,6 +69,7 @@ class BoxPacker:
         substrate: Optional[object] = None,
         subtract: Optional[list] = None,
         box_dims: Optional[tuple] = None,
+        packing: Optional[object] = None,
     ) -> None:
         """
         Args:
@@ -85,6 +90,8 @@ class BoxPacker:
             box_dims: Optional per-axis box sides (lx, ly, lz) in Angstrom;
                       any element may be None (auto-sized). Overrides
                       box_size per axis where given.
+            packing: Optional strategy configuration (NanocompositePacking
+                      for "nanocomposite_mc").
 
         Raises:
             ValidationError: If the strategy name is not registered.
@@ -104,6 +111,7 @@ class BoxPacker:
         self.substrate = substrate
         self.subtract = subtract
         self.box_dims = box_dims
+        self.packing = packing
 
         self.path_master = str(Path(__file__).parent.parent.resolve() / "extern/")
         self.path_moltemplatesrc = str(
@@ -129,6 +137,7 @@ class BoxPacker:
         """
         units = self._load_units(build)
         build_dir = self._resolve_build_dir(build)
+        self._inorganic_only = bool(units.units) and not units.organic_units
 
         # 1. Fresh moltemplate dir + copy typed .lt files from build/<ff>/
         self._prepare_moltemplate_dir(units, build_dir)
@@ -146,9 +155,17 @@ class BoxPacker:
             self._patch_in_init_styles()
             logger.info("Processing output files")
             get_rid_of_lj_cut_coul_long(self.moltemplate_dir)
+            cross = None
+            if units.filler_units:
+                cross = self._write_cross_terms(units)
             mv_files(self.moltemplate_dir)
             if self.substrate is not None:
                 self._write_run_script(result)
+            if units.filler_units:
+                groups = self._write_component_groups(units, result)
+                self._write_nanocomposite_run_script(units, result, groups)
+            if units.inorganic_units:
+                self._write_ff_report(units, result, cross)
 
         logger.info("Successfully completed polymer generation")
         return result
@@ -202,11 +219,14 @@ class BoxPacker:
             shutil.copy2(build_dir / rel, dst)
             dst.chmod(0o644)
         for unit in units.units:
-            src = build_dir / unit.lt_file
-            dst = self.moltemplate_dir / unit.lt_file
-            if src.is_file() and not dst.exists():
-                shutil.copy2(src, dst)
-                dst.chmod(0o644)
+            # the unit's class file plus any class it imports (e.g. the
+            # core class of a grafted nanoparticle composite)
+            for rel in [unit.lt_file] + list(unit.monomer_files):
+                src = build_dir / rel
+                dst = self.moltemplate_dir / rel
+                if src.is_file() and not dst.exists():
+                    shutil.copy2(src, dst)
+                    dst.chmod(0o644)
 
         # External substrate slab: user-supplied .lt, imported as-is
         if self.substrate is not None and self.substrate.is_external:
@@ -219,9 +239,33 @@ class BoxPacker:
             shutil.copy2(src, dst)
             dst.chmod(0o644)
 
-        # Built-in substrate slab: generate the .lt at pack time
+        # Built-in substrate slab: typed in stage 2 (inorganic substrate
+        # unit, .lt already copied above), else generated at pack time
+        # (legacy route for builds without the stage-1/2 slab).
         if self.substrate is not None and self.substrate.is_builder:
-            self._build_substrate_slab(units.force_field)
+            typed = self._typed_substrate_unit(units)
+            if typed is not None:
+                from ..surfaces.component import SlabInfo
+                self.substrate._built_slab = SlabInfo(typed)
+                logger.info(
+                    f"Using stage-2 typed substrate slab {typed.lt_file} "
+                    f"({typed.class_name})"
+                )
+            else:
+                self._build_substrate_slab(units.force_field)
+
+    @staticmethod
+    def _typed_substrate_unit(units: UnitLibrary):
+        """The stage-2 typed built-in slab unit, if the build has one."""
+        slabs = [u for u in units.units
+                 if u.is_inorganic and u.role == "substrate"
+                 and u.geometry_type == "slab"]
+        if len(slabs) > 1:
+            raise WorkflowError(
+                f"Build contains {len(slabs)} substrate slab units; at most "
+                "one substrate is supported"
+            )
+        return slabs[0] if slabs else None
 
     def _ff_lt_for_styles(self, force_field: str) -> Optional[Path]:
         """
@@ -239,17 +283,14 @@ class BoxPacker:
             / FORCE_FIELD_REGISTRY[force_field]["lt_file"]
         )
 
+    def host_styles(self, force_field: str):
+        """HostStyles of the film/matrix force field (shared parser)."""
+        from ..materials.forcefields.compatibility import host_styles
+        return host_styles(force_field, self._ff_lt_for_styles(force_field))
+
     def _film_bond_substyle(self, force_field: str) -> Optional[str]:
         """'harmonic' if the film force field uses a hybrid bond style."""
-        if force_field == "openff" and self._ff_lt_for_styles(force_field) is None:
-            # openff.lt always declares 'bond_style hybrid harmonic'.
-            return "harmonic"
-        ff_lt = self._ff_lt_for_styles(force_field)
-        for line in ff_lt.read_text().splitlines():
-            ls = line.strip()
-            if ls.startswith("bond_style") and not ls.startswith("#"):
-                return "harmonic" if "hybrid" in ls else None
-        return None
+        return self.host_styles(force_field).bond_substyle
 
     def _film_pair_substyle(self, force_field: str) -> Optional[str]:
         """
@@ -261,31 +302,22 @@ class BoxPacker:
         pair coefficients in the data file, which the slab writers do
         not support.
         """
-        if force_field == "openff" and self._ff_lt_for_styles(force_field) is None:
-            # openff.lt always declares a hybrid pair style with an LJ
-            # sub-style (lj/charmm/coul/long or lj/cut/coul/long).
-            return "lj/charmm/coul/long"
-        ff_lt = self._ff_lt_for_styles(force_field)
-        pair_style = ""
-        for line in ff_lt.read_text().splitlines():
-            ls = line.strip()
-            if ls.startswith("pair_style") and not ls.startswith("#"):
-                pair_style = ls
-                break
-        if "class2" in pair_style:
+        host = self.host_styles(force_field)
+        if host.is_class2:
             raise WorkflowError(
                 f"Built-in substrate builders do not support class2 "
                 f"force fields ({force_field}); build the slab outside "
                 "AutoPoly and use SubstrateSpec(lt_file=..., ...) instead"
             )
-        if "hybrid" in pair_style:
-            for token in pair_style.split()[1:]:
-                if token.startswith("lj/"):
-                    return token
-            raise WorkflowError(
-                f"Could not find an LJ sub-style in the pair_style line "
-                f"of {ff_lt.name}: '{pair_style}'"
-            )
+        if host.is_hybrid_pair:
+            if host.pair_substyle is None:
+                ff_lt = self._ff_lt_for_styles(force_field)
+                raise WorkflowError(
+                    f"Could not find an LJ sub-style in the pair_style line "
+                    f"of {ff_lt.name if ff_lt else force_field}: "
+                    f"'{host.pair_style}'"
+                )
+            return host.pair_substyle
         return None
 
     def _build_substrate_slab(self, force_field: str = "gaff") -> None:
@@ -337,6 +369,11 @@ class BoxPacker:
         """Generate force field files from the manifest's monomer files."""
         force_field = units.force_field
         logger.info(f"Generating {force_field}.lt")
+        if not units.monomer_files and units.inorganic_units:
+            # inorganic-only system (e.g. a box of nanoparticles): nothing
+            # to subset; the host file only provides the In Init styles
+            self._write_init_only_force_field(force_field)
+            return
 
         monomer_paths = [
             str(self.moltemplate_dir / rel) for rel in units.monomer_files
@@ -358,6 +395,39 @@ class BoxPacker:
         if force_field == "oplsaa":
             ff_manager.FFmodify_alkyl_dihedral_oplsaa()
 
+    def _write_init_only_force_field(self, force_field: str) -> None:
+        """Host FF .lt with only its write_once("In Init") block."""
+        import re
+
+        entry = FORCE_FIELD_REGISTRY[force_field]
+        src = self._ff_lt_for_styles(force_field)
+        if src is None or not src.is_file():
+            raise WorkflowError(
+                f"Force-field file for '{force_field}' not found"
+            )
+        lines = src.read_text().splitlines()
+        block, depth, inside = [], 0, False
+        for line in lines:
+            if not inside and re.search(r'write_once\("In Init"\)\s*\{', line):
+                inside, depth = True, 1
+                block.append(line)
+                continue
+            if inside:
+                depth += line.count("{") - line.count("}")
+                block.append(line)
+                if depth <= 0:
+                    break
+        if not block:
+            raise WorkflowError(
+                f"No In Init block in {src.name}; cannot write the host "
+                "styles for an inorganic-only system"
+            )
+        text = "\n".join([
+            f"# {entry['lt_file']}: In Init styles of the {force_field} force "
+            "field only (inorganic-only system; no organic types)",
+            f"{entry['inherits']} {{", *block, "}", ""])
+        (self.moltemplate_dir / entry["lt_file"]).write_text(text)
+
     # ------------------------------------------------------------------
     # Step 3: strategy + system.lt
     # ------------------------------------------------------------------
@@ -376,6 +446,7 @@ class BoxPacker:
             monomer_density=self.monomer_density,
             substrate=self.substrate,
             subtract=self.subtract,
+            nanocomposite=self.packing,
         )
         logger.info(f"Placing units with strategy '{self.strategy_name}'")
         return self.strategy.place(ctx)
@@ -409,6 +480,12 @@ class BoxPacker:
                 built = getattr(self.substrate, "_built_slab", None)
                 if built is not None and built.lt_filename not in seen:
                     f.write(f'import "{built.lt_filename}"\n')
+
+            # Strategy-generated classes (e.g. chains regrown in place)
+            for fname, text in sorted(result.extra_lt_files.items()):
+                (self.moltemplate_dir / fname).write_text(text)
+                if fname not in seen:
+                    f.write(f'import "{fname}"\n')
             f.write("\n")
 
             for record in result.records:
@@ -479,6 +556,286 @@ run             10000
         out = self.project_dir / "in.run"
         out.write_text(script)
         logger.info(f"Run script written to {out}")
+
+    # ------------------------------------------------------------------
+    # Step 6: inorganic components (fillers): cross terms, groups, run
+    # ------------------------------------------------------------------
+    def _filler_policies(self, units: UnitLibrary):
+        from ..materials.forcefields.compatibility import InorganicClassPolicy
+        from ..materials.forcefields import get_inorganic_ff
+
+        policies = {}
+        for u in units.filler_units:
+            mat = u.material or {}
+            adapter = get_inorganic_ff(mat["inorganic_ff"], mat["id"])
+            qual = mat.get("qualification") or {}
+            # atom types live in the (core) particle class namespace; a
+            # grafted composite GNP_x only instantiates NP_x + chains
+            type_ns = mat.get("core_class") or u.class_name
+            policies[type_ns] = InorganicClassPolicy(
+                class_name=type_ns,
+                adapter=adapter.name,
+                native_rule=adapter.combining_rule,
+                organic_rule=mat.get("cross_rule", adapter.combining_rule),
+                qualification=qual.get("id") or qual.get("status"),
+            )
+        return policies
+
+    def _write_cross_terms(self, units: UnitLibrary):
+        """Explicit organic-inorganic pair_coeff lines (system.in.settings)."""
+        from ..materials.forcefields.compatibility import (
+            write_explicit_cross_terms,
+        )
+        host = self.host_styles(units.force_field)
+        report = write_explicit_cross_terms(
+            self.moltemplate_dir, self._filler_policies(units), host)
+        logger.info(
+            f"Wrote {report.n_pairs} explicit organic-inorganic cross "
+            "pair coefficients to system.in.settings"
+        )
+        return report
+
+    def _write_component_groups(self, units: UnitLibrary,
+                                result: PlacementResult) -> dict:
+        """
+        system.in.groups: one group per filler instance (by molecule ID
+        from the moltemplate assignments), per filler species, per motion,
+        plus "fillers" and "matrix".  Never assumes instance order.
+        """
+        from ..materials.forcefields.compatibility import (
+            read_instance_assignments,
+        )
+        mols, _ = read_instance_assignments(self.moltemplate_dir)
+        by_unit = {u.id: u for u in units.filler_units}
+        instances = {}
+        for rec in result.records:
+            if rec.unit_id in by_unit:
+                # grafted fillers: the rigid body is the core molecule only
+                key = rec.instance_name
+                if key not in mols and f"{key}/core" in mols:
+                    key = f"{key}/core"
+                if key not in mols:
+                    raise WorkflowError(
+                        f"No molecule ID found for filler instance "
+                        f"{rec.instance_name} in ttree_assignments.txt"
+                    )
+                instances.setdefault(rec.unit_id, []).append(
+                    (rec.instance_name, mols[key]))
+        lines = [
+            "# AutoPoly component groups (generated from moltemplate's",
+            "# output_ttree/ttree_assignments.txt: stable instance identities)",
+        ]
+        motions = {"rigid": [], "frozen": []}
+        all_ids = []
+        for uid, inst in instances.items():
+            ids = [m for _, m in inst]
+            all_ids += ids
+            motions.setdefault(by_unit[uid].motion, []).extend(ids)
+            for name, m in inst:
+                lines.append(f"group {name} molecule {m}")
+            lines.append(f"group filler_{uid} molecule "
+                         + " ".join(str(m) for m in ids))
+        lines.append("group fillers molecule "
+                     + " ".join(str(m) for m in sorted(all_ids)))
+        for motion, ids in motions.items():
+            if ids:
+                lines.append(f"group {motion}_fillers molecule "
+                             + " ".join(str(m) for m in sorted(ids)))
+        lines.append("group matrix subtract all fillers")
+        out = self.project_dir / "system.in.groups"
+        out.write_text("\n".join(lines) + "\n")
+        logger.info(f"Component groups written to {out}")
+        return {"instances": instances,
+                "motions": {k: v for k, v in motions.items() if v}}
+
+    def _write_nanocomposite_run_script(self, units: UnitLibrary,
+                                        result: PlacementResult,
+                                        groups: dict) -> None:
+        """Minimal run template: relax matrix, rigid/frozen fillers, NVT."""
+        motions = groups["motions"]
+        if "flexible" in motions:
+            raise WorkflowError(
+                "Flexible fillers need a validated bonded inorganic model; "
+                "no run template is generated"
+            )
+        species = "\n".join(
+            f"#   {u.id}: {u.count} x {u.material['id']} "
+            f"({u.material.get('phase')}, {u.geometry_type}), "
+            f"{u.material['inorganic_ff']} v{u.material['ff_version']}, "
+            f"motion '{u.motion}', qualification "
+            f"{(u.material.get('qualification') or {}).get('id') or 'user'}"
+            for u in units.filler_units
+        )
+        cfg = self.packing
+        target = getattr(cfg, "target_polymer_density", None)
+        dyn = []
+        if "rigid" in motions:
+            # rigid/nvt (not rigid/nvt/small): rigid/nvt/small together
+            # with "neigh_modify exclude molecule/intra" aborts during setup
+            # in LAMMPS 29Aug2024; particle counts are modest anyway
+            dyn.append("fix             rigid rigid_fillers rigid/nvt "
+                       "molecule temp 300.0 300.0 100.0")
+        if "frozen" in motions:
+            dyn.append("fix             freeze frozen_fillers setforce "
+                       "0.0 0.0 0.0")
+        dyn = "\n".join(dyn)
+        has_matrix = bool(units.organic_units)
+        charged = self._system_has_charges()
+        kspace_fix = ("" if charged else
+                      "# no charged atoms: PPPM needs an explicit g_ewald\n"
+                      "kspace_modify   gewald 0.25\n")
+        if has_matrix:
+            matrix_dyn = (
+                "velocity        matrix create 300.0 4928459 dist gaussian\n"
+                f"{dyn}\n"
+                "fix             nvt matrix nvt temp 300.0 300.0 100.0\n"
+                "compute         tmatrix matrix temp\n"
+                "thermo_style    custom step temp c_tmatrix pe ke etotal "
+                "press density")
+        else:
+            matrix_dyn = (
+                f"{dyn}\n"
+                "thermo_style    custom step temp pe ke etotal press")
+        compress = ""
+        if target is not None:
+            compress = f"""
+# --- 3. (optional) compression toward the target matrix density
+#        {target} g/cm^3: one barostat controls the box and dilates all
+#        atoms (rigid bodies by their centers of mass). Uncomment to use.
+# unfix           nvt
+# unfix           rigid
+# fix             rigid rigid_fillers rigid/npt molecule temp 300.0 300.0 100.0 iso 1.0 1.0 1000.0 dilate all
+# fix             nvt matrix nvt temp 300.0 300.0 100.0
+# run             200000
+"""
+        script = f"""# AutoPoly nanocomposite run script (generated)
+# Fillers:
+{species}
+# Matrix force field: {units.force_field}. Explicit organic-inorganic
+# pair coefficients are appended to system.in.settings; component groups
+# (per particle instance / species / motion) are in system.in.groups.
+# Edit as needed; this template is a starting point, not an equilibration
+# protocol.
+boundary        p p p
+
+include         system.in.init
+read_data       system.data
+include         system.in.settings
+include         system.in.groups
+{kspace_fix}
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+# rigid/frozen particles: skip intra-particle pair forces
+neigh_modify    exclude molecule/intra fillers
+
+# --- 1. relax the matrix around the (temporarily held) fillers
+fix             hold fillers setforce 0.0 0.0 0.0
+minimize        1.0e-4 1.0e-6 2000 20000
+unfix           hold
+
+# --- 2. dynamics: one rigid body per particle instance (or frozen
+#        particles), matrix NVT; matrix-only temperature for the log
+{matrix_dyn}
+thermo          500
+timestep        1.0
+dump            d1 all custom 2000 dump.nanocomposite.lammpstrj id mol type x y z
+run             10000
+{compress}"""
+        out = self.project_dir / "in.run"
+        out.write_text(script)
+        logger.info(f"Run script written to {out}")
+
+    def _system_has_charges(self) -> bool:
+        """True if system.data has any nonzero atomic charge."""
+        data = self.project_dir / "system.data"
+        if not data.is_file():
+            data = self.moltemplate_dir / "output" / "system.data"
+        if not data.is_file():
+            return True
+        in_atoms = False
+        for line in data.read_text().splitlines():
+            ls = line.split("#", 1)[0].strip()
+            if ls.startswith("Atoms"):
+                in_atoms = True
+                continue
+            if in_atoms:
+                if not ls:
+                    continue
+                parts = ls.split()
+                if not parts[0].isdigit():
+                    break
+                if len(parts) >= 4 and abs(float(parts[3])) > 0.0:
+                    return True
+        return False
+
+    def _write_ff_report(self, units: UnitLibrary, result: PlacementResult,
+                         cross) -> None:
+        """ff_compatibility.json / .md for builds with inorganic units."""
+        import json
+
+        host = self.host_styles(units.force_field)
+        comps = []
+        for u in units.inorganic_units:
+            mat = dict(u.material or {})
+            comps.append({
+                "id": u.id,
+                "role": u.role,
+                "geometry_type": u.geometry_type,
+                "motion": u.motion,
+                "count": u.count,
+                "class": u.class_name,
+                "material": mat.get("id"),
+                "phase": mat.get("phase"),
+                "surface": mat.get("surface"),
+                "inorganic_ff": mat.get("inorganic_ff"),
+                "ff_version": mat.get("ff_version"),
+                "ff_citations": mat.get("ff_citations", []),
+                "combining_rule": mat.get("combining_rule"),
+                "cross_rule": mat.get("cross_rule", "host (pair_modify mix)"),
+                "qualification": mat.get("qualification",
+                                         {"status": "legacy substrate "
+                                                    "(not blocked)"}),
+                "net_charge": mat.get("net_charge"),
+                "mass_amu": u.mass,
+                "envelope": u.envelope,
+            })
+        report = {
+            "host_force_field": host.to_dict(),
+            "components": comps,
+            "explicit_cross_terms": cross.to_dict() if cross else None,
+            "placement": result.report,
+            "strategy": self.strategy_name,
+        }
+        out = self.project_dir / "ff_compatibility.json"
+        out.write_text(json.dumps(report, indent=2, default=str))
+        md = ["# AutoPoly force-field compatibility report", "",
+              f"Host (matrix/film) force field: `{units.force_field}` "
+              f"(`{host.pair_style}`, `{host.pair_modify or 'mix default'}`, "
+              f"`{host.special_bonds}`)", "",
+              "| component | role | material | phase | surface | inorganic FF "
+              "| motion | qualification | cross rule | net charge |",
+              "|---|---|---|---|---|---|---|---|---|---|"]
+        for c in comps:
+            q = c["qualification"] or {}
+            md.append(
+                f"| {c['id']} x{c['count']} | {c['role']} | {c['material']} "
+                f"| {c['phase']} | {c['surface']} | {c['inorganic_ff']} "
+                f"v{c['ff_version']} | {c['motion']} | "
+                f"{q.get('id') or q.get('status')} | {c['cross_rule']} | "
+                f"{c['net_charge']} |")
+        if cross:
+            md += ["", f"Explicit organic-inorganic pair coefficients: "
+                       f"{cross.n_pairs} (appended to system.in.settings)."]
+            for cls, rule in cross.rules.items():
+                md.append(f"- `{cls}`: {rule}")
+        if result.report:
+            md += ["", "Placement checks (minimum image, A): "
+                   + json.dumps(result.report.get("min_distance")),
+                   "", "Loading: " + json.dumps(result.report.get("loading"),
+                                               default=str)]
+        (self.project_dir / "ff_compatibility.md").write_text(
+            "\n".join(md) + "\n")
+        logger.info(f"Force-field compatibility report written to {out}")
 
     # ------------------------------------------------------------------
     # Step 4a: in.init style patching (zero-count hybrid styles)
@@ -584,8 +941,12 @@ run             10000
 
         # openff builds write typed "Data Bonds" sections (never the untyped
         # "Data Bond List"), so the required bond section differs by FF.
+        # Inorganic classes always write typed "Data Bonds" (metal clusters
+        # none at all): inorganic-only systems need no bond section.
         bond_section = "Data Bonds" if force_field == "openff" else "Data Bond List"
-        required_data_files = ["Data Atoms", bond_section]
+        required_data_files = ["Data Atoms"]
+        if not getattr(self, "_inorganic_only", False):
+            required_data_files.append(bond_section)
         missing_data_files = []
 
         for data_file in required_data_files:

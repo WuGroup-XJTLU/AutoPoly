@@ -24,7 +24,12 @@ from ..core.system import logger
 from ..core.exceptions import ValidationError, WorkflowError
 from ..models.molecule import Molecule
 from ..packing import AUTO_COUNT, PlacementResult, SubstrateSpec
-from .geometry import GeometryBuilder, GeometryConfig, is_molecule_model
+from .geometry import (
+    GeometryBuilder,
+    GeometryConfig,
+    is_inorganic_component,
+    is_molecule_model,
+)
 from .typing import UnitTyper
 from .packer import BoxPacker
 
@@ -48,6 +53,9 @@ def generate(
     subtract: Optional[list] = None,
     box_dims: Optional[tuple] = None,
     typer_options: Optional[dict] = None,
+    packing: Optional[object] = None,
+    inorganic_force_fields: Optional[dict] = None,
+    allow_unqualified: bool = False,
 ) -> PlacementResult:
     """
     Generate a complete LAMMPS system in one call (three-stage pipeline).
@@ -62,13 +70,15 @@ def generate(
         system: System object providing get_folder_path().
         name: Project name; outputs go to ``<out>/<name>/``.
         models: List of Polymer and/or Molecule objects (the "film" models
-            when a substrate is used).
+            when a substrate is used), optionally with Nanoparticle fillers
+            (AutoPoly.nanoparticles).
         force_field: Force field name (see FORCE_FIELD_REGISTRY).
             Defaults to "oplsaa".
         strategy: Box packing strategy ("mc_random", "grid",
-            "on_substrate", ...). Defaults to "mc_random". When
-            ``substrate`` is given and strategy is left at its default,
-            "on_substrate" is selected automatically.
+            "on_substrate", "nanocomposite_mc", ...). Defaults to
+            "mc_random". When ``substrate`` is given and strategy is left at
+            its default, "on_substrate" is selected automatically; with
+            Nanoparticle fillers, "nanocomposite_mc".
         geometry_config: Optional GeometryConfig for stage 1 (MC chain
             growth parameters). Defaults to GeometryConfig().
         box_size: Optional explicit box edge length (Angstrom) for stage 3.
@@ -93,6 +103,13 @@ def generate(
             force_field="openff" (OpenFFTyper kwargs: ``offxml``,
             ``charge_method`` ("nagl"/"am1bcc"/"gasteiger"), ``nagl_model``,
             ``neutralize``).
+        packing: Optional NanocompositePacking (strategy
+            "nanocomposite_mc": initial/target density, clearances, gap,
+            seed).
+        inorganic_force_fields: Optional {component id: inorganic force
+            field} stage-2 overrides (e.g. {"substrate": "clayff"}).
+        allow_unqualified: Type nanoparticle combinations that are not in
+            the qualification matrix (recorded as user-qualified).
 
     Returns:
         PlacementResult from the packing stage.
@@ -120,17 +137,28 @@ def generate(
     try:
         logger.info("Starting LAMMPS data file generation using Moltemplate")
 
-        strategy = _resolve_strategy(strategy, substrate, subtract)
+        fillers = [m for m in models if is_inorganic_component(m)]
+        strategy = _resolve_strategy(strategy, substrate, subtract, fillers)
         substrate_models = _resolve_substrate_models(substrate, box_dims)
+        inorganic = _resolve_inorganic_components(substrate, box_dims)
 
-        # Stage 1: force-field-agnostic geometry
+        # Stage 1: force-field-agnostic geometry (incl. inorganic
+        # components: built-in substrate slabs, nanoparticles)
+        build_kwargs = {"substrate_models": substrate_models}
+        if inorganic:
+            build_kwargs["inorganic"] = inorganic
         geometry_result = GeometryBuilder(
             system, name, config=geometry_config
-        ).build(models, substrate_models=substrate_models)
+        ).build(models, **build_kwargs)
 
         # Stage 2: force-field typing on the stored geometry
+        typer_kwargs = {"typer_options": typer_options}
+        if inorganic_force_fields:
+            typer_kwargs["inorganic_force_fields"] = inorganic_force_fields
+        if allow_unqualified:
+            typer_kwargs["allow_unqualified"] = True
         units = UnitTyper(
-            geometry_result.dir, force_field, typer_options=typer_options
+            geometry_result.dir, force_field, **typer_kwargs
         ).type()
 
         # Stage 3: box packing + moltemplate
@@ -146,6 +174,7 @@ def generate(
             substrate=substrate,
             subtract=subtract,
             box_dims=box_dims,
+            **({"packing": packing} if packing is not None else {}),
         ).pack(units)
 
         logger.info("Successfully completed polymer generation")
@@ -161,15 +190,42 @@ def _resolve_strategy(
     strategy: str,
     substrate: Optional[SubstrateSpec],
     subtract: Optional[list],
+    fillers: Optional[list] = None,
 ) -> str:
     """
-    Pick the packing strategy from the substrate/subtract arguments.
+    Pick the packing strategy from the substrate/subtract/filler arguments.
 
     A substrate auto-selects "on_substrate" when strategy is left at the
     "mc_random" default; combining a substrate with any other explicit
     strategy is contradictory and rejected. Subtract regions require a
-    strategy that implements whole-instance removal.
+    strategy that implements whole-instance removal.  Nanoparticle fillers
+    auto-select "nanocomposite_mc"; fillers together with a substrate
+    (filled film on a slab) are a later milestone and are rejected rather
+    than silently ignoring the filler obstacles.
     """
+    if fillers:
+        if substrate is not None:
+            raise ValidationError(
+                "Nanoparticle fillers together with a substrate (filled film "
+                "on a slab, 'nanocomposite_on_substrate') are not supported "
+                "yet: the placement must respect both the slab region and "
+                "the filler obstacles"
+            )
+        if strategy == "mc_random":
+            logger.info("Nanoparticle fillers given: selecting strategy "
+                        "'nanocomposite_mc'")
+            return "nanocomposite_mc"
+        if strategy != "nanocomposite_mc":
+            raise ValidationError(
+                f"Nanoparticle fillers conflict with strategy '{strategy}' "
+                "(it cannot place filler obstacles); use "
+                "strategy='nanocomposite_mc'"
+            )
+        if subtract:
+            raise ValidationError(
+                "subtract=... is not supported with nanoparticle fillers"
+            )
+        return strategy
     if substrate is not None:
         if strategy == "mc_random":
             logger.info("Substrate given: selecting strategy 'on_substrate'")
@@ -185,6 +241,21 @@ def _resolve_strategy(
             "use 'mc_random' or 'on_substrate'"
         )
     return strategy
+
+
+def _resolve_inorganic_components(
+    substrate: Optional[SubstrateSpec],
+    box_dims: Optional[tuple],
+) -> List[object]:
+    """
+    Stage-1 inorganic components implied by the arguments: a built-in
+    substrate slab (SubstrateSpec(builder=...)) is built in stage 1 and
+    typed in stage 2; stage 3 only places it.
+    """
+    if substrate is None or not substrate.is_builder:
+        return []
+    from ..surfaces.component import BuiltinSlabComponent
+    return [BuiltinSlabComponent(substrate, box_dims)]
 
 
 def _resolve_substrate_models(

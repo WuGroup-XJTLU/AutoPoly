@@ -20,13 +20,20 @@ mbuild, BSD-3; adapted to crystalline bulks generated in code):
 6. Cap remaining dangling oxygens with H (top and, by default, bottom).
 7. Type atoms by role and emit a self-contained moltemplate .lt class.
 
+Since the inorganic-framework refactoring this module is a stable public
+facade over the shared ``AutoPoly.materials`` foundation: steps 1-6 are
+``materials.chemistry.silica.build_silica_slab`` (force-field agnostic,
+returns an AtomicStructure), step 7 is a silica force-field adapter
+(``materials.forcefields.silica``) plus the shared moltemplate writer
+(``AutoPoly.exporters.moltemplate``).  Constructor arguments, defaults,
+``build()`` and the generated .lt files are unchanged.
+
 Subclasses provide the surface cell (fractional coordinates + lattice
 constants) via class attributes.
 
 Created on 2026-08-12
 @author: zwu
 """
-import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
@@ -35,18 +42,22 @@ import numpy as np
 
 from ..core.exceptions import ValidationError
 from ..core.system import logger
+from ..exporters.moltemplate import mean_bond_lengths, write_inorganic_lt
+from ..materials.chemistry import silica as silica_chem
+from ..materials.chemistry.silica import (  # noqa: F401  (public constants)
+    BRIDGE_SI_SI_MAX,
+    ROLE_MASSES,
+    SI_O_BOND_CUTOFF,
+    Z_MARGIN,
+)
+from ..materials.forcefields.registry import (
+    InorganicForceField,
+    ParameterAssignment,
+    RoleParameters,
+)
+from ..materials.forcefields.silica import SLAB_FF_ADAPTERS
+from ..materials.structure import AtomicStructure
 from .ff_tables import OH_BOND_LENGTH, SLAB_FF_REGISTRY, SLAB_ROLES
-
-#: Si-O bond perception cutoff (A); Si-O bonds are ~1.6 A, next shell
-#: starts above 2.4 A.
-SI_O_BOND_CUTOFF = 1.9
-#: Max Si-Si distance (lateral minimum image) for forming a Si-O-Si bridge
-#: between dangling oxygens (mbuild: 0.45 nm).
-BRIDGE_SI_SI_MAX = 4.5
-#: z margin reserved on each slab face for the oxygen coating plus the
-#: hydroxyl caps (A).  Si are kept inside [Z_MARGIN, thickness-Z_MARGIN],
-#: which guarantees the final physical slab fits inside [0, thickness].
-Z_MARGIN = 2.7
 
 
 @dataclass
@@ -57,6 +68,25 @@ class SlabAtom:
     type_name: str     # moltemplate @atom type
     charge: float
     position: np.ndarray
+    epsilon: float = 0.0   # LJ epsilon (kcal/mol) of type_name
+    sigma: float = 0.0     # LJ sigma (A) of type_name
+
+    # Backwards-compatible private aliases (pre-refactoring attribute names)
+    @property
+    def _epsilon(self) -> float:
+        return self.epsilon
+
+    @_epsilon.setter
+    def _epsilon(self, value: float) -> None:
+        self.epsilon = value
+
+    @property
+    def _sigma(self) -> float:
+        return self.sigma
+
+    @_sigma.setter
+    def _sigma(self, value: float) -> None:
+        self.sigma = value
 
 
 @dataclass
@@ -92,6 +122,9 @@ class SurfaceSlab:
                 nonbonded interactions (otherwise bonded O-H pairs at
                 0.945 A would contribute enormous spurious LJ/Coulomb
                 terms).
+        structure: The force-field-agnostic AtomicStructure the slab was
+                typed from (None for slabs constructed by hand).
+        assignment: The ParameterAssignment (types/charges/LJ) applied.
     """
     class_name: str
     lt_filename: str
@@ -106,106 +139,78 @@ class SurfaceSlab:
     pair_substyle: Optional[str] = None
     bond_substyle: Optional[str] = None
     bonds: Optional[List[Tuple[int, int]]] = None
+    structure: Optional[AtomicStructure] = None
+    assignment: Optional[ParameterAssignment] = None
 
     # ------------------------------------------------------------------
+    def lt_text(self) -> str:
+        """The self-contained moltemplate .lt text of the slab."""
+        from ..exporters.moltemplate import inorganic_lt_text
+        return inorganic_lt_text(**self._lt_arguments())
+
     def write_lt(self, directory) -> Path:
         """Write the slab as a self-contained moltemplate .lt file."""
         directory = Path(directory)
         directory.mkdir(parents=True, exist_ok=True)
         path = directory / self.lt_filename
-        lines = [
-            "# crystalline substrate slab built by AutoPoly",
-            f"# lateral {self.lx:.4f} x {self.ly:.4f} A, envelope "
-            f"thickness {self.thickness:.2f} A (physical z-extent "
-            f"{self.z_extent:.2f} A)",
-            f"# silanols: top {self.n_silanol_top}, "
-            f"bottom {self.n_silanol_bottom}; slab_ff='{self.slab_ff}'",
-            "# self-contained: masses and pair coefficients included;",
-            "# no bonded terms (slab is meant to be held rigid/frozen)",
-            "",
-            f"{self.class_name} {{",
-            "",
-            '  write_once("Data Masses") {',
-        ]
-        seen = {}
-        for atom in self.atoms:
-            seen[atom.type_name] = atom
-        mass_by_type = _mass_table(self.atoms)
-        for tname in sorted(seen):
-            lines.append(f"    @atom:{tname} {mass_by_type[tname]:.4f}")
-        lines += ["  }", "", '  write_once("In Settings") {']
-        lj_by_type = _lj_table(self.atoms)
-        sub = f" {self.pair_substyle}" if self.pair_substyle else ""
-        for tname in sorted(seen):
-            eps, sig = lj_by_type[tname]
-            lines.append(
-                f"    pair_coeff @atom:{tname} @atom:{tname}{sub} "
-                f"{eps:.6g} {sig:.6g}"
-            )
-        lines += ["  }", "", '  write("Data Atoms") {']
-        for atom in self.atoms:
-            x, y, z = atom.position
-            lines.append(
-                f"    $atom:{atom.name} $mol:. @atom:{atom.type_name} "
-                f"{atom.charge:.4f} {x:.4f} {y:.4f} {z:.4f}"
-            )
-        lines += ["  }"]
-
-        if self.bonds:
-            # Bond types: Si-O ("*_si_o") and O-H ("*_o_h")
-            prefix = self.class_name.lower()
-
-            def btype_name(roles):
-                return (f"{prefix}_o_h" if "HO" in roles
-                        else f"{prefix}_si_o")
-
-            roles_of = [
-                frozenset((self.atoms[i].role, self.atoms[j].role))
-                for i, j in self.bonds
-            ]
-            type_names = sorted({btype_name(r) for r in roles_of},
-                                reverse=True)  # si_o before o_h
-
-            bsub = f" {self.bond_substyle}" if self.bond_substyle else ""
-            lines += ["", '  write_once("In Settings") {']
-            for tname in type_names:
-                # equilibrium length: mean length of bonds of this type
-                # (lateral minimum image: bonds crossing the slab's
-                # periodic edges would otherwise appear stretched)
-                d = []
-                for (i, j), r in zip(self.bonds, roles_of):
-                    if btype_name(r) != tname:
-                        continue
-                    dv = (self.atoms[i].position - self.atoms[j].position)
-                    dv[0] -= self.lx * round(dv[0] / self.lx)
-                    dv[1] -= self.ly * round(dv[1] / self.ly)
-                    d.append(float(np.linalg.norm(dv)))
-                lines.append(
-                    f"    bond_coeff @bond:{tname}{bsub} "
-                    f"0.0 {float(np.mean(d)):.4f}"
-                )
-            lines += ["  }", "", '  write("Data Bonds") {']
-            for k, ((i, j), r) in enumerate(
-                    zip(self.bonds, roles_of), start=1):
-                lines.append(
-                    f"    $bond:b{k} @bond:{btype_name(r)} "
-                    f"$atom:{self.atoms[i].name} $atom:{self.atoms[j].name}"
-                )
-            lines += ["  }"]
-
-        lines += ["", "}", ""]
-        path.write_text("\n".join(lines))
+        write_inorganic_lt(path, **self._lt_arguments())
         logger.info(f"Slab written to {path} ({len(self.atoms)} atoms)")
         return path
 
+    def _lt_arguments(self) -> dict:
+        header = [
+            "crystalline substrate slab built by AutoPoly",
+            f"lateral {self.lx:.4f} x {self.ly:.4f} A, envelope "
+            f"thickness {self.thickness:.2f} A (physical z-extent "
+            f"{self.z_extent:.2f} A)",
+            f"silanols: top {self.n_silanol_top}, "
+            f"bottom {self.n_silanol_bottom}; slab_ff='{self.slab_ff}'",
+            "self-contained: masses and pair coefficients included;",
+            "no bonded terms (slab is meant to be held rigid/frozen)",
+        ]
+        type_masses = {a.type_name: ROLE_MASSES[a.role] for a in self.atoms}
+        type_lj = {a.type_name: (a.epsilon, a.sigma) for a in self.atoms}
+        positions = np.array([a.position for a in self.atoms])
+        args = dict(
+            class_name=self.class_name,
+            labels=[a.name for a in self.atoms],
+            type_names=[a.type_name for a in self.atoms],
+            charges=[a.charge for a in self.atoms],
+            positions=positions,
+            type_masses=type_masses,
+            type_lj=type_lj,
+            header=header,
+            pair_substyle=self.pair_substyle,
+            bond_substyle=self.bond_substyle,
+        )
+        if self.bonds:
+            # Bond types: Si-O ("*_si_o") and O-H ("*_o_h")
+            prefix = self.class_name.lower()
+            bond_types = [
+                f"{prefix}_" + silica_chem.role_bond_type(
+                    self.atoms[i].role, self.atoms[j].role)
+                for i, j in self.bonds
+            ]
+            order = sorted(set(bond_types), reverse=True)  # si_o before o_h
+            # equilibrium length: mean length of bonds of this type
+            # (lateral minimum image: bonds crossing the slab's periodic
+            # edges would otherwise appear stretched)
+            r0 = mean_bond_lengths(positions, self.bonds, bond_types, order,
+                                   lx=self.lx, ly=self.ly)
+            args.update(
+                bonds=self.bonds,
+                bond_types=bond_types,
+                bond_coeffs={t: (0.0, r0[t]) for t in order},
+            )
+        return args
+
 
 def _mass_table(atoms) -> Dict[str, float]:
-    masses = {"Si": 28.0855, "OB": 15.9994, "OH": 15.9994, "HO": 1.008}
-    return {a.type_name: masses[a.role] for a in atoms}
+    return {a.type_name: ROLE_MASSES[a.role] for a in atoms}
 
 
 def _lj_table(atoms) -> Dict[str, Tuple[float, float]]:
-    return {a.type_name: (a._epsilon, a._sigma) for a in atoms}
+    return {a.type_name: (a.epsilon, a.sigma) for a in atoms}
 
 
 class SlabBuilder:
@@ -289,6 +294,9 @@ class SlabBuilder:
         self._table = self._resolve_table(
             slab_ff, slab_types, slab_charges, slab_lj
         )
+        self._adapter, self._role_table = self._resolve_adapter(
+            slab_ff, self._table
+        )
         self._validate()
 
     # ------------------------------------------------------------------
@@ -300,6 +308,7 @@ class SlabBuilder:
 
     @staticmethod
     def _resolve_table(slab_ff, slab_types, slab_charges, slab_lj):
+        """Role table (role -> type/charge/epsilon/sigma) incl. overrides."""
         if slab_ff == "custom":
             missing = [
                 r for r in SLAB_ROLES
@@ -342,6 +351,33 @@ class SlabBuilder:
                 )
         return base
 
+    @staticmethod
+    def _resolve_adapter(slab_ff, table):
+        """(adapter, role table) for the resolved per-role table."""
+        role_table = {
+            r: RoleParameters(
+                type_name=str(e["type"]),
+                mass=ROLE_MASSES[r],
+                charge=float(e["charge"]),
+                epsilon=float(e["epsilon"]),
+                sigma=float(e["sigma"]),
+            )
+            for r, e in table.items()
+        }
+        adapter = SLAB_FF_ADAPTERS.get(slab_ff)
+        if adapter is None:  # "custom": user-supplied, unvalidated table
+            adapter = InorganicForceField(
+                name="custom_silica",
+                version="user",
+                label="user-supplied silica role table",
+                material_ids=("sio2",),
+                roles=role_table,
+                combining_rule="host",
+                motions=("frozen", "rigid"),
+                notes="slab_ff='custom' (not validated by AutoPoly)",
+            )
+        return adapter, role_table
+
     def _validate(self) -> None:
         if self.lx_target <= 0 or self.ly_target <= 0:
             raise ValidationError(
@@ -361,378 +397,80 @@ class SlabBuilder:
     # ------------------------------------------------------------------
     # Public build
     # ------------------------------------------------------------------
-    def build(self) -> SurfaceSlab:
-        nx = max(1, int(round(self.lx_target / self.CELL_A)))
-        ny = max(1, int(round(self.ly_target / self.CELL_B)))
-        lx, ly = nx * self.CELL_A, ny * self.CELL_B
+    @property
+    def oh_length(self) -> float:
+        """O-H cap length for the selected slab force field (A)."""
+        return OH_BOND_LENGTH.get(self.slab_ff, 0.98)
 
-        species, pos = self._tile(nx, ny)
-        keep = self._cleave(species, pos, lx, ly)
-        species, pos = species[keep], pos[keep]
-        bonds = self._perceive_bonds(species, pos, lx, ly)
-        species, pos, bonds = self._strip_strays(species, pos, bonds)
-
-        coord = _coordination(len(species), bonds)
-        si_idx = np.where(species == "Si")[0]
-        if not np.all(coord[si_idx] == 4):
-            bad = int(np.sum(coord[si_idx] != 4))
-            raise ValidationError(
-                f"{self.BUILDER_NAME} slab cleave left {bad} Si without "
-                "full tetrahedral coordination; increase the slab "
-                "thickness"
-            )
-
-        z_si_top = pos[si_idx][:, 2].max()
-        dangling_top = [
-            i for i in np.where(species == "O")[0]
-            if coord[i] == 1 and pos[i][2] > z_si_top
-        ]
-
-        species, pos, bonds, dangling_top = self._bridge_dangling(
-            species, pos, bonds, dangling_top, lx, ly
+    def build_structure(self) -> AtomicStructure:
+        """Steps 1-6: the force-field-agnostic hydroxylated slab."""
+        return silica_chem.build_silica_slab(
+            self.CELL_FRACTIONAL, self.CELL_A, self.CELL_B, self.CELL_C,
+            self.lx_target, self.ly_target, self.thickness,
+            oh_density=self.oh_density,
+            hydroxylate_bottom=self.hydroxylate_bottom,
+            seed=self.seed,
+            oh_length=self.oh_length,
+            name=self.BUILDER_NAME,
+            phase=self.BUILDER_NAME,
         )
 
-        # indices were remapped by bridging: recompute coordination and
-        # the bottom-face dangling oxygens
-        coord = _coordination(len(species), bonds)
-        dangling_set = set(dangling_top)
-        dangling_bottom = [
-            i for i in np.where(species == "O")[0]
-            if coord[i] == 1 and i not in dangling_set
-        ]
+    def build(self) -> SurfaceSlab:
+        structure = self.build_structure()
+        return self.type_structure(structure)
 
-        # Hydroxylation: cap remaining dangling oxygens with H
-        oh_len = OH_BOND_LENGTH.get(self.slab_ff, 0.98)
-        species_l = list(species)
-        pos_l = list(pos)
-        bonds_l = list(bonds)
-        n_top_capped = 0
-        for i in dangling_top:
-            self._cap_with_h(species_l, pos_l, bonds_l, i, oh_len)
-            n_top_capped += 1
-        n_bottom_capped = 0
-        for i in dangling_bottom:
-            if self.hydroxylate_bottom:
-                self._cap_with_h(species_l, pos_l, bonds_l, i, oh_len)
-                n_bottom_capped += 1
-            # else: leave bare (documented; slab no longer neutral)
-
-        atoms = self._assign_atoms(species_l, pos_l, bonds_l)
-        slab_bonds = list(bonds_l)
-
-        # Center coordinates: lateral at origin, z at the slab mid-plane.
-        # Wrap lateral coordinates into [-l/2, l/2): edge hydroxyl caps
-        # can point slightly outside the cell (harmless for a periodic
-        # slab, but tidy in the data file).
-        arr = np.array([a.position for a in atoms])
-        arr[:, 0] -= lx / 2.0
-        arr[:, 1] -= ly / 2.0
-        arr[:, 0] -= lx * np.floor(arr[:, 0] / lx + 0.5)
-        arr[:, 1] -= ly * np.floor(arr[:, 1] / ly + 0.5)
-        z_mid = 0.5 * (arr[:, 2].min() + arr[:, 2].max())
-        arr[:, 2] -= z_mid
-        for a, p in zip(atoms, arr):
-            a.position = p
-        z_extent = float(arr[:, 2].max() - arr[:, 2].min())
-
-        total_q = float(sum(a.charge for a in atoms))
+    def type_structure(self, structure: AtomicStructure) -> SurfaceSlab:
+        """Step 7: type a slab structure and wrap it as a SurfaceSlab."""
+        assignment = self._adapter.assign(
+            structure.roles, self._role_table,
+            notes=[f"slab_ff={self.slab_ff}"],
+        )
+        atoms = self._assign_atoms(structure, assignment)
+        total_q = assignment.net_charge
         if abs(total_q) > 1e-4:
             logger.warning(
                 f"{self.BUILDER_NAME} slab net charge {total_q:+.4f} e "
                 "(expected ~0 for a fully hydroxylated slab)"
             )
-
-        achieved = n_top_capped / (lx * ly / 100.0)
-        logger.info(
-            f"{self.BUILDER_NAME} slab: {nx}x{ny} cells "
-            f"({lx:.3f} x {ly:.3f} A), {len(atoms)} atoms, "
-            f"z-extent {z_extent:.2f} A, silanols top {n_top_capped} / "
-            f"bottom {n_bottom_capped} (achieved top density "
-            f"{achieved:.2f}/nm^2, target {self.oh_density}/nm^2)"
-        )
+        meta = structure.metadata
         return SurfaceSlab(
             class_name=self.class_name,
             lt_filename=self.lt_filename,
-            lx=lx, ly=ly,
+            lx=float(meta["lx"]),
+            ly=float(meta["ly"]),
             thickness=self.thickness,
-            z_extent=z_extent,
+            z_extent=float(structure.descriptors["z_extent"]),
             atoms=atoms,
-            n_silanol_top=n_top_capped,
-            n_silanol_bottom=n_bottom_capped,
+            n_silanol_top=int(meta["n_silanol_top"]),
+            n_silanol_bottom=int(meta["n_silanol_bottom"]),
             slab_ff=self.slab_ff,
             pair_substyle=self.pair_substyle,
             bond_substyle=self.bond_substyle,
-            bonds=slab_bonds,
+            bonds=list(structure.bonds),
+            structure=structure,
+            assignment=assignment,
         )
 
     # ------------------------------------------------------------------
-    # Pipeline steps
+    # Helpers
     # ------------------------------------------------------------------
-    def _tile(self, nx, ny):
-        """Replicate the surface cell; z as needed for the cut."""
-        nz = int(math.ceil(self.thickness / self.CELL_C)) + 1
-        species, positions = [], []
-        for ix in range(nx):
-            for iy in range(ny):
-                for iz in range(nz):
-                    for elem, (fx, fy, fz) in self.CELL_FRACTIONAL:
-                        species.append(elem)
-                        positions.append((
-                            (ix + fx) * self.CELL_A,
-                            (iy + fy) * self.CELL_B,
-                            (iz + fz) * self.CELL_C,
-                        ))
-        return np.array(species), np.array(positions)
-
-    def _cleave(self, species, pos, lx, ly):
-        """
-        Choose the z-shift whose cut runs along the natural cleavage
-        plane, then keep Si in the interior window and O in the
-        buffer-coated range.
-
-        Candidate shifts align each distinct Si layer with the window
-        bottom.  The winner keeps every Si tetrahedrally coordinated
-        (given the O coating) and breaks the fewest bonds (smallest
-        dangling-O count).  Raises ValidationError if no candidate works.
-        """
-        z = pos[:, 2]
-        si_mask = species == "Si"
-        si_z = np.sort(z[si_mask])
-        planes = []
-        for zv in si_z:
-            if not planes or zv - planes[-1] > 0.2:
-                planes.append(zv)
-
-        si_top = self.thickness - Z_MARGIN
-        best = None  # (n_dangling, shift, keep, n_dangling_invalid)
-        for p in planes:
-            shift = Z_MARGIN - p
-            zz = z + shift
-            keep = (
-                (si_mask & (zz >= Z_MARGIN - 1e-6) & (zz <= si_top))
-                | ((species == "O") & (zz >= Z_MARGIN - 1.65)
-                   & (zz <= si_top + 1.65))
-            )
-            if not np.any(keep & si_mask):
-                continue
-            sub_species = species[keep]
-            sub_pos = pos[keep].copy()
-            sub_pos[:, 2] = zz[keep]
-            bonds = self._perceive_bonds(sub_species, sub_pos, lx, ly)
-            coord = _coordination(len(sub_species), bonds)
-            sub_si = np.where(sub_species == "Si")[0]
-            n_bad = int(np.sum(coord[sub_si] != 4))
-            n_dangling = int(np.sum(
-                coord[sub_species == "O"] != 2
-            ))
-            candidate = (n_bad, n_dangling, keep)
-            if best is None or (n_bad, n_dangling) < best[:2]:
-                best = candidate
-
-        if best is None or best[0] > 0:
-            raise ValidationError(
-                f"{self.BUILDER_NAME}: no cleavage plane keeps all Si "
-                "tetrahedrally coordinated for thickness "
-                f"{self.thickness} A; increase the slab thickness"
-            )
-        return best[2]
-
-    @staticmethod
-    def _perceive_bonds(species, pos, lx, ly):
-        """Si-O bonds by distance cutoff (lateral minimum image)."""
-        si = np.where(species == "Si")[0]
-        ox = np.where(species == "O")[0]
-        bonds = []
-        for i in si:
-            d = pos[ox] - pos[i]
-            d[:, 0] -= lx * np.round(d[:, 0] / lx)
-            d[:, 1] -= ly * np.round(d[:, 1] / ly)
-            dist = np.linalg.norm(d, axis=1)
-            for j, dij in zip(ox, dist):
-                if dij < SI_O_BOND_CUTOFF:
-                    bonds.append((int(i), int(j)))
-        return bonds
-
-    @staticmethod
-    def _strip_strays(species, pos, bonds):
-        """Keep the largest connected component of the bond graph."""
-        neighbors = {}
-        for i, j in bonds:
-            neighbors.setdefault(i, set()).add(j)
-            neighbors.setdefault(j, set()).add(i)
-        seen, components = set(), []
-        for start in list(neighbors):
-            if start in seen:
-                continue
-            stack, comp = [start], set()
-            while stack:
-                node = stack.pop()
-                if node in comp:
-                    continue
-                comp.add(node)
-                stack.extend(neighbors.get(node, ()) - comp)
-            seen |= comp
-            components.append(comp)
-        if not components:
-            raise ValidationError(
-                "Substrate slab: no bonded network found"
-            )
-        major = max(components, key=len)
-        n_dropped = len(species) - len(major)
-        if n_dropped:
-            logger.info(f"Slab: stripped {n_dropped} stray atoms")
-        keep_idx = sorted(major)
-        remap = {old: new for new, old in enumerate(keep_idx)}
-        return (
-            species[keep_idx],
-            pos[keep_idx],
-            [(remap[i], remap[j]) for i, j in bonds
-             if i in remap and j in remap],
-        )
-
-    def _bridge_dangling(self, species, pos, bonds, dangling_top, lx, ly):
-        """
-        Form Si-O-Si bridges to reduce the dangling-O count to the target
-        silanol density (mbuild SilicaInterface._bridge_dangling_Os).
-        """
-        neighbors = {}
-        for i, j in bonds:
-            neighbors.setdefault(i, set()).add(j)
-            neighbors.setdefault(j, set()).add(i)
-
-        area_nm2 = lx * ly / 100.0
-        target = int(round(self.oh_density * area_nm2))
-        if len(dangling_top) <= target:
-            if len(dangling_top) < target:
-                logger.warning(
-                    f"{self.BUILDER_NAME} slab has only "
-                    f"{len(dangling_top)} dangling surface oxygens, "
-                    f"below the target silanol count {target} "
-                    f"({self.oh_density}/nm^2); keeping all"
-                )
-            return species, pos, bonds, dangling_top
-
-        rng = np.random.default_rng(self.seed)
-        species = species.copy()
-        pos = pos.copy()
-        bonds = list(bonds)
-        dangling = list(dangling_top)
-        n_bridges = int((len(dangling) - target) / 2)
-
-        for _ in range(n_bridges):
-            bridged = False
-            attempts = 0
-            while not bridged and attempts < 1000:
-                attempts += 1
-                o1 = dangling[rng.integers(len(dangling))]
-                si1 = next(iter(neighbors[o1]))
-                order = rng.permutation(len(dangling))
-                for k in order:
-                    o2 = dangling[k]
-                    if o2 == o1:
-                        continue
-                    si2 = next(iter(neighbors[o2]))
-                    if si1 == si2:
-                        continue
-                    if neighbors[si1] & neighbors[si2]:
-                        continue
-                    d = pos[si2] - pos[si1]
-                    d[0] -= lx * round(d[0] / lx)
-                    d[1] -= ly * round(d[1] / ly)
-                    if np.linalg.norm(d) < BRIDGE_SI_SI_MAX:
-                        bonds.append((o1, si2))
-                        neighbors[o1].add(si2)
-                        neighbors[si2].add(o1)
-                        neighbors[si2].discard(o2)
-                        neighbors.pop(o2, None)
-                        # delete o2: mark and compact at the end
-                        pos[o2] = np.nan
-                        species[o2] = "X"
-                        dangling.remove(o1)
-                        dangling.remove(o2)
-                        bridged = True
-                        break
-            if not bridged:
-                logger.warning(
-                    f"{self.BUILDER_NAME} slab: no geometrically valid "
-                    "Si-O-Si bridge pairs found; the surface stays at "
-                    "its intrinsic termination. Use a larger oh_density "
-                    "or accept the intrinsic density."
-                )
-                break
-
-        keep = species != "X"
-        remap = {}
-        new_idx = 0
-        for old, k in enumerate(keep):
-            if k:
-                remap[old] = new_idx
-                new_idx += 1
-        species = species[keep]
-        pos = pos[keep]
-        bonds = [(remap[i], remap[j]) for i, j in bonds
-                 if i in remap and j in remap]
-        dangling_top = [remap[i] for i in dangling]
-        return species, pos, bonds, dangling_top
-
-    @staticmethod
-    def _cap_with_h(species_l, pos_l, bonds_l, o_idx, oh_len):
-        """Cap a dangling oxygen with H along the O-Si bond direction."""
-        si_idx = None
-        for i, j in bonds_l:
-            if i == o_idx and species_l[j] == "Si":
-                si_idx = j
-                break
-            if j == o_idx and species_l[i] == "Si":
-                si_idx = i
-                break
-        if si_idx is None:
-            raise ValidationError("Substrate slab: dangling O without Si")
-        direction = pos_l[o_idx] - pos_l[si_idx]
-        direction = direction / np.linalg.norm(direction)
-        h_idx = len(species_l)
-        species_l.append("H")
-        pos_l.append(pos_l[o_idx] + oh_len * direction)
-        bonds_l.append((o_idx, h_idx))
-
-    def _assign_atoms(self, species_l, pos_l, bonds_l):
-        """Assign roles/types/charges; every Si must stay 4-coordinated."""
-        si_neighbors = {}
-        for i, j in bonds_l:
-            if species_l[j] == "Si":
-                si_neighbors.setdefault(i, set()).add(j)
-            if species_l[i] == "Si":
-                si_neighbors.setdefault(j, set()).add(i)
-        counters = {"Si": 0, "OB": 0, "OH": 0, "HO": 0}
+    def _assign_atoms(self, structure: AtomicStructure,
+                      assignment: ParameterAssignment) -> List[SlabAtom]:
+        """SlabAtom records (names by role counter, types, charges, LJ)."""
+        from ..exporters.moltemplate import role_labels
+        names = role_labels(structure.roles, self.ATOM_PREFIX)
         atoms = []
-        table = self._table
-        for idx, (elem, p) in enumerate(zip(species_l, pos_l)):
-            if elem == "Si":
-                role = "Si"
-            elif elem == "H":
-                role = "HO"
-            elif len(si_neighbors.get(idx, ())) >= 2:
-                role = "OB"
-            else:
-                role = "OH"
-            counters[role] += 1
-            entry = table[role]
-            atom = SlabAtom(
-                name=f"{self.ATOM_PREFIX}_{role.lower()}_{counters[role]}",
-                role=role,
-                type_name=entry["type"],
-                charge=entry["charge"],
-                position=np.asarray(p, dtype=float),
-            )
-            atom._epsilon = entry["epsilon"]
-            atom._sigma = entry["sigma"]
-            atoms.append(atom)
+        for name, role, tname, q, p in zip(
+                names, structure.roles, assignment.type_names,
+                assignment.charges, structure.positions):
+            eps, sig = assignment.type_lj[tname]
+            atoms.append(SlabAtom(
+                name=name, role=role, type_name=tname, charge=float(q),
+                position=np.array(p, dtype=float),
+                epsilon=eps, sigma=sig,
+            ))
         return atoms
 
 
 def _coordination(n, bonds):
-    coord = np.zeros(n, dtype=int)
-    for i, j in bonds:
-        coord[i] += 1
-        coord[j] += 1
-    return coord
+    return silica_chem.coordination(n, bonds)

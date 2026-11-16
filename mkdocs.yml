@@ -81,6 +81,7 @@ nav:
       - Force Fields: guides/force-fields.md
       - "MC Placement & Chain Growth": guides/mc-placement.md
       - Substrates & Films: guides/substrates.md
+      - Nanocomposites: guides/nanocomposites.md
       - Reactive MD (Reactor): guides/reactor.md
       - Bead-Spring (Coarse-Grained): guides/bead-spring.md
       - Output Files: guides/output-files.md
@@ -102,6 +103,7 @@ nav:
       - Molecule: reference/molecule.md
       - generate: reference/generate.md
       - Bead-Spring: reference/bead-spring.md
+      - Nanoparticles & Materials: reference/nanoparticles.md
       - MonomerGenerator: reference/monomer-generator.md
       - mc (Monte Carlo): reference/mc.md
       - exceptions: reference/exceptions.md

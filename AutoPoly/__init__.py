@@ -20,6 +20,13 @@ Three-Stage Pipeline (Geometry -> Typing -> Packing):
 - UnitLibrary: units.json manifest contract between stages 2 and 3
 - PlacementStrategy / register_strategy: pluggable packing strategies
 
+Inorganic components (shared AutoPoly.materials foundation):
+- SubstrateSpec(builder=...): built-in crystalline silica slabs
+- Nanoparticle: nanoparticle fillers (silica, alumina, titania, carbon,
+  gold, silver) for polymer nanocomposites ("nanocomposite_mc" packing)
+- Material / AutoPoly.materials: material registry, inorganic force-field
+  adapters and the md_ready qualification matrix
+
 External Dependencies:
 - Moltemplate: For generating LAMMPS data files from molecular templates
 - LAMMPS: Molecular dynamics simulation engine
@@ -68,6 +75,9 @@ __all__ = [
     "BoxRegion",
     "register_strategy",
     "get_strategy",
+    "Nanoparticle",
+    "NanocompositePacking",
+    "Material",
     "Reactor",
     "ReactorResult",
     "OpenFFTyper",
@@ -115,6 +125,9 @@ try:
         get_strategy,
     )
     from .reactor import Reactor, ReactorResult
+    from .nanoparticles import Nanoparticle
+    from .packing import NanocompositePacking
+    from .materials import Material
     from . import mc
     # OpenFFTyper imports the openff packages lazily (only when used), so the
     # class itself is always importable; parameterization without the optional
@@ -133,5 +146,8 @@ except ImportError as e:
     generate = None
     Reactor = None
     ReactorResult = None
+    Nanoparticle = None
+    NanocompositePacking = None
+    Material = None
     OpenFFTyper = None
     mc = None

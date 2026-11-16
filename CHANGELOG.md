@@ -9,6 +9,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Polymer nanocomposites** (`AutoPoly.nanoparticles`, `AutoPoly.materials`)
+  — a `Nanoparticle` passed to `generate()` next to `Polymer`/`Molecule`
+  models builds finite inorganic particles in a polymer matrix:
+  - *Materials foundation* (`AutoPoly.materials`): `AtomicStructure`
+    (elements, positions, bonds, periodic images, cell, roles, surface
+    sites, provenance), periodic topology helpers, crystal tables
+    (alpha-quartz, beta-cristobalite, corundum, rutile, anatase, fcc Au/Ag,
+    graphene; generated tables reproducible with
+    `tools/generate_crystal_tables.py`), a material registry with six IDs
+    (`sio2`, `al2o3`, `tio2`, `c`, `au`, `ag`), per-material chemistry
+    adapters (silica hydroxylation/condensation, oxide bond-valence
+    protonation, carbon edge passivation, fcc metal clusters) and a shared
+    moltemplate writer (`AutoPoly.exporters.moltemplate`).
+  - *Shapes*: crystal-carved spheres (oxides, metals), ASE metal
+    polyhedra (cuboctahedron/octahedron/Wulff), graphene sheets, (n, m)
+    nanotubes, and imported clusters (`Nanoparticle.from_file`: JSON, PDB
+    with CONECT, XYZ with bond perception), validated against the
+    material's valence rules.
+  - *Inorganic force-field adapters* (registered, versioned): INTERFACE
+    FF v1.5 silica, CLAYFF silica and alumina, OPLS-AA aromatic carbon,
+    Heinz 2008 12-6 Au/Ag; user adapters via `register_inorganic_ff`.
+  - *Explicit cross interactions*: one `pair_coeff i j` per
+    organic-inorganic (and inorganic-inorganic) type pair appended to
+    `system.in.settings`, with the combining rule each parameter set was
+    fitted with and the host's pair sub-style; `ff_compatibility.json` /
+    `.md` report per build.
+  - *Qualification matrix* (`AutoPoly.materials.qualification`): MD
+    export only for exact qualified combinations (material, phase,
+    geometry, surface, inorganic FF, polymer FF, motion, linker), each
+    backed by a LAMMPS smoke test; `md_ready` is derived per material,
+    never declared. TiO2 is geometry-only. `allow_unqualified=True`
+    records user-qualified builds.
+  - *`nanocomposite_mc` packing* (`NanocompositePacking`): fillers first
+    with periodic atom-level gaps, then the matrix (rigid pre-grown
+    conformations, regrown in the box around obstacles when they do not
+    fit), conservative voxel occupancy plus an exact minimum-image
+    verification; never falls back to overlapping positions. The report
+    records minimum distances, box sizing and loading.
+  - *Grafted chains* (`Grafting`): silyl-ether grafting onto silica
+    silanols at a target density, anchored growth around the core,
+    charge-conserving grafted-O type, linkage bonded terms read from the
+    bundled `oplsaa.lt` by OPLS bonded class.
+  - *Run template*: `in.run` with fillers held during minimization, one
+    rigid body per particle (`fix rigid/nvt molecule`) or frozen
+    particles, matrix NVT with a matrix-only temperature, optional
+    compression stage; `system.in.groups` with per-instance, per-species
+    and per-motion groups. `AutoPoly.pipeline.smoke.run_smoke()` runs a
+    short LAMMPS health check of any project.
+  - Docs: `guides/nanocomposites.md`, reference page; examples
+    `example_silica_nanoparticle.py`, `example_pmma_silica_nanocomposite.py`,
+    `example_silica_grafted_polymer.py`, `example_alumina_pmma.py`,
+    `example_titania_polymer.py`, `example_graphene_polymer.py`,
+    `example_au_polymer.py`.
+- **Coarse-grained fillers for the bead-spring backend** —
+  `BeadSpringSystem.add_filler(CGFiller(...))`: rigid or frozen spheres
+  of LJ beads (solid FCC or surface shell) placed before the chains, which
+  grow around them by SAW with periodic overlap checks; both backends
+  write one molecule per filler and the run script integrates rigid
+  fillers with `fix rigid/nvt molecule`. `set_pair_coeff()` overrides a
+  bead-pair interaction (optionally with its own cutoff), e.g. an
+  attractive polymer-filler pair in a WCA melt. `saw_generate_graphs`
+  gains an optional `obstacles=` argument (default unchanged). Example:
+  `example_cg_nanocomposite.py`.
+- **Golden equivalence tests** for the built-in silica substrates
+  (`tests/golden/`): geometry, topology, typed coefficients, generated
+  files and LAMMPS energies are compared with the pre-refactoring
+  reference.
+
 - **LAMMPS run script for substrate systems** — `generate()` with
   `substrate=` now writes a ready-to-run `in.run` (frozen slab via
   `fix setforce`, film NVT 300 K with a film-only temperature compute,
@@ -20,8 +88,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Regression tests** for the issues exposed by running built
   film-on-substrate systems through LAMMPS.
 
+### Changed
+
+- **Built-in silica slabs go through the materials foundation** —
+  `SubstrateSpec(builder=...)` slabs are recorded as stage-1 inorganic
+  entries in `geometry.json` and typed in stage 2 by the registered
+  silica adapters (`AutoPoly.surfaces` is now a compatibility facade over
+  `AutoPoly.materials`). Calls, geometry, topology and charges are
+  unchanged (golden tests); see the CLAYFF fix below for the one
+  intentional parameter change.
+- **Manifest formats v2** — `units.json` (format 2) adds the `inorganic`
+  kind, `filler`/`graft` roles, motion, material provenance and particle
+  envelopes; `geometry.json` (format 2) adds an `inorganic` section and is
+  still written as version 1 when there is none. Version-1 files are
+  read unchanged.
+- **Strategy checks** — `mc_random`, `grid` and `on_substrate` refuse
+  inorganic filler units with a pointer to `nanocomposite_mc`; passing a
+  `Nanoparticle` together with an incompatible `strategy=` or with
+  `substrate=` raises instead of silently ignoring one of them.
+  `UnitLibrary.total_particle_count` counts organic units only.
+
 ### Fixed
 
+- **CLAYFF sigma** — CLAYFF publishes the well-minimum distance R0;
+  the built-in table converted R0 to sigma twice, so CLAYFF Si/O sigmas
+  were 2^(1/6) too small (e.g. Si 2.942 instead of 3.302 A, O 2.820
+  instead of 3.166 A). Slabs built with `slab_ff="clayff"` now carry the
+  published values; only these sigmas and the resulting LJ energies
+  change (checked by the golden tests). INTERFACE FF is unaffected.
+- **Bead-spring moltemplate backend: `in.polymer` did not run** — it read
+  `system.data` before `include system.in.init`, so LAMMPS aborted with
+  "No bonds allowed with this atom style"; the init file is now included
+  first.
+- **Chain regrowth junction geometry** — the open valence of a template
+  connection atom now uses the vacant tetrahedral/trigonal site (minus
+  the sum of its bond vectors), falling back to the clearest direction
+  only for flattened fragment conformers; the clearance-only criterion
+  gave ~95 degree backbone angles for PMMA and made in-box regrowth fail
+  in most attempts.
+- **Unclear cross-rule wording** in `ff_compatibility.md`.
 - **Spurious intra-slab nonbonded interactions** — built substrate
   slabs now emit their Si-O/O-H bond topology with zero-force-coefficient
   bond terms, so `special_bonds` excludes intra-slab 1-2/1-3/1-4

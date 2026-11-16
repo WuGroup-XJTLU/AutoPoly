@@ -13,6 +13,7 @@ AutoPoly generates polymer structures and prepares them for molecular dynamics s
 - **Ring & Linear** — both topologies supported
 - **SAW Placement** — Monte Carlo self-avoiding walk for realistic initial configurations
 - **Coarse-Grained Models** — bead-spring polymers written directly as LAMMPS data files
+- **Nanocomposites** — silica, alumina, carbon, Au/Ag particles (and CG fillers) in a polymer matrix, with qualified force-field combinations and explicit cross terms
 - **Three-Stage Pipeline** — geometry → typing → packing as independently usable stages
 
 ## Your First Polymer in 3 Steps

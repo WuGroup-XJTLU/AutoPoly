@@ -1,0 +1,28 @@
+{
+  "builder": "beta_cristobalite",
+  "kwargs": {
+    "lx_target": 40.0,
+    "ly_target": 53.0,
+    "thickness": 14.0,
+    "oh_density": 2.0,
+    "seed": 7
+  },
+  "class_name": "CristobaliteSlab",
+  "lt_filename": "beta_cristobalite_slab.lt",
+  "lx": 40.503076,
+  "ly": 52.615041000000005,
+  "thickness": 14.0,
+  "z_extent": 12.183494032639594,
+  "n_atoms": 2016,
+  "n_bonds": 2304,
+  "n_silanol_top": 288,
+  "n_silanol_bottom": 96,
+  "slab_ff": "interface",
+  "net_charge": 0.0,
+  "roles": {
+    "Si": 480,
+    "OB": 768,
+    "OH": 384,
+    "HO": 384
+  }
+}

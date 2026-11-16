@@ -17,43 +17,16 @@ builder warns when a lower oh_density target cannot be met.
 Created on 2026-08-12
 @author: zwu
 """
-import math
-
+from ..materials.crystals import (  # noqa: F401  (public constants)
+    ORTHO_CELL_FRACTIONAL,
+    QUARTZ_A,
+    QUARTZ_B,
+    QUARTZ_C,
+)
 from .base import SlabBuilder, SurfaceSlab
 
 #: Backwards-compatible alias.
 QuartzSlab = SurfaceSlab
-
-#: Lattice constant a of the orthorhombic quartz(0001) surface cell (A).
-QUARTZ_A = 4.9019
-#: Lattice constant c (slab z direction) (A).
-QUARTZ_C = 5.3988
-#: Lateral b of the orthorhombic surface cell (A) = a*sqrt(3).
-QUARTZ_B = QUARTZ_A * math.sqrt(3.0)
-
-#: Fractional coordinates of the 18-atom orthorhombic quartz(0001) cell
-#: (derived from COD 1526860; verified: 4 Si-O bonds per Si at
-#: 1.607-1.616 A, O-O >= 2.62 A, Si-Si >= 3.05 A).
-ORTHO_CELL_FRACTIONAL = (
-    ("Si", (0.46730000, 0.00000000, 0.33330000)),
-    ("Si", (0.96730000, 0.50000000, 0.33330000)),
-    ("Si", (0.76635000, 0.23365000, 0.66663333)),
-    ("Si", (0.26635000, 0.73365000, 0.66663333)),
-    ("Si", (0.26635000, 0.26635000, 0.99996667)),
-    ("Si", (0.76635000, 0.76635000, 0.99996667)),
-    ("O",  (0.15795000, 0.42905000, 0.11613333)),
-    ("O",  (0.65795000, 0.92905000, 0.11613333)),
-    ("O",  (0.27745000, 0.13555000, 0.21720000)),
-    ("O",  (0.77745000, 0.63555000, 0.21720000)),
-    ("O",  (0.77745000, 0.36445000, 0.44946667)),
-    ("O",  (0.27745000, 0.86445000, 0.44946667)),
-    ("O",  (0.65795000, 0.07095000, 0.55053333)),
-    ("O",  (0.15795000, 0.57095000, 0.55053333)),
-    ("O",  (0.06460000, 0.20650000, 0.78280000)),
-    ("O",  (0.56460000, 0.70650000, 0.78280000)),
-    ("O",  (0.56460000, 0.29350000, 0.88386667)),
-    ("O",  (0.06460000, 0.79350000, 0.88386667)),
-)
 
 
 class QuartzBuilder(SlabBuilder):

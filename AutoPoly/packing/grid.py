@@ -27,6 +27,7 @@ from .base import (
     PlacementRecord,
     PlacementResult,
     PlacementStrategy,
+    reject_inorganic_units,
     symmetric_bounds,
 )
 
@@ -41,6 +42,7 @@ class GridStrategy(PlacementStrategy):
     name = "grid"
 
     def place(self, ctx: PackingContext) -> PlacementResult:
+        reject_inorganic_units(ctx, self.name)
         if ctx.substrate is not None:
             raise ValidationError(
                 "Strategy 'grid' does not support substrates; "

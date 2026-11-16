@@ -16,7 +16,16 @@ The artifact stores:
 - one entry per built chain with per-monomer placements (rotation +
   translation), either from MC self-avoiding chain growth, deterministic
   fallback, or circular ring placement,
-- small molecules with embedded conformers.
+- small molecules with embedded conformers,
+- (format_version 2) an ``inorganic`` list: one entry per inorganic
+  component (built-in substrate slab, nanoparticle species) holding the
+  force-field-agnostic AtomicStructure (elements, coordinates, cell/PBC,
+  bonds with image shifts, chemical roles, surface sites, descriptors,
+  provenance) plus the component's identity/placement request (material,
+  phase, surface, count, motion, requested inorganic force field).
+
+Artifacts without inorganic components are still written as
+format_version 1 (unchanged); readers accept versions 1 and 2.
 
 Atom-map numbers are the join key to stage 2 (UnitTyper): every variant
 atom carries the map number of its atom in the full chain graph, so types
@@ -52,7 +61,9 @@ from ..monomers.monomer_generator import (
     compute_lt_atom_order,
 )
 
-GEOMETRY_FORMAT_VERSION = 1
+GEOMETRY_FORMAT_VERSION = 2
+#: Version written when no inorganic section is present (legacy layout).
+GEOMETRY_FORMAT_VERSION_ORGANIC = 1
 GEOMETRY_DIRNAME = "geometry"
 GEOMETRY_FILENAME = "geometry.json"
 
@@ -120,6 +131,15 @@ def is_molecule_model(model: object) -> bool:
     return bool(getattr(model, "_is_molecule", False))
 
 
+def is_inorganic_component(model: object) -> bool:
+    """
+    Detect inorganic stage-1 components (nanoparticles, built-in slab
+    adapters): objects flagged ``_is_inorganic_component`` that provide
+    ``geometry_entry(component_id) -> dict``.
+    """
+    return getattr(model, "_is_inorganic_component", False) is True
+
+
 class GeometryBuilder:
     """
     Stage 1: build force-field-agnostic geometry for a set of models.
@@ -159,16 +179,22 @@ class GeometryBuilder:
     # Public API
     # ------------------------------------------------------------------
     def build(self, models: List[object],
-              substrate_models: Optional[List[object]] = None) -> GeometryResult:
+              substrate_models: Optional[List[object]] = None,
+              inorganic: Optional[List[object]] = None) -> GeometryResult:
         """
         Build geometry for all models and write geometry.json.
 
         Args:
-            models: List of Polymer and/or Molecule model objects (film).
+            models: List of Polymer and/or Molecule model objects (film),
+                optionally mixed with inorganic components (e.g.
+                Nanoparticle), which are routed to the inorganic section.
             substrate_models: Optional list of models forming a physical
                 substrate slab. Processed identically to film models, but
                 their chains/molecules are tagged role="substrate" so the
                 packing stage can place them into the slab region.
+            inorganic: Optional extra inorganic components (e.g. the
+                built-in slab adapter generate() creates for
+                SubstrateSpec(builder=...)).
 
         Returns:
             GeometryResult with the geometry directory and data dict.
@@ -179,32 +205,52 @@ class GeometryBuilder:
         if self.config.rng_seed is not None:
             np.random.seed(self.config.rng_seed)
 
+        components = [m for m in models if is_inorganic_component(m)]
+        components += list(inorganic or [])
+        models = [m for m in models if not is_inorganic_component(m)]
+
         chain_graphs: Dict[str, Any] = {}
         variants: Dict[str, Any] = {}
         chains: List[Dict[str, Any]] = []
         molecules: List[Dict[str, Any]] = []
 
         partitioned = (
-            [(m, "film") for m in models]
-            + [(m, "substrate") for m in (substrate_models or [])]
+            [(m, "film", None) for m in models]
+            + [(m, "substrate", None) for m in (substrate_models or [])]
         )
+        # grafted chains of inorganic components: regular chains tagged
+        # role "graft" + owner; the owner anchors them in its entry
+        for comp in components:
+            for gm in getattr(comp, "graft_models", lambda: [])():
+                partitioned.append((gm, "graft", comp.component_id))
 
         poly_model_idx = 0
-        for model, role in partitioned:
+        for model, role, owner in partitioned:
             if is_molecule_model(model):
                 molecules.append(self._build_molecule_entry(model, role))
             else:
                 model_id = f"model_{poly_model_idx}"
                 base_name = f"monomer_{poly_model_idx}"
                 poly_model_idx += 1
+                n_before = len(chains)
                 self._build_polymer_entries(
                     model, model_id, base_name,
                     chain_graphs, variants, chains,
                     role=role,
                 )
+                if owner is not None:
+                    for k, chain in enumerate(chains[n_before:]):
+                        chain["graft_of"] = owner
+                        chain["graft_index"] = k
+
+        # Inorganic components last: their builders use private RNGs, so
+        # the organic geometry is identical with or without them.
+        inorganic_entries = self._build_inorganic_entries(
+            components, {"chains": chains, "variants": variants})
 
         data = {
-            "format_version": GEOMETRY_FORMAT_VERSION,
+            "format_version": (GEOMETRY_FORMAT_VERSION if inorganic_entries
+                               else GEOMETRY_FORMAT_VERSION_ORGANIC),
             "created_with": {"autopoly_version": self._autopoly_version()},
             "mc_config": self.config.to_dict(),
             "chain_graphs": chain_graphs,
@@ -212,6 +258,8 @@ class GeometryBuilder:
             "chains": chains,
             "molecules": molecules,
         }
+        if inorganic_entries:
+            data["inorganic"] = inorganic_entries
 
         self.geometry_dir.mkdir(parents=True, exist_ok=True)
         json_path = self.geometry_dir / GEOMETRY_FILENAME
@@ -221,8 +269,34 @@ class GeometryBuilder:
             f"Geometry written to {json_path}: "
             f"{len(chains)} chains, {len(variants)} variants, "
             f"{len(molecules)} molecule species"
+            + (f", {len(inorganic_entries)} inorganic components"
+               if inorganic_entries else "")
         )
         return GeometryResult(directory=self.geometry_dir, data=data)
+
+    @staticmethod
+    def _build_inorganic_entries(components: List[object],
+                                 geometry: Optional[Dict[str, Any]] = None
+                                 ) -> List[Dict[str, Any]]:
+        """geometry.json inorganic entries with unique component IDs."""
+        from ..core.exceptions import ValidationError
+
+        entries: List[Dict[str, Any]] = []
+        used = set()
+        for k, comp in enumerate(components):
+            default_id = getattr(comp, "component_id", None) or f"inorganic_{k + 1}"
+            if getattr(comp, "grafts", None) is not None:
+                entry = comp.geometry_entry(default_id, geometry=geometry)
+            else:
+                entry = comp.geometry_entry(default_id)
+            if entry["id"] in used:
+                raise ValidationError(
+                    f"Duplicate inorganic component id '{entry['id']}'; give "
+                    "each nanoparticle species a unique name"
+                )
+            used.add(entry["id"])
+            entries.append(entry)
+        return entries
 
     @staticmethod
     def load(geometry_dir: str) -> Dict[str, Any]:
@@ -235,6 +309,7 @@ class GeometryBuilder:
         with open(path) as f:
             data = json.load(f)
         version = int(data.get("format_version", 0))
+        data.setdefault("inorganic", [])
         if version > GEOMETRY_FORMAT_VERSION:
             raise ValidationError(
                 f"Unsupported geometry.json format_version {version} "

@@ -1,0 +1,35 @@
+# AutoPoly film-on-substrate run script (generated)
+# Frozen substrate + film NVT 300 K.  Edit as needed for production runs.
+boundary        p p p
+
+include         system.in.init
+read_data       system.data
+include         system.in.settings
+
+# substrate = molecule(s) 1 (placed first in the data file)
+group           slab molecule 1
+group           film subtract all slab
+
+neighbor        2.0 bin
+neigh_modify    delay 0 every 1 check yes
+
+# freeze the substrate (built slabs carry no force-bearing bonded terms)
+fix             freeze slab setforce 0.0 0.0 0.0
+
+minimize        1.0e-4 1.0e-6 1000 10000
+
+velocity        film create 300.0 12345 dist gaussian
+# film-only temperature: the frozen slab has zero kinetic energy and
+# would bias the default whole-system temperature in the log
+compute         tfilm film temp
+fix             nvt film nvt temp 300.0 300.0 100.0
+fix_modify      nvt temp tfilm
+
+timestep        1.0
+thermo          500
+thermo_style    custom step c_tfilm pe ke etotal press
+thermo_modify   temp tfilm
+
+dump            d1 all custom 2000 dump.film.lammpstrj id mol type x y z
+
+run             10000

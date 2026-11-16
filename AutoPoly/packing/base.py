@@ -13,7 +13,7 @@ Created on 2026-07-30
 """
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, ClassVar, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, ClassVar, Dict, List, Optional, Tuple, Union
 
 from ..core.exceptions import ValidationError
 from ..pipeline.units import UnitLibrary
@@ -238,6 +238,8 @@ class PackingContext:
         subtract: Optional list of CarveRegion specs applied to placed
                   instances before lt command emission (whole-instance
                   removal; supported by "mc_random" and "on_substrate").
+        nanocomposite: Optional NanocompositePacking configuration
+                  ("nanocomposite_mc" strategy).
     """
     units: UnitLibrary
     box: BoxSpec = field(default_factory=BoxSpec)
@@ -247,6 +249,7 @@ class PackingContext:
     monomer_density: float = 0.085
     substrate: Optional[SubstrateSpec] = None
     subtract: Optional[List["CarveRegion"]] = None
+    nanocomposite: Optional[object] = None
 
 
 @dataclass
@@ -272,9 +275,40 @@ class PlacementResult:
     Attributes:
         records: Placement commands in system.lt emission order.
         box_bounds: Box bounds actually used (after auto-sizing).
+        report: Optional strategy report (achieved clearances, loading,
+                box sizing); written to the force-field/placement report.
+        extra_lt_files: Optional {file name: .lt text} written into the
+                moltemplate directory and imported by system.lt (e.g.
+                per-instance chain classes regrown in place).
     """
     records: List[PlacementRecord]
     box_bounds: BoxBounds
+    report: Optional[dict] = None
+    extra_lt_files: Dict[str, str] = field(default_factory=dict)
+
+
+def reject_inorganic_units(ctx: "PackingContext", strategy: str,
+                           allow_substrate_slab: bool = False) -> None:
+    """
+    Refuse inorganic units a strategy cannot place (never treat a filler
+    or slab as a generic molecule).
+
+    Args:
+        allow_substrate_slab: Accept the stage-2 typed built-in substrate
+            slab unit (on_substrate places it as the substrate instance).
+    """
+    bad = [
+        u.id for u in ctx.units.units
+        if getattr(u, "kind", None) == "inorganic"
+        and not (allow_substrate_slab and u.role == "substrate")
+    ]
+    if bad:
+        raise ValidationError(
+            f"Strategy '{strategy}' cannot place inorganic unit(s) {bad}: "
+            "use strategy='nanocomposite_mc' for nanoparticle fillers, or "
+            "SubstrateSpec(builder=...) with 'on_substrate' for built-in "
+            "slabs"
+        )
 
 
 class PlacementStrategy(ABC):

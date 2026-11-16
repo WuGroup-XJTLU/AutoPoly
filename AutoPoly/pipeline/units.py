@@ -8,12 +8,26 @@ This module defines the file-based contract between pipeline stage 2
 
     UnitTyper  --writes-->  build/<ff>/units.json  --reads-->  BoxPacker
 
-A "unit" is one packable entity: either a single built polymer chain
-(each chain has its own MC conformation, so chains are genuinely distinct
-units) or a small-molecule species with an instance count.
+A "unit" is one packable entity: a single built polymer chain (each chain
+has its own MC conformation, so chains are genuinely distinct units), a
+small-molecule species with an instance count, or an inorganic component
+(a built-in substrate slab or a nanoparticle species with an instance
+count).
 
 Packing strategies read ONLY this manifest (plus the referenced .lt files
-by name); they never parse .lt contents.
+by name, and the optional per-unit coordinate files); they never parse .lt
+contents.
+
+Unit contract (format_version 2): three independent axes
+
+- kind:          "polymer" | "molecule" | "inorganic"   (what it is made of)
+- role:          "film" | "substrate" | "filler"        (where it goes)
+- geometry_type: "slab" | "cluster" | "sheet" | "rod" | "imported"
+                 (inorganic only; a geometry descriptor)
+
+``role`` is never interpreted as the chemical type.  Version-1 manifests
+(no geometry_type/material/motion/coords_file fields) remain readable and
+are migrated in memory by migrate_manifest().
 
 Created on 2026-07-30
 @author: zwu
@@ -25,16 +39,27 @@ from typing import Any, Dict, List, Optional, Union
 
 from ..core.exceptions import ValidationError
 
-FORMAT_VERSION = 1
+FORMAT_VERSION = 2
 MANIFEST_FILENAME = "units.json"
 
 UNIT_KIND_POLYMER = "polymer"
 UNIT_KIND_MOLECULE = "molecule"
-VALID_UNIT_KINDS = (UNIT_KIND_POLYMER, UNIT_KIND_MOLECULE)
+UNIT_KIND_INORGANIC = "inorganic"
+VALID_UNIT_KINDS = (UNIT_KIND_POLYMER, UNIT_KIND_MOLECULE, UNIT_KIND_INORGANIC)
 
 UNIT_ROLE_FILM = "film"
 UNIT_ROLE_SUBSTRATE = "substrate"
-VALID_UNIT_ROLES = (UNIT_ROLE_FILM, UNIT_ROLE_SUBSTRATE)
+UNIT_ROLE_FILLER = "filler"
+#: Chains covalently grafted onto a filler: instantiated by the filler's
+#: composite class, never placed by a strategy.
+UNIT_ROLE_GRAFT = "graft"
+VALID_UNIT_ROLES = (UNIT_ROLE_FILM, UNIT_ROLE_SUBSTRATE, UNIT_ROLE_FILLER,
+                    UNIT_ROLE_GRAFT)
+
+#: Geometry types of inorganic units (descriptors, not chemistry).
+VALID_GEOMETRY_TYPES = ("slab", "cluster", "sheet", "rod", "imported")
+#: Motion treatments of inorganic units.
+VALID_MOTIONS = ("frozen", "rigid", "flexible")
 
 
 @dataclass
@@ -55,10 +80,30 @@ class UnitSpec:
         anchors: Head/tail atom references for future grafting strategies,
                  e.g. {"head": "monomer[0]/C1", "tail": "monomer[49]/C2"}.
                  Populated by UnitTyper; not consumed by current strategies.
-        role: "film" (default) or "substrate". Substrate units are packed
-              into the slab region by the "on_substrate" strategy.
+        role: "film" (default), "substrate" or "filler". Substrate units
+              are packed into the slab region by the "on_substrate"
+              strategy; filler units are placed first by the
+              "nanocomposite_mc" strategy.
         monomer_files: Constituent monomer .lt files this unit depends on
                        (used for force-field subsetting).
+        lt_class: Moltemplate class defined by lt_file when it differs
+                  from the file stem (built-in slabs: "QuartzSlab").
+        geometry_type: Inorganic geometry descriptor (None for organic
+                       units).
+        motion: Inorganic motion treatment ("frozen"/"rigid"/"flexible").
+        material: Inorganic identity and parameterization record
+                  (material id, phase, surface, inorganic force field,
+                  version, combining rule, qualification id, ...).
+        envelope: Collision/loading descriptors (shape, radius, core
+                  volume A^3, accessible area A^2, lateral dims, ...).
+        mass: Mass of one instance (amu), when known.
+        coords_file: File (relative to the build dir) with the unit's
+                     class-local atom coordinates (element x y z, XYZ
+                     format) used by atom-level packing strategies.
+        chain_file: Polymer units: per-monomer template sidecar (JSON:
+                    monomer variant sequence, local coordinates, bonds,
+                    connection atoms, junction lengths) used by strategies
+                    that regrow chains in place.
     """
     id: str
     kind: str
@@ -70,6 +115,14 @@ class UnitSpec:
     anchors: Dict[str, str] = field(default_factory=dict)
     role: str = UNIT_ROLE_FILM
     monomer_files: List[str] = field(default_factory=list)
+    lt_class: Optional[str] = None
+    geometry_type: Optional[str] = None
+    motion: Optional[str] = None
+    material: Optional[Dict[str, Any]] = None
+    envelope: Optional[Dict[str, Any]] = None
+    mass: Optional[float] = None
+    coords_file: Optional[str] = None
+    chain_file: Optional[str] = None
 
     def __post_init__(self) -> None:
         if self.kind not in VALID_UNIT_KINDS:
@@ -86,11 +139,35 @@ class UnitSpec:
             raise ValidationError(
                 f"Unit '{self.id}' has invalid count {self.count} (must be >= 1)"
             )
+        if self.kind == UNIT_KIND_INORGANIC:
+            if self.geometry_type not in VALID_GEOMETRY_TYPES:
+                raise ValidationError(
+                    f"Inorganic unit '{self.id}' needs a geometry_type in "
+                    f"{list(VALID_GEOMETRY_TYPES)}, got {self.geometry_type!r}"
+                )
+            if self.motion not in VALID_MOTIONS:
+                raise ValidationError(
+                    f"Inorganic unit '{self.id}' needs a motion in "
+                    f"{list(VALID_MOTIONS)}, got {self.motion!r}"
+                )
+        elif self.role == UNIT_ROLE_FILLER:
+            raise ValidationError(
+                f"Unit '{self.id}': role 'filler' is reserved for inorganic "
+                f"units (kind '{self.kind}')"
+            )
+        if self.role == UNIT_ROLE_GRAFT and self.kind != UNIT_KIND_POLYMER:
+            raise ValidationError(
+                f"Unit '{self.id}': role 'graft' is for polymer chains"
+            )
 
     @property
     def class_name(self) -> str:
-        """Moltemplate class name instantiated by strategies (lt file stem)."""
-        return Path(self.lt_file).stem
+        """Moltemplate class name instantiated by strategies."""
+        return self.lt_class or Path(self.lt_file).stem
+
+    @property
+    def is_inorganic(self) -> bool:
+        return self.kind == UNIT_KIND_INORGANIC
 
     def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
@@ -99,7 +176,9 @@ class UnitSpec:
     def from_dict(data: Dict[str, Any]) -> "UnitSpec":
         known = {
             "id", "kind", "lt_file", "count", "topology", "n_monomers",
-            "radius", "anchors", "role", "monomer_files",
+            "radius", "anchors", "role", "monomer_files", "lt_class",
+            "geometry_type", "motion", "material", "envelope", "mass",
+            "coords_file", "chain_file",
         }
         filtered = {k: v for k, v in data.items() if k in known}
         return UnitSpec(**filtered)
@@ -145,6 +224,7 @@ class UnitLibrary:
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> "UnitLibrary":
+        data = migrate_manifest(data)
         return UnitLibrary(
             force_field=data["force_field"],
             units=[UnitSpec.from_dict(u) for u in data.get("units", [])],
@@ -209,6 +289,10 @@ class UnitLibrary:
         for unit in self.units:
             referenced.append(unit.lt_file)
             referenced.extend(unit.monomer_files)
+            if unit.coords_file:
+                referenced.append(unit.coords_file)
+            if unit.chain_file:
+                referenced.append(unit.chain_file)
         for rel in dict.fromkeys(referenced):  # dedup, keep order
             if not (directory / rel).is_file():
                 missing.append(rel)
@@ -237,16 +321,59 @@ class UnitLibrary:
     def film_units(self) -> List[UnitSpec]:
         return [u for u in self.units if u.role == UNIT_ROLE_FILM]
 
+    @property
+    def inorganic_units(self) -> List[UnitSpec]:
+        return [u for u in self.units if u.kind == UNIT_KIND_INORGANIC]
+
+    @property
+    def filler_units(self) -> List[UnitSpec]:
+        return [u for u in self.units if u.role == UNIT_ROLE_FILLER]
+
+    @property
+    def organic_units(self) -> List[UnitSpec]:
+        return [u for u in self.units if u.kind != UNIT_KIND_INORGANIC]
+
+    @property
+    def matrix_units(self) -> List[UnitSpec]:
+        """Organic units placed by strategies (grafted chains excluded)."""
+        return [u for u in self.units if u.kind != UNIT_KIND_INORGANIC
+                and u.role != UNIT_ROLE_GRAFT]
+
+    @property
+    def graft_units(self) -> List[UnitSpec]:
+        return [u for u in self.units if u.role == UNIT_ROLE_GRAFT]
+
     def total_particle_count(self) -> int:
-        """Total monomers + molecule instances, used for density box sizing."""
+        """
+        Total monomers + molecule instances, used for density box sizing
+        (inorganic components are not monomers and are excluded).
+        """
         total = 0
         for unit in self.units:
             if unit.kind == UNIT_KIND_POLYMER:
                 total += (unit.n_monomers or 1) * unit.count
-            else:
+            elif unit.kind == UNIT_KIND_MOLECULE:
                 total += unit.count
         return max(total, 1)
 
     def max_chain_length(self) -> int:
         """Largest n_monomers across polymer units (1 if none)."""
         return max((u.n_monomers or 1 for u in self.polymer_units), default=1)
+
+
+def migrate_manifest(data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Explicit in-memory migration of a units.json dict to the current
+    format.
+
+    Version 1 -> 2: inorganic fields (lt_class, geometry_type, motion,
+    material, envelope, mass, coords_file, chain_file) did not exist; they default to
+    None, which is exactly the v1 meaning (organic units only).  The
+    kind/role values of v1 ("polymer"/"molecule", "film"/"substrate") are
+    unchanged in v2.  The original format_version is preserved so callers
+    can tell where a manifest came from.
+    """
+    version = int(data.get("format_version", 1))
+    if version < 1:
+        raise ValidationError(f"Invalid units.json format_version {version}")
+    return dict(data)

@@ -150,6 +150,14 @@ The film keeps its own force field; the slab's is chosen independently:
 | `"clayff"` | `cff_st`, `cff_ob`, `cff_oh`, `cff_ho` | +2.10, −1.05, −0.95, +0.425 | Cygan et al., *J. Phys. Chem. B* 2004 (CLAYFF) |
 | `"custom"` | user-provided | user-provided | — |
 
+!!! note "CLAYFF sigma corrected"
+    Cygan et al. tabulate the well-minimum distance R0; the LJ sigma is
+    R0 / 2^(1/6) (st 3.3020 A, ob/oh 3.1655 A). Earlier releases applied
+    this conversion twice, so CLAYFF slab sigmas were 2^(1/6) too small.
+    Slabs built with `slab_ff="clayff"` now carry the published values;
+    coordinates, topology, charges and the INTERFACE FF tables are
+    unchanged (see the CHANGELOG).
+
 With `"custom"` (or to override individual entries of a built-in table),
 pass per-role maps covering the roles `"Si"` (tetrahedral Si), `"OB"`
 (bridging O), `"OH"` (silanol O), `"HO"` (silanol H):
@@ -170,7 +178,16 @@ SubstrateSpec(
     mixing (`pair_modify mix arithmetic`), which also matches GAFF/AMBER
     conventions. OPLS films expect geometric mixing. Check your
     `system.in.settings` and set the mixing rule appropriate for your
-    combination.
+    combination. (Nanoparticle systems do not depend on this: they get
+    explicit polymer–particle `pair_coeff` lines, see
+    [Nanocomposites](nanocomposites.md#explicit-cross-interactions).)
+
+Internally the builder slabs share the materials foundation with the
+nanoparticles (`AutoPoly.materials`: crystal tables, silica chemistry,
+force-field adapters and the moltemplate writer). The slab is recorded
+as a stage-1 inorganic entry in `geometry.json` and typed in stage 2
+like any other unit; the `SubstrateSpec` calls and the generated
+geometry, topology and charges are unchanged.
 
 ### External pre-built surface: `SubstrateSpec(lt_file=..., class_name=...)`
 
@@ -276,3 +293,4 @@ this feature.
 - [example_film_on_substrate.py](https://github.com/WuGroup-XJTLU/AutoPoly/blob/v2.0/examples/example_film_on_substrate.py) — runnable film + patterned variant
 - [MC Placement & Chain Growth](mc-placement.md) — the placement engine the film uses
 - [generate API](../reference/generate.md) — `substrate`, `subtract`, `box_dims` parameters
+- [Nanocomposites](nanocomposites.md) — finite particles (silica, alumina, carbon, Au/Ag) in a matrix

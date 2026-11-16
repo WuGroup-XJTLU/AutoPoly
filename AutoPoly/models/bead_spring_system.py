@@ -25,6 +25,11 @@ Example — a ring/linear blend::
     bss.add_species(arch.ring([("A", 50)]), n_chains=20)
     bss.add_species(arch.linear([("A", 50)]), n_chains=20)
     bss.generate_data_file()
+
+Coarse-grained fillers (AutoPoly.nanoparticles.CGFiller) are added with
+:meth:`BeadSpringSystem.add_filler`: they are placed first, chains grow
+around them by SAW, and the run script integrates them as rigid bodies
+(or keeps them frozen).
 """
 
 from pathlib import Path
@@ -77,7 +82,9 @@ class BeadSpringSystem:
         angle_types: Per-triplet AngleType parameters.
         include_branch_angles: Whether to include angle triplets centered
             on branch points.
-        density: Target bead density (beads/sigma^3) for box sizing.
+        density: Target bead density (beads/sigma^3) for box sizing (with
+            CG fillers: chain-bead density of the volume outside the
+            filler envelopes).
         box_size: Explicit box size (overrides density).
         generation_method: "geometric", "saw" (default), or "mc".
         saw_config: SAW configuration.
@@ -172,6 +179,11 @@ class BeadSpringSystem:
 
         self._pair_coeffs = lb_pair_coeffs(bead_types)
 
+        # Coarse-grained fillers (AutoPoly.nanoparticles.cg)
+        self._fillers: List = []
+        self._placed_fillers: Optional[List] = None
+        self.filler_min_gap = 1.0
+
         Path(self.path).mkdir(parents=True, exist_ok=True)
 
     # ------------------------------------------------------------------ #
@@ -203,6 +215,7 @@ class BeadSpringSystem:
         species_name = name or architecture.name
         self._species.append((architecture, n_chains, species_name))
         # Invalidate generated state
+        self._placed_fillers = None
         self._positions = None
         self._chain_indices = None
         self._chain_architectures = None
@@ -211,6 +224,86 @@ class BeadSpringSystem:
             f"Added species '{species_name}': {n_chains} chains, "
             f"{architecture.n_beads} beads each"
         )
+
+    def add_filler(self, filler) -> None:
+        """
+        Add a coarse-grained filler species (AutoPoly.nanoparticles.CGFiller).
+
+        Fillers are placed before the chains (random positions and
+        orientations, envelope gaps >= ``filler_min_gap``); chains then
+        grow around them by SAW, so only generation_method="saw" is
+        supported.  Filler beads are written as one molecule per particle.
+
+        Raises:
+            ValueError: Unknown filler bead type.
+        """
+        from ..nanoparticles.cg import CGFiller
+        if not isinstance(filler, CGFiller):
+            raise ValueError("add_filler() expects an AutoPoly.nanoparticles.CGFiller")
+        if filler.bead_type not in self._bead_type_map:
+            raise ValueError(
+                f"CG filler bead type '{filler.bead_type}' is not among the "
+                f"bead types {list(self._bead_type_map)}"
+            )
+        self._fillers.append(filler)
+        self._placed_fillers = None
+        self._positions = None
+        self._chain_indices = None
+        self._chain_architectures = None
+        self._bonds = None
+        logger.info(
+            f"Added CG filler '{filler.name}': {filler.count} x R="
+            f"{filler.radius} ({filler.structure}, {filler.n_beads} beads, "
+            f"{filler.motion})"
+        )
+
+    def set_pair_coeff(self, type_a: str, type_b: str, epsilon: float,
+                       sigma: Optional[float] = None,
+                       cutoff: Optional[float] = None) -> None:
+        """
+        Override the Lorentz-Berthelot pair coefficients of one bead-type
+        pair (e.g. the polymer-filler attraction), optionally with its own
+        cutoff (e.g. an attractive 2.5 sigma pair in a WCA melt).
+        """
+        for t in (type_a, type_b):
+            if t not in self._bead_type_id:
+                raise ValueError(f"Unknown bead type '{t}'")
+        i, j = sorted((self._bead_type_id[type_a], self._bead_type_id[type_b]))
+        sig = sigma if sigma is not None else self._pair_coeffs[(i, j)][1]
+        self._pair_coeffs[(i, j)] = (
+            (epsilon, sig) if cutoff is None else (epsilon, sig, cutoff)
+        )
+
+    @property
+    def n_fillers(self) -> int:
+        """Number of CG filler particles."""
+        return sum(f.count for f in self._fillers)
+
+    def _check_fillers(self) -> None:
+        """Filler bead types are exclusive and have one motion each."""
+        from ..nanoparticles.cg import motion_groups
+        chain_types = {t for arch, _, _ in self._species for t in arch.bead_types}
+        for f in self._fillers:
+            if f.bead_type in chain_types:
+                raise ValueError(
+                    f"CG filler bead type '{f.bead_type}' is also used by a "
+                    "chain species; fillers need their own bead type"
+                )
+        if self._generation_method != "saw":
+            raise ValueError(
+                "CG fillers need generation_method='saw' (chains are grown "
+                "around the placed fillers)"
+            )
+        motion_groups(self._fillers)
+
+    def _filler_groups(self, numeric: bool) -> Dict[str, List[str]]:
+        """motion -> filler type tokens (numeric ids or type names)."""
+        from ..nanoparticles.cg import motion_groups
+        groups = motion_groups(self._fillers)
+        if not numeric:
+            return groups
+        return {m: [str(self._bead_type_id[t]) for t in ts]
+                for m, ts in groups.items()}
 
     @property
     def n_species(self) -> int:
@@ -240,6 +333,11 @@ class BeadSpringSystem:
         if self._explicit_box_size is not None:
             return self._explicit_box_size
         density = self.density if self.density is not None else DEFAULT_BEAD_DENSITY
+        if self._fillers:
+            from ..nanoparticles.cg import filler_volume
+            sigma = {bt.name: bt.sigma for bt in self.bead_types}
+            volume = self.total_beads / density + filler_volume(self._fillers, sigma)
+            return volume ** (1 / 3)
         return calculate_box_size(self.total_beads, density)
 
     # ------------------------------------------------------------------ #
@@ -252,6 +350,10 @@ class BeadSpringSystem:
 
     def _generate_geometric_positions(self) -> None:
         """Grow each chain along its spanning tree with random directions."""
+        if self._fillers:
+            raise ValueError(
+                "Geometric placement ignores CG fillers; use generation_method='saw'"
+            )
         chains = self._expanded_chain_architectures()
         self._positions = []
         self._chain_indices = []
@@ -289,11 +391,19 @@ class BeadSpringSystem:
         """
         self._require_species()
         config = saw_config or self._saw_config or SAWConfig()
+        if self._fillers:
+            self._check_fillers()
+        filler_types = {f.bead_type for f in self._fillers}
         if config.collision_sigma == 1.0 and self.bead_types:
-            config.collision_sigma = max(bt.sigma for bt in self.bead_types)
+            config.collision_sigma = max(
+                bt.sigma for bt in self.bead_types if bt.name not in filler_types
+            )
 
         box_size = self._calculate_box_size()
         chains = self._expanded_chain_architectures()
+        if self._fillers:
+            from ..nanoparticles.cg import place_fillers
+            sigma = {bt.name: bt.sigma for bt in self.bead_types}
 
         logger.info(
             f"Starting SAW generation: {len(chains)} chains "
@@ -304,11 +414,21 @@ class BeadSpringSystem:
         stats = {"success": False}
         positions, chain_indices = None, None
         for attempt in range(max(1, config.system_retries)):
+            obstacles = None
+            if self._fillers:
+                self._placed_fillers = place_fillers(
+                    self._fillers, box_size, sigma, self.filler_min_gap
+                )
+                obstacles = (
+                    np.array([p.center for p in self._placed_fillers]),
+                    np.array([p.envelope for p in self._placed_fillers]),
+                )
             positions, chain_indices, stats = saw_generate_graphs(
                 architectures=chains,
                 bond_length=self.bond_length,
                 box_size=box_size,
                 config=config,
+                obstacles=obstacles,
             )
             if stats["success"]:
                 break
@@ -323,6 +443,13 @@ class BeadSpringSystem:
                 f"Chains completed: {stats['chains_completed']}, "
                 f"Backtracks: {stats['total_backtracks']}"
             )
+            if self._fillers:
+                # the geometric fallback would ignore the fillers
+                raise RuntimeError(
+                    "SAW generation around the CG fillers failed "
+                    f"({stats['failure_reason']}): lower the density or the "
+                    "filler loading, or enlarge the box"
+                )
             return False
 
         self._positions = positions
@@ -343,6 +470,11 @@ class BeadSpringSystem:
         linear chains additionally use reptation.
         """
         self._require_species()
+        if self._fillers:
+            raise ValueError(
+                "MC equilibration does not see CG fillers; use "
+                "generation_method='saw'"
+            )
         config = mc_config or self._mc_config or MCConfig()
 
         if self._positions is None:
@@ -452,7 +584,9 @@ class BeadSpringSystem:
         chain_triplets = self._chain_triplets()
         chain_bead_types = [arch.bead_types for arch in self._chain_architectures]
 
+        placed = self._placed_fillers or []
         total_atoms = sum(arch.n_beads for arch in self._chain_architectures)
+        total_atoms += sum(len(p.positions) for p in placed)
         total_bonds = sum(arch.n_bonds for arch in self._chain_architectures)
         total_angles = sum(len(t) for t in chain_triplets)
 
@@ -479,10 +613,13 @@ class BeadSpringSystem:
                 f.write(f"{n_angle_types} angle types\n")
             f.write("\n")
 
-            # Box dimensions
-            f.write(f"{-box_size/2:.1f} {box_size/2:.1f} xlo xhi\n")
-            f.write(f"{-box_size/2:.1f} {box_size/2:.1f} ylo yhi\n")
-            f.write(f"{-box_size/2:.1f} {box_size/2:.1f} zlo zhi\n\n")
+            # Box dimensions (exact with CG fillers: the filler-aware SAW
+            # checks overlaps with the periodic image of this box)
+            lo = f"{-box_size/2:.6f}" if placed else f"{-box_size/2:.1f}"
+            hi = f"{box_size/2:.6f}" if placed else f"{box_size/2:.1f}"
+            f.write(f"{lo} {hi} xlo xhi\n")
+            f.write(f"{lo} {hi} ylo yhi\n")
+            f.write(f"{lo} {hi} zlo zhi\n\n")
 
             # Masses
             f.write("Masses\n\n")
@@ -503,6 +640,16 @@ class BeadSpringSystem:
                     type_id = self._bead_type_id[bead_name]
                     f.write(
                         f"{atom_id} {chain_idx + 1} {type_id} "
+                        f"{pos[0]:.3f} {pos[1]:.3f} {pos[2]:.3f}\n"
+                    )
+                    atom_id += 1
+            # CG fillers: one molecule per particle, after the chains
+            for k, p in enumerate(placed):
+                mol_id = len(self._chain_architectures) + k + 1
+                type_id = self._bead_type_id[p.filler.bead_type]
+                for pos in p.positions:
+                    f.write(
+                        f"{atom_id} {mol_id} {type_id} "
                         f"{pos[0]:.3f} {pos[1]:.3f} {pos[2]:.3f}\n"
                     )
                     atom_id += 1
@@ -556,6 +703,7 @@ class BeadSpringSystem:
             angle_types=self._angle_types,
             default_k_angle=self.default_k_angle,
             default_theta0=self.default_theta0,
+            fillers=self._filler_groups(numeric=True) if placed else None,
         )
         logger.info(f"Generated bead-spring mixture files in {self.path}")
 
@@ -625,6 +773,8 @@ class BeadSpringSystem:
             include_branch_angles=self.include_branch_angles,
             canonical_triplet=canonical_bead_triplet,
             run_moltemplate=run_moltemplate,
+            fillers=((self._placed_fillers, self._filler_groups(numeric=False))
+                     if self._placed_fillers else None),
         )
 
     def get_system_info(self) -> dict:
@@ -641,7 +791,7 @@ class BeadSpringSystem:
             ]
             if self.use_angles else []
         )
-        return {
+        info = {
             'name': self.name,
             'n_species': self.n_species,
             'n_chains': self.n_chains,
@@ -666,3 +816,16 @@ class BeadSpringSystem:
             'bead_types': [bt.name for bt in self.bead_types],
             'output_path': self.path,
         }
+        if self._fillers:
+            from ..nanoparticles.cg import summary
+            if self._placed_fillers:
+                info['fillers'] = summary(
+                    self._placed_fillers, self._calculate_box_size()
+                )
+            else:
+                info['fillers'] = {
+                    'species': {f.name: {'count': f.count, 'radius': f.radius}
+                                for f in self._fillers},
+                    'n_particles': self.n_fillers,
+                }
+        return info

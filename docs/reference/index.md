@@ -19,6 +19,18 @@ AutoPoly's public API, generated from the source docstrings.
 | [`BeadType` / `AngleType`](bead-spring.md) | `AutoPoly.models.bead_spring` | Bead species and angle parameters |
 | [`MCConfig` / `SAWConfig`](bead-spring.md) | `AutoPoly.models.bead_spring` | Generation and equilibration tuning |
 
+## Nanocomposites
+
+| Class | Module | Purpose |
+|---|---|---|
+| [`Nanoparticle`](nanoparticles.md) | `AutoPoly.nanoparticles` | Finite inorganic particle (material, phase, shape, surface, motion, inorganic FF) |
+| [`Grafting`](nanoparticles.md) | `AutoPoly.nanoparticles.grafting` | Covalently grafted chains on silica |
+| [`CGFiller`](nanoparticles.md) | `AutoPoly.nanoparticles.cg` | Coarse-grained filler for `BeadSpringSystem` |
+| [`get_material` / `MaterialSpec`](nanoparticles.md) | `AutoPoly.materials` | Material registry and capability states |
+| [`qualification_matrix`](nanoparticles.md) | `AutoPoly.materials.qualification` | md_ready combinations and their evidence |
+| [`NanocompositePacking`](nanoparticles.md) | `AutoPoly.packing` | Fillers-first, obstacle-aware packing configuration |
+| [`run_smoke`](nanoparticles.md) | `AutoPoly.pipeline.smoke` | Short LAMMPS health check of a generated project |
+
 ## Building blocks
 
 | Module | Purpose |
