@@ -1,0 +1,23 @@
+    pair_coeff 2 2 lj/charmm/coul/long 0.0208 2.600176998764394
+    pair_coeff 1 1 lj/charmm/coul/long 0.1078 3.397709531243626
+
+bond_coeff 1 harmonic 232.5 1.5380   # SOURCE1_SOURCE5 88072 0.0058
+bond_coeff 2 harmonic 375.9 1.0970   # SOURCE3_SOURCE5 133628 0.0015
+
+angle_coeff 1 harmonic 46.8 109.80   # SOURCE3_SOURCE5 179054 0.7972
+angle_coeff 2 harmonic 39.0 107.58   # SOURCE3_SOURCE5 92717 0.5328
+
+dihedral_coeff 1 fourier 1 0.15555555555555556 3 0.0     # JCC,7,(1986),230
+# Wildcard dihedrals for nu (aromatic amine nitrogen with one hydrogen) - approximated from nh
+# Wildcard dihedrals for nv (aromatic amine nitrogen with two hydrogens) - approximated from nh
+dihedral_coeff 2 fourier 1 0.12 3 0.0     # m1 SS AUE=0.2420 RMSE=0.2944 TorType=2
+# Specific dihedrals for nu (aromatic amine nitrogen with one hydrogen) - approximated from nh
+# Specific dihedrals for nv (aromatic amine nitrogen with two hydrogens) - approximated from nh
+
+
+    pair_coeff 3 3 lj/charmm/coul/long 0.015 0.966625
+    pair_coeff 4 4 lj/charmm/coul/long 0.054 3.09142
+    pair_coeff 5 5 lj/charmm/coul/long 0.122 3.09142
+    pair_coeff 6 6 lj/charmm/coul/long 0.093 3.69723
+bond_coeff 3 harmonic 0.0 1.6117
+bond_coeff 4 harmonic 0.0 0.9450

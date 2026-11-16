@@ -257,6 +257,7 @@ generate(
 - `"mc_random"` (default) — Monte Carlo with SAW chain growth
 - `"grid"` — Deterministic grid placement
 - `"on_substrate"` — Film on a physical substrate slab (auto-selected when `substrate=` is given)
+- `"nanocomposite_mc"` — Fillers first, then the matrix around them (auto-selected when a `Nanoparticle` is given)
 
 Box sizing uses SAW scaling (`N^0.6 × bond_length`) rather than fully-extended chain length, producing compact, realistic simulation boxes.
 
@@ -344,6 +345,56 @@ works with plain `mc_random` melts — carve a `Cylinder` through a melt box and
 you have a nanopore.
 
 [Full example: examples/example_film_on_substrate.py →](examples/example_film_on_substrate.py) · [Guide: Substrates & Films →](https://wugroup-xjtlu.github.io/AutoPoly/guides/substrates/)
+
+### Polymer Nanocomposites
+
+Pass a `Nanoparticle` next to your polymers to build a **nanocomposite**:
+silica, alumina, carbon (graphene, nanotubes), gold or silver particles
+in a polymer matrix, in one fully periodic box:
+
+```python
+from AutoPoly import System, Polymer, generate
+from AutoPoly.nanoparticles import Nanoparticle
+from AutoPoly.packing import NanocompositePacking
+
+PMMA = ["CC(C)(C(=O)OC)[*]"] + ["[*]CC(C)(C(=O)OC)[*]"] * 8 + ["[*]CC(C)(C(=O)OC)"]
+
+system = System(out="pmma_silica")
+pmma = Polymer(chain_num=16, sequence=PMMA, tacticity="atactic")
+silica = Nanoparticle(material="SiO2", structure="alpha_quartz", radius=9.0,
+                      count=1, motion="rigid")      # one rigid body per particle
+
+generate(system, "pmma_silica", [pmma, silica], force_field="oplsaa",
+         packing=NanocompositePacking(target_polymer_density=1.18, seed=7))
+```
+
+- **Materials** (`AutoPoly.materials`): `SiO2` (cristobalite/quartz
+  spheres, imported clusters), `Al2O3` (hydroxylated or dry corundum),
+  `C` (graphene sheets, (n, m) nanotubes), `Au`/`Ag` (fcc spheres and
+  polyhedra), and `TiO2` (geometry only). Particles are carved from the
+  crystal and surface-terminated (silanols, bond-valence protonation,
+  edge C–H) by per-material chemistry rules.
+- **Force fields:** registered, versioned inorganic adapters (INTERFACE
+  FF silica, CLAYFF silica/alumina, OPLS-AA aromatic carbon, Heinz 12-6
+  metals). Polymer–particle interactions are written as **explicit
+  `pair_coeff` lines** with the rule each parameter set was fitted with.
+- **Truthful capability states:** an MD system is exported only for
+  combinations in the **qualification matrix** (material, phase, shape,
+  surface, inorganic FF, polymer FF, motion), each backed by a LAMMPS
+  smoke test; everything else is geometry-only unless you opt in with
+  your own parameters (`allow_unqualified=True`).
+- **Packing:** fillers first, then the chains around them (regrown in
+  the box when needed), with exact periodic clearance checks; the report
+  records minimum distances and loading.
+- **Grafting:** silica particles with covalently grafted chains
+  (`Grafting(polymer=..., density=0.5)`, silyl-ether linkage, OPLS-AA).
+- **Run script:** `in.run` holds the fillers during minimization, then
+  runs rigid particles + matrix NVT (optional compression stage);
+  `run_smoke()` checks any project with a short LAMMPS run.
+- **Coarse-grained fillers:** `BeadSpringSystem.add_filler(CGFiller(...))`
+  for rigid LJ-bead fillers in bead-spring melts.
+
+[Examples: example_pmma_silica_nanocomposite.py →](examples/example_pmma_silica_nanocomposite.py) · [Guide: Nanocomposites →](https://wugroup-xjtlu.github.io/AutoPoly/guides/nanocomposites/)
 
 ### Reactive MD (Reactor)
 
@@ -440,11 +491,13 @@ polymer.generate()  # moltemplate backend (default) -> system.data + system.in.*
 
 ### More Examples
 
-The [examples directory](examples/) contains 18 runnable scripts covering:
+The [examples directory](examples/) contains 26 runnable scripts covering:
 
 - **Beginner tutorial** — PMMA step by step ([example_pmma_linear.py](examples/example_pmma_linear.py))
 - **Film on substrate** — PE film on a slab + carve subtract ([example_film_on_substrate.py](examples/example_film_on_substrate.py))
 - **Built-in silica substrates** — films on alpha-quartz(0001) and beta-cristobalite(111) ([example_film_on_quartz.py](examples/example_film_on_quartz.py), [example_film_on_cristobalite.py](examples/example_film_on_cristobalite.py))
+- **Nanocomposites** — silica particle on its own, PMMA/silica, grafted silica, PMMA/alumina, graphene and CNT, gold, TiO2 (geometry only) ([example_pmma_silica_nanocomposite.py](examples/example_pmma_silica_nanocomposite.py), [example_silica_grafted_polymer.py](examples/example_silica_grafted_polymer.py), [example_silica_nanoparticle.py](examples/example_silica_nanoparticle.py), [example_alumina_pmma.py](examples/example_alumina_pmma.py), [example_graphene_polymer.py](examples/example_graphene_polymer.py), [example_au_polymer.py](examples/example_au_polymer.py), [example_titania_polymer.py](examples/example_titania_polymer.py))
+- **Coarse-grained nanocomposite** — rigid CG fillers in a bead-spring melt ([example_cg_nanocomposite.py](examples/example_cg_nanocomposite.py))
 - **Reactive MD** — monomer melt → `fix bond/react` polyesterification ([example_reactor_polyester.py](examples/example_reactor_polyester.py))
 - **Three-stage pipeline** — GeometryBuilder → UnitTyper → BoxPacker, one geometry typed under multiple force fields ([example_three_stage_pipeline.py](examples/example_three_stage_pipeline.py))
 - **Condensation polymers** — PLA with GAFF ([example_pla_condensation.py](examples/example_pla_condensation.py))

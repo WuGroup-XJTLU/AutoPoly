@@ -1,0 +1,29 @@
+{
+  "builder": "alpha_quartz",
+  "kwargs": {
+    "lx_target": 25.0,
+    "ly_target": 26.0,
+    "thickness": 14.0,
+    "pair_substyle": "lj/charmm/coul/long",
+    "bond_substyle": "harmonic",
+    "hydroxylate_bottom": false
+  },
+  "class_name": "QuartzSlab",
+  "lt_filename": "alpha_quartz_slab.lt",
+  "lx": 24.509500000000003,
+  "ly": 25.47101956086564,
+  "thickness": 14.0,
+  "z_extent": 10.229431747132448,
+  "n_atoms": 570,
+  "n_bonds": 660,
+  "n_silanol_top": 60,
+  "n_silanol_bottom": 0,
+  "slab_ff": "interface",
+  "net_charge": -24.0,
+  "roles": {
+    "Si": 150,
+    "OB": 240,
+    "OH": 120,
+    "HO": 60
+  }
+}

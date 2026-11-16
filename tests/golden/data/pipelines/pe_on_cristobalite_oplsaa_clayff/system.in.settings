@@ -1,0 +1,20 @@
+    pair_coeff 1 1 0.066 3.550
+    pair_coeff 2 2 0.066 3.510
+    pair_coeff 3 3 0.026 2.480
+bond_coeff 1 268. 1.529 # CHARMM 22 parameter file
+bond_coeff 2 340. 1.09 # CHARMM 22 parameter file
+bond_coeff 3 0. 1.75 # wlj for FEP
+angle_coeff 1 58.35 112.7 # CHARMM 22 parameter file
+angle_coeff 2 37.5 110.7 # CHARMM 22
+angle_coeff 3 0. 37.0 # wlj
+angle_coeff 4 33. 107.8 # CHARMM 22
+dihedral_coeff 1 1.100 -0.200 0.200 0.0 # butane only OPLS/2020
+dihedral_coeff 2 0.850 -0.200 0.200 0.0 # hydrocarbon OPLS/2020
+dihedral_coeff 3 0.000 0.000 0.300 0.0 # hydrocarbon
+dihedral_coeff 4 0.000 0.000 0.300 0.0 # hydrocarbon  11/99
+    pair_coeff 4 4 0 0
+    pair_coeff 5 5 0.1554 2.82018
+    pair_coeff 6 6 0.1554 2.82018
+    pair_coeff 7 7 1.8405e-06 2.94177
+bond_coeff 4 0.0 1.6100
+bond_coeff 5 0.0 1.0000

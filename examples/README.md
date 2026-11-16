@@ -35,6 +35,19 @@ Output directories are git-ignored — just re-run a script to regenerate them.
 | `example_film_on_quartz.py` | PE film on alpha-quartz(0001) | GAFF | **Built-in silica:** `builder="alpha_quartz"`, hydroxylated Q2 slab, INTERFACE FF |
 | `example_film_on_cristobalite.py` | PE film on beta-cristobalite(111) | GAFF | **Built-in silica:** `builder="beta_cristobalite"`, Q3 silanols, CLAYFF option |
 
+### Nanocomposites
+
+| Script | System | Qualification | Demonstrates |
+|---|---|---|---|
+| `example_silica_nanoparticle.py` | 2 silica particles, no matrix | `sio2-interface-hydroxylated` | Building a particle, surface summary, `write_structure`, standalone LAMMPS system |
+| `example_pmma_silica_nanocomposite.py` | PMMA + quartz-derived silica | `sio2-interface-hydroxylated` | `NanocompositePacking`, loading report, compression target |
+| `example_silica_grafted_polymer.py` | PE-grafted silica in PE | `sio2-interface-grafted` | `Grafting` (density, silyl-ether linkage, OPLS linkage terms) |
+| `example_alumina_pmma.py` | PMMA + hydroxylated alumina | `al2o3-clayff-hydroxylated` | CLAYFF alumina, arithmetic cross terms |
+| `example_graphene_polymer.py` | PE + graphene flake / (6,6) CNT | `c-oplsaa-graphene` | Sheet and tube shapes |
+| `example_au_polymer.py` | PE + gold particle | `au-interface-lj` | Heinz 12-6 metal model |
+| `example_titania_polymer.py` | TiO2 (anatase) | none (geometry only) | Capability report; MD export refused with an explanation |
+| `example_cg_nanocomposite.py` | Bead-spring melt + 2 CG fillers | – (generic LJ) | `CGFiller`, `set_pair_coeff`, rigid fillers in `in.polymer` |
+
 ### Pipeline API
 
 | Script | Demonstrates |

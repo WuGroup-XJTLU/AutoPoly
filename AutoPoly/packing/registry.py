@@ -22,9 +22,11 @@ from typing import Dict, List, Type
 from ..core.exceptions import ValidationError
 from .base import PlacementStrategy
 
-#: Names reserved for future built-in strategies (grafting, confinement).
-#: Registering these is rejected so user code cannot shadow planned built-ins.
-RESERVED_STRATEGY_NAMES = ("grafted_surface", "nanopore")
+#: Names reserved for future built-in strategies (grafting, confinement,
+#: filled films on substrates).  Registering these is rejected so user
+#: code cannot shadow planned built-ins.
+RESERVED_STRATEGY_NAMES = ("grafted_surface", "nanopore",
+                           "nanocomposite_on_substrate")
 
 _STRATEGY_REGISTRY: Dict[str, Type[PlacementStrategy]] = {}
 

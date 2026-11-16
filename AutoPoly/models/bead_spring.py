@@ -20,7 +20,7 @@ import math
 import numpy as np
 
 from ..core.logger import setup_logger
-from ..mc.collision import CollisionDetector
+from ..mc.collision import CollisionDetector, ObstacleCollisionDetector
 from .architectures import BeadArchitecture, linear as _linear_arch, ring as _ring_arch
 
 logger = setup_logger()
@@ -1582,6 +1582,7 @@ def saw_generate_graphs(
     box_size: float,
     config: SAWConfig,
     max_start_attempts: int = 100,
+    obstacles: Optional[Tuple[np.ndarray, np.ndarray]] = None,
 ) -> Tuple[Optional[List[np.ndarray]], Optional[List[Tuple[int, int]]], Dict[str, any]]:
     """
     Generate multiple chains of (possibly different) architectures using SAW.
@@ -1596,6 +1597,11 @@ def saw_generate_graphs(
         box_size: Cubic box side length.
         config: SAWConfig with algorithm parameters.
         max_start_attempts: Max attempts to find valid starting position.
+        obstacles: Optional (centers (k, 3), exclusion radii (k,)) of fixed
+            spheres (coarse-grained fillers) no bead may enter.  With
+            obstacles, all overlap checks (obstacles and beads) use the
+            periodic minimum image of the box.  None (default) leaves the
+            generator unchanged.
 
     Returns:
         Tuple of (all_positions, chain_indices, stats) or
@@ -1605,7 +1611,12 @@ def saw_generate_graphs(
     box_bounds = ((-half_box, half_box), (-half_box, half_box), (-half_box, half_box))
 
     cell_size = max(config.collision_sigma * 2, bond_length * 2)
-    collision_detector = CollisionDetector(box_bounds, cell_size)
+    if obstacles is None:
+        collision_detector = CollisionDetector(box_bounds, cell_size)
+    else:
+        collision_detector = ObstacleCollisionDetector(
+            box_bounds, cell_size, obstacles[0], obstacles[1], period=box_size
+        )
 
     all_positions: List[np.ndarray] = []
     chain_indices: List[Tuple[int, int]] = []
@@ -2043,6 +2054,7 @@ def write_lammps_input_script(
     angle_types: List["AngleType"],
     default_k_angle: float,
     default_theta0: float,
+    fillers: Optional[Dict[str, List[str]]] = None,
 ) -> None:
     """
     Write the LAMMPS input script (in.polymer) for a bead-spring system.
@@ -2054,7 +2066,14 @@ def write_lammps_input_script(
     (2^(1/6) * sigma ≈ 1.12246) should be used instead of full LJ cutoff
     (pair_style="wca"). The equilibrium bond length of ~0.97 emerges from
     the balance of FENE + WCA potentials - there is no explicit r0 in FENE.
+
+    ``fillers`` (motion -> filler atom-type ids) adds the CG-filler groups,
+    the held-filler minimization and rigid/frozen filler integration (see
+    AutoPoly.nanoparticles.cg); a pair coefficient may carry a third value,
+    its own cutoff.
     """
+    if fillers:
+        from ..nanoparticles import cg
     max_sigma = max(bt.sigma for bt in bead_types)
 
     if pair_style == 'wca':
@@ -2075,8 +2094,10 @@ def write_lammps_input_script(
         f.write("read_data       polymer.data\n\n")
 
         f.write(f"pair_style      lj/cut {cutoff:.5f}\n")
-        for (i, j), (eps, sig) in sorted(pair_coeffs.items()):
-            f.write(f"pair_coeff      {i} {j} {eps:.4f} {sig:.4f}\n")
+        for (i, j), coeff in sorted(pair_coeffs.items()):
+            eps, sig = coeff[:2]
+            rc = f" {coeff[2]:.5f}" if len(coeff) > 2 else ""
+            f.write(f"pair_coeff      {i} {j} {eps:.4f} {sig:.4f}{rc}\n")
         if pair_modify:
             f.write(pair_modify)
         f.write("\n")
@@ -2107,14 +2128,24 @@ def write_lammps_input_script(
         f.write("neighbor        2.0 bin\n")
         f.write("neigh_modify    every 2 delay 4 check yes\n\n")
 
-        f.write("thermo_style    custom step temp pe ke etotal press vol density\n")
+        if fillers:
+            for line in cg.group_lines(fillers):
+                f.write(line + "\n")
+            f.write(cg.SETUP + "\n")
+            f.write(cg.THERMO)
+        else:
+            f.write("thermo_style    custom step temp pe ke etotal press vol density\n")
         f.write("thermo          1000\n\n")
 
         f.write("dump            1 all custom 1000 dump.lammpstrj id type mol x y z\n")
         f.write("dump_modify     1 sort id\n\n")
 
         f.write("# Energy minimization\n")
+        if fillers:
+            f.write(cg.HOLD)
         f.write("minimize        1.0e-4 1.0e-6 1000 10000\n")
+        if fillers:
+            f.write(cg.UNHOLD)
         f.write("write_restart   min.restart\n")
         f.write("write_data      min.data\n")
         f.write("reset_timestep  0\n\n")
@@ -2123,10 +2154,15 @@ def write_lammps_input_script(
         f.write("# Production MD\n")
         f.write("timestep        0.001\n")
         # Tdamp = 0.1 (100x timestep) for proper temperature control
-        f.write("fix             1 all nvt temp 1.0 1.0 0.1 tchain 3\n")
+        if fillers:
+            f.write(cg.production_lines(fillers))
+        else:
+            f.write("fix             1 all nvt temp 1.0 1.0 0.1 tchain 3\n")
         f.write("run             100000\n")
         f.write("write_restart   prod.restart\n")
         f.write("write_data      prod.data\n")
+        if fillers:
+            f.write(cg.compression_hint(fillers))
 
 
 class BeadSpringPolymer:

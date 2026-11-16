@@ -22,6 +22,12 @@ the variant/poly .lt files (no "By Type" inference). See _type_openff().
 The same geometry can be typed under multiple force fields into separate
 build/<ff>/ directories (typing is the cheap stage).
 
+Inorganic components (geometry.json "inorganic" section: built-in slabs,
+nanoparticles) are typed by their registered component typers
+(pipeline/inorganic.py) against the host force-field styles; organic
+SMARTS typing is never applied to them.  Every unit additionally gets a
+class-local coordinate file (<unit>.xyz) for atom-level packing.
+
 Created on 2026-07-30
 @author: zwu
 """
@@ -99,6 +105,8 @@ class UnitTyper:
         force_field: str,
         output_dir: Optional[Union[str, Path]] = None,
         typer_options: Optional[Dict[str, Any]] = None,
+        inorganic_force_fields: Optional[Dict[str, str]] = None,
+        allow_unqualified: bool = False,
     ) -> None:
         """
         Args:
@@ -109,6 +117,13 @@ class UnitTyper:
             typer_options: Force-field-specific typer options. Currently only
                 used for "openff" (forwarded to OpenFFTyper: offxml,
                 charge_method, nagl_model, neutralize).
+            inorganic_force_fields: Optional {component id: inorganic force
+                field} overrides for the stored inorganic components (e.g.
+                {"substrate": "clayff"} types a built-in silica slab with
+                CLAYFF instead of the stage-1 request).
+            allow_unqualified: Permit typing nanoparticle combinations that
+                are not listed in the qualification matrix (recorded as
+                user-qualified in units.json).
 
         Raises:
             ValidationError: Unknown force field, or unsupported/missing
@@ -123,6 +138,8 @@ class UnitTyper:
         self.geometry = GeometryBuilder.load(self.geometry_dir)
         self.force_field = force_field
         self.typer_options = dict(typer_options or {})
+        self.inorganic_force_fields = dict(inorganic_force_fields or {})
+        self.allow_unqualified = bool(allow_unqualified)
         if output_dir is None:
             output_dir = self.geometry_dir.parent / BUILD_DIRNAME / force_field
         self.output_dir = Path(output_dir)
@@ -183,6 +200,17 @@ class UnitTyper:
         # 5. DOP=1 chains become molecule-like units grouped by variant
         self._add_single_monomer_units(units, dop1_counts)
 
+        # 6. Class-local coordinates of the organic units; inorganic
+        #    components typed by their component typers (grafted chains
+        #    are handed to the filler that owns them)
+        self._write_organic_coords(units)
+        self._graft_units = {}
+        for u in units:
+            if u.role == "graft":
+                self._graft_units.setdefault(u.anchors["graft_of"],
+                                             []).append(u)
+        units.extend(self._type_inorganic())
+
         library = UnitLibrary(
             force_field=self.force_field,
             units=units,
@@ -206,6 +234,101 @@ class UnitTyper:
             f"{len(library.monomer_files)} monomer files -> {self.output_dir}"
         )
         return library
+
+    # ------------------------------------------------------------------
+    # Inorganic components + unit coordinates
+    # ------------------------------------------------------------------
+    def host_ff_lt(self) -> Optional[Path]:
+        """The host force-field .lt whose style lines apply."""
+        lt = FORCE_FIELD_REGISTRY[self.force_field]["lt_file"]
+        if self.force_field == "openff":
+            path = self.output_dir / lt
+            return path if path.is_file() else None
+        return (Path(__file__).parent.parent / "extern" / "moltemplate"
+                / "force_fields" / lt)
+
+    def _type_inorganic(self) -> List[UnitSpec]:
+        """Type the geometry's inorganic components (if any)."""
+        entries = self.geometry.get("inorganic", [])
+        if not entries:
+            if self.inorganic_force_fields:
+                raise ValidationError(
+                    "inorganic_force_fields given, but the geometry has no "
+                    "inorganic components"
+                )
+            return []
+        from ..materials.forcefields.compatibility import host_styles
+        from .inorganic import InorganicTypingContext, type_inorganic_entries
+
+        ctx = InorganicTypingContext(
+            output_dir=self.output_dir,
+            force_field=self.force_field,
+            host=host_styles(self.force_field, self.host_ff_lt()),
+            force_field_overrides=self.inorganic_force_fields,
+            allow_unqualified=self.allow_unqualified,
+            geometry=self.geometry,
+            variant_rows=getattr(self, "_variant_rows", {}),
+            graft_units=getattr(self, "_graft_units", {}),
+            host_ff_lt=self.host_ff_lt(),
+        )
+        return type_inorganic_entries(entries, ctx)
+
+    def _write_organic_coords(self, units: List[UnitSpec]) -> None:
+        """
+        Write <unit>.xyz class-local coordinates for organic units and set
+        coords_file/mass (atom-level packing strategies read these).
+        """
+        from ..materials.structure import element_mass
+        from .unit_coords import chain_coordinates, write_xyz
+
+        geom = self.geometry
+        variants = geom["variants"]
+        polymer_units = iter(u for u in units if u.kind == "polymer")
+        sources: Dict[str, Tuple[List[str], np.ndarray]] = {}
+        for chain in geom["chains"]:
+            if len(chain["placements"]) <= 1:
+                continue
+            unit = next(polymer_units)
+            sources[unit.id] = chain_coordinates(chain["placements"], variants)
+            unit.chain_file = self._write_chain_template(unit, chain)
+        molecules = {m["name"]: m for m in geom["molecules"]}
+        for unit in units:
+            if unit.id in sources:
+                continue
+            if unit.kind != "molecule":
+                continue
+            if unit.id in molecules:
+                atoms = molecules[unit.id]["atoms"]
+            else:  # DOP=1 chain unit: the variant itself
+                atoms = variants[Path(unit.lt_file).stem]["atoms"]
+            sources[unit.id] = (
+                [a["element"] for a in atoms],
+                np.array([a["coords"] for a in atoms], dtype=float),
+            )
+        for unit in units:
+            if unit.id not in sources:
+                continue
+            elements, coords = sources[unit.id]
+            fname = f"{unit.id}.xyz"
+            write_xyz(self.output_dir / fname, elements, coords,
+                      comment=f"{unit.class_name} (class-local coordinates)")
+            unit.coords_file = fname
+            unit.mass = float(sum(element_mass(e) for e in elements))
+
+    def _write_chain_template(self, unit: UnitSpec, chain: Dict[str, Any]) -> str:
+        """
+        <unit>.chain.json: per-monomer local geometry of one chain (variant
+        sequence, coordinates, intra-monomer bonds, connection atoms,
+        junction bond lengths) for strategies that regrow chains in place.
+        """
+        import json
+
+        from .unit_coords import chain_template_data
+
+        data = chain_template_data(unit.id, chain, self.geometry["variants"])
+        fname = f"{unit.id}.chain.json"
+        (self.output_dir / fname).write_text(json.dumps(data))
+        return fname
 
     # ------------------------------------------------------------------
     # Chain graph typing
@@ -333,10 +456,17 @@ class UnitTyper:
     ) -> None:
         """Write one typed monomer variant .lt file."""
         path = self.output_dir / f"{name}.lt"
+        # grafted chains: the head H replaced by the surface O-C bond
+        cap = variant.get("graft_cap_atom")
+        if not hasattr(self, "_variant_rows"):
+            self._variant_rows = {}
+        self._variant_rows[name] = rows
         with open(path, "w") as f:
             write_lt_header(f, name, self.force_field)
             f.write('  write("Data Atoms") {\n')
-            for row in rows:
+            for k, row in enumerate(rows):
+                if k == cap:
+                    continue
                 x, y, z = row["coords"]
                 f.write(
                     f"\t$atom:{row['atom_id']} $mol:... {row['atom_type']} "
@@ -345,6 +475,8 @@ class UnitTyper:
             f.write("  }\n\n")
             f.write("  write('Data Bond List') {\n")
             for i, j in variant["bonds"]:
+                if cap is not None and cap in (i, j):
+                    continue
                 id1 = rows[i]["atom_id"]
                 id2 = rows[j]["atom_id"]
                 f.write(f"\t$bond:{id1}{id2}\t$atom:{id1}\t$atom:{id2}\n")
@@ -389,6 +521,11 @@ class UnitTyper:
             )
 
             anchors = self._chain_anchors(variant_names, n)
+            if chain.get("graft_of"):
+                role = "graft"
+                anchors = dict(anchors, graft_of=chain["graft_of"],
+                               graft_index=str(chain.get("graft_index", 0)),
+                               chain_id=chain["id"])
             units.append(UnitSpec(
                 id=poly_id,
                 kind="polymer",
@@ -626,6 +763,15 @@ class UnitTyper:
         #    parameter tables; shipped via monomer_files so stage 3 copies it.
         ff_lt = FORCE_FIELD_REGISTRY["openff"]["lt_file"]
         typer.write_force_field_lt(self.output_dir / ff_lt)
+
+        # 7. Coordinates + inorganic components (host styles from openff.lt)
+        if any(c.get("graft_of") for c in self.geometry["chains"]):
+            raise ValidationError(
+                "Grafted nanoparticles are not supported with "
+                "force_field='openff' (linkage terms need OPLS-AA classes)"
+            )
+        self._write_organic_coords(units)
+        units.extend(self._type_inorganic())
 
         library = UnitLibrary(
             force_field=self.force_field,

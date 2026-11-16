@@ -164,6 +164,13 @@ The SAW generator shares its collision detector with the atomistic [MC placement
 
 Both backends consume the same generated coordinates and graph structure — the physics is identical. The lower-level methods `generate_moltemplate(run_moltemplate=...)` and `generate_data_file()` remain available for explicit control.
 
+## Coarse-grained fillers
+
+`BeadSpringSystem.add_filler(CGFiller(...))` adds rigid or frozen
+spherical fillers made of LJ beads; chains grow around them by a
+periodic SAW and `in.polymer` integrates each filler as one rigid body.
+See [Nanocomposites → Coarse-grained fillers](nanocomposites.md#coarse-grained-fillers-bead-spring).
+
 ## See also
 
 - [Bead-Spring tutorial](../tutorials/bead-spring.md) — homopolymer, diblock with FENE, ring with angles, MC equilibration

@@ -32,6 +32,7 @@ from .base import (
     PlacementResult,
     PlacementStrategy,
     bounds_size,
+    reject_inorganic_units,
     symmetric_bounds,
 )
 from .regions import PlacedItem, apply_carve_regions
@@ -79,9 +80,12 @@ def compute_auto_box_size(ctx: PackingContext) -> float:
     chain_length_box = max_dop**0.6 * ctx.offset * CHAIN_LENGTH_SAFETY_FACTOR
 
     # Packing-volume estimate: enough room for non-overlapping placement
+    # (inorganic substrate slabs are sized by the box, not packed)
     total_collision_volume = sum(
         unit.count * (4.0 / 3.0) * np.pi * unit.radius**3
         for unit in units.units
+        if not (getattr(unit, "kind", None) == "inorganic"
+                and unit.role == "substrate")
     )
     packing_box = (
         (total_collision_volume / PACKING_FRACTION) ** (1.0 / 3.0)
@@ -97,6 +101,7 @@ class RandomMCStrategy(PlacementStrategy):
     name = "mc_random"
 
     def place(self, ctx: PackingContext) -> PlacementResult:
+        reject_inorganic_units(ctx, self.name)
         if ctx.rng_seed is not None:
             np.random.seed(ctx.rng_seed)
 

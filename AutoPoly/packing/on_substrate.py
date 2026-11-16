@@ -44,6 +44,7 @@ from .base import (
     PlacementResult,
     PlacementStrategy,
     SubstrateSpec,
+    reject_inorganic_units,
 )
 from .random_mc import compute_auto_box_size, emit_lt_command, unit_role
 from .regions import PlacedItem, apply_carve_regions
@@ -67,6 +68,8 @@ class OnSubstrateStrategy(PlacementStrategy):
                 "Strategy 'on_substrate' requires a SubstrateSpec "
                 "(pass substrate=... to generate()/BoxPacker)"
             )
+        reject_inorganic_units(ctx, self.name,
+                               allow_substrate_slab=spec.is_builder)
         if ctx.rng_seed is not None:
             np.random.seed(ctx.rng_seed)
 
@@ -265,6 +268,7 @@ class OnSubstrateStrategy(PlacementStrategy):
         substrate_units = [
             u for u in ctx.units.units
             if unit_role(u) == UNIT_ROLE_SUBSTRATE
+            and getattr(u, "kind", None) != "inorganic"
         ]
         if not substrate_units:
             raise ValidationError(

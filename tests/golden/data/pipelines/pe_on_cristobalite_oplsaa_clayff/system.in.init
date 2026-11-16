@@ -1,0 +1,15 @@
+units real
+atom_style full
+bond_style harmonic
+angle_style harmonic
+dihedral_style opls
+improper_style cvff  #("harmonic" also works but coeffs should be 2x larger)
+# NOTE: in the original oplsaa2008.lt file the pair style was
+#   lj/cut/coul/long 11.0 11.0
+# but with an accompanying note stating that OPLSAA/M (2015)
+# uses a different pair style, the one used here
+# (as I trusted the original author)
+pair_style lj/charmm/coul/long 9.0 11.0
+pair_modify mix geometric
+special_bonds lj/coul 0.0 0.0 0.5
+kspace_style pppm 0.0001

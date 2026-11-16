@@ -370,6 +370,88 @@ class CollisionDetector:
         self.spheres.clear()
 
 
+class ObstacleCollisionDetector(CollisionDetector):
+    """
+    CollisionDetector that also rejects positions inside fixed spherical
+    obstacles (e.g. coarse-grained fillers), with periodic checks.
+
+    Obstacles are kept out of the cell list (their radius would widen
+    every neighbor search) and checked directly.  With ``period`` set, all
+    checks -- obstacles and the spheres added during growth -- use the
+    minimum-image convention of the cubic periodic box
+    [-period/2, period/2)^3, so chains that leave the box cannot overlap
+    the periodic images of fillers or of other chains.
+
+    Args:
+        box_bounds: As for CollisionDetector.
+        cell_size: As for CollisionDetector.
+        centers: (k, 3) obstacle centers.
+        radii: (k,) exclusion radii: a test sphere of radius r collides
+            when its center is closer than radii[i] + r - tolerance.
+        period: Periodic box side (None: open box, obstacles only).
+    """
+
+    def __init__(self, box_bounds: Tuple[Tuple[float, float], ...],
+                 cell_size: float, centers: np.ndarray, radii: np.ndarray,
+                 period: Optional[float] = None):
+        super().__init__(box_bounds, cell_size)
+        self.obstacle_centers = np.asarray(centers, dtype=np.float64).reshape(-1, 3)
+        self.obstacle_radii = np.asarray(radii, dtype=np.float64).reshape(-1)
+        self.period = period
+        if period:
+            # whole cells tile the period exactly
+            self._nx = self._ny = self._nz = max(1, int(period // cell_size))
+            self._pcell = period / self._nx
+
+    def _min_image(self, d: np.ndarray) -> np.ndarray:
+        if self.period:
+            d = d - self.period * np.round(d / self.period)
+        return d
+
+    def _get_cell_index(self, position: np.ndarray) -> Tuple[int, int, int]:
+        if not self.period:
+            return super()._get_cell_index(position)
+        w = np.mod(np.asarray(position, dtype=np.float64) + self.period / 2,
+                   self.period)
+        idx = np.minimum((w // self._pcell).astype(int), self._nx - 1)
+        return (int(idx[0]), int(idx[1]), int(idx[2]))
+
+    def hits_obstacle(self, center: np.ndarray, radius: float,
+                      tolerance: float = 0.1) -> bool:
+        """True if a sphere at ``center`` overlaps any obstacle."""
+        if len(self.obstacle_radii) == 0:
+            return False
+        d = self._min_image(self.obstacle_centers - np.asarray(center, dtype=np.float64))
+        r2 = np.einsum("ij,ij->i", d, d)
+        lim = self.obstacle_radii + radius - tolerance
+        return bool(np.any(r2 < lim * lim))
+
+    def check_collision(self, center, radius, exclude_ids=None,
+                        tolerance: float = 0.1) -> bool:
+        if self.hits_obstacle(center, radius, tolerance):
+            return True
+        if not self.period:
+            return super().check_collision(center, radius, exclude_ids, tolerance)
+        if not self.spheres:
+            return False
+        exclude_ids = exclude_ids or set()
+        reach = radius + max(s.radius for s in self.spheres.values())
+        n = min(self._nx // 2, max(1, int(np.ceil(reach / self._pcell))))
+        ix, iy, iz = self._get_cell_index(center)
+        cells = {((ix + i) % self._nx, (iy + j) % self._ny, (iz + k) % self._nz)
+                 for i in range(-n, n + 1) for j in range(-n, n + 1)
+                 for k in range(-n, n + 1)}
+        for cell in cells:
+            for mon_id in self.cells.get(cell, ()):
+                if mon_id in exclude_ids:
+                    continue
+                sphere = self.spheres[mon_id]
+                d = self._min_image(center - sphere.center)
+                if np.linalg.norm(d) < radius + sphere.radius - tolerance:
+                    return True
+        return False
+
+
 def calculate_box_size(
     total_monomers: int,
     monomer_density: float = 0.1

@@ -1,0 +1,1858 @@
+# crystalline substrate slab built by AutoPoly
+# lateral 29.4114 x 33.9614 A, envelope thickness 12.00 A (physical z-extent 9.20 A)
+# silanols: top 96, bottom 96; slab_ff='clayff'
+# self-contained: masses and pair coefficients included;
+# no bonded terms (slab is meant to be held rigid/frozen)
+
+QuartzSlab {
+
+  write_once("Data Masses") {
+    @atom:cff_ho 1.0080
+    @atom:cff_ob 15.9994
+    @atom:cff_oh 15.9994
+    @atom:cff_st 28.0855
+  }
+
+  write_once("In Settings") {
+    pair_coeff @atom:cff_ho @atom:cff_ho 0 0
+    pair_coeff @atom:cff_ob @atom:cff_ob 0.1554 2.82018
+    pair_coeff @atom:cff_oh @atom:cff_oh 0.1554 2.82018
+    pair_coeff @atom:cff_st @atom:cff_st 1.8405e-06 2.94177
+  }
+
+  write("Data Atoms") {
+    $atom:qz_si_1 $mol:. @atom:cff_st 2.1000 -10.9491 -14.9969 -2.6996
+    $atom:qz_si_2 $mol:. @atom:cff_st 2.1000 -13.4001 -10.7517 -2.6996
+    $atom:qz_si_3 $mol:. @atom:cff_st 2.1000 -13.4001 -14.7193 -0.9000
+    $atom:qz_si_4 $mol:. @atom:cff_st 2.1000 -10.9491 -10.4741 -0.9000
+    $atom:qz_oh_1 $mol:. @atom:cff_oh -0.9500 -10.8947 -13.8864 -3.8721
+    $atom:qz_oh_2 $mol:. @atom:cff_oh -0.9500 -13.3457 -9.6412 -3.8721
+    $atom:qz_oh_3 $mol:. @atom:cff_oh -0.9500 -11.4805 -16.3783 -3.3264
+    $atom:qz_oh_4 $mol:. @atom:cff_oh -0.9500 -13.9314 -12.1331 -3.3264
+    $atom:qz_ob_1 $mol:. @atom:cff_ob -1.0500 -14.3890 -15.2274 -2.0725
+    $atom:qz_ob_2 $mol:. @atom:cff_ob -1.0500 -11.9381 -10.9823 -2.0725
+    $atom:qz_ob_3 $mol:. @atom:cff_ob -1.0500 -11.9381 -14.4888 -1.5268
+    $atom:qz_ob_4 $mol:. @atom:cff_ob -1.0500 -14.3890 -10.2436 -1.5268
+    $atom:qz_si_5 $mol:. @atom:cff_st 2.1000 -12.4150 -16.9807 0.8996
+    $atom:qz_si_6 $mol:. @atom:cff_st 2.1000 -9.9641 -12.7355 0.8996
+    $atom:qz_si_7 $mol:. @atom:cff_st 2.1000 -10.9491 -14.9969 2.6992
+    $atom:qz_si_8 $mol:. @atom:cff_st 2.1000 -13.4001 -10.7517 2.6992
+    $atom:qz_ob_5 $mol:. @atom:cff_ob -1.0500 -13.9314 -13.3379 -0.2729
+    $atom:qz_ob_6 $mol:. @atom:cff_ob -1.0500 -11.4805 -9.0927 -0.2729
+    $atom:qz_ob_7 $mol:. @atom:cff_ob -1.0500 -13.3457 -15.8298 0.2728
+    $atom:qz_ob_8 $mol:. @atom:cff_ob -1.0500 -10.8947 -11.5846 0.2728
+    $atom:qz_ob_9 $mol:. @atom:cff_ob -1.0500 -10.8947 -13.8864 1.5267
+    $atom:qz_ob_10 $mol:. @atom:cff_ob -1.0500 -13.3457 -9.6412 1.5267
+    $atom:qz_ob_11 $mol:. @atom:cff_ob -1.0500 -11.4805 -16.3783 2.0724
+    $atom:qz_ob_12 $mol:. @atom:cff_ob -1.0500 -13.9314 -12.1331 2.0724
+    $atom:qz_oh_5 $mol:. @atom:cff_oh -0.9500 -14.3890 -15.2274 3.3263
+    $atom:qz_oh_6 $mol:. @atom:cff_oh -0.9500 -11.9381 -10.9823 3.3263
+    $atom:qz_oh_7 $mol:. @atom:cff_oh -0.9500 -11.9381 -14.4888 3.8720
+    $atom:qz_oh_8 $mol:. @atom:cff_oh -0.9500 -14.3890 -10.2436 3.8720
+    $atom:qz_si_9 $mol:. @atom:cff_st 2.1000 -10.9491 -6.5066 -2.6996
+    $atom:qz_si_10 $mol:. @atom:cff_st 2.1000 -13.4001 -2.2614 -2.6996
+    $atom:qz_si_11 $mol:. @atom:cff_st 2.1000 -13.4001 -6.2289 -0.9000
+    $atom:qz_si_12 $mol:. @atom:cff_st 2.1000 -10.9491 -1.9838 -0.9000
+    $atom:qz_oh_9 $mol:. @atom:cff_oh -0.9500 -10.8947 -5.3960 -3.8721
+    $atom:qz_oh_10 $mol:. @atom:cff_oh -0.9500 -13.3457 -1.1509 -3.8721
+    $atom:qz_oh_11 $mol:. @atom:cff_oh -0.9500 -11.4805 -7.8880 -3.3264
+    $atom:qz_oh_12 $mol:. @atom:cff_oh -0.9500 -13.9314 -3.6428 -3.3264
+    $atom:qz_ob_13 $mol:. @atom:cff_ob -1.0500 -14.3890 -6.7371 -2.0725
+    $atom:qz_ob_14 $mol:. @atom:cff_ob -1.0500 -11.9381 -2.4919 -2.0725
+    $atom:qz_ob_15 $mol:. @atom:cff_ob -1.0500 -11.9381 -5.9984 -1.5268
+    $atom:qz_ob_16 $mol:. @atom:cff_ob -1.0500 -14.3890 -1.7533 -1.5268
+    $atom:qz_si_13 $mol:. @atom:cff_st 2.1000 -12.4150 -8.4903 0.8996
+    $atom:qz_si_14 $mol:. @atom:cff_st 2.1000 -9.9641 -4.2452 0.8996
+    $atom:qz_si_15 $mol:. @atom:cff_st 2.1000 -10.9491 -6.5066 2.6992
+    $atom:qz_si_16 $mol:. @atom:cff_st 2.1000 -13.4001 -2.2614 2.6992
+    $atom:qz_ob_17 $mol:. @atom:cff_ob -1.0500 -13.9314 -4.8476 -0.2729
+    $atom:qz_ob_18 $mol:. @atom:cff_ob -1.0500 -11.4805 -0.6024 -0.2729
+    $atom:qz_ob_19 $mol:. @atom:cff_ob -1.0500 -13.3457 -7.3395 0.2728
+    $atom:qz_ob_20 $mol:. @atom:cff_ob -1.0500 -10.8947 -3.0943 0.2728
+    $atom:qz_ob_21 $mol:. @atom:cff_ob -1.0500 -10.8947 -5.3960 1.5267
+    $atom:qz_ob_22 $mol:. @atom:cff_ob -1.0500 -13.3457 -1.1509 1.5267
+    $atom:qz_ob_23 $mol:. @atom:cff_ob -1.0500 -11.4805 -7.8880 2.0724
+    $atom:qz_ob_24 $mol:. @atom:cff_ob -1.0500 -13.9314 -3.6428 2.0724
+    $atom:qz_oh_13 $mol:. @atom:cff_oh -0.9500 -14.3890 -6.7371 3.3263
+    $atom:qz_oh_14 $mol:. @atom:cff_oh -0.9500 -11.9381 -2.4919 3.3263
+    $atom:qz_oh_15 $mol:. @atom:cff_oh -0.9500 -11.9381 -5.9984 3.8720
+    $atom:qz_oh_16 $mol:. @atom:cff_oh -0.9500 -14.3890 -1.7533 3.8720
+    $atom:qz_si_17 $mol:. @atom:cff_st 2.1000 -10.9491 1.9838 -2.6996
+    $atom:qz_si_18 $mol:. @atom:cff_st 2.1000 -13.4001 6.2289 -2.6996
+    $atom:qz_si_19 $mol:. @atom:cff_st 2.1000 -13.4001 2.2614 -0.9000
+    $atom:qz_si_20 $mol:. @atom:cff_st 2.1000 -10.9491 6.5066 -0.9000
+    $atom:qz_oh_17 $mol:. @atom:cff_oh -0.9500 -10.8947 3.0943 -3.8721
+    $atom:qz_oh_18 $mol:. @atom:cff_oh -0.9500 -13.3457 7.3395 -3.8721
+    $atom:qz_oh_19 $mol:. @atom:cff_oh -0.9500 -11.4805 0.6024 -3.3264
+    $atom:qz_oh_20 $mol:. @atom:cff_oh -0.9500 -13.9314 4.8476 -3.3264
+    $atom:qz_ob_25 $mol:. @atom:cff_ob -1.0500 -14.3890 1.7533 -2.0725
+    $atom:qz_ob_26 $mol:. @atom:cff_ob -1.0500 -11.9381 5.9984 -2.0725
+    $atom:qz_ob_27 $mol:. @atom:cff_ob -1.0500 -11.9381 2.4919 -1.5268
+    $atom:qz_ob_28 $mol:. @atom:cff_ob -1.0500 -14.3890 6.7371 -1.5268
+    $atom:qz_si_21 $mol:. @atom:cff_st 2.1000 -12.4150 0.0000 0.8996
+    $atom:qz_si_22 $mol:. @atom:cff_st 2.1000 -9.9641 4.2452 0.8996
+    $atom:qz_si_23 $mol:. @atom:cff_st 2.1000 -10.9491 1.9838 2.6992
+    $atom:qz_si_24 $mol:. @atom:cff_st 2.1000 -13.4001 6.2289 2.6992
+    $atom:qz_ob_29 $mol:. @atom:cff_ob -1.0500 -13.9314 3.6428 -0.2729
+    $atom:qz_ob_30 $mol:. @atom:cff_ob -1.0500 -11.4805 7.8880 -0.2729
+    $atom:qz_ob_31 $mol:. @atom:cff_ob -1.0500 -13.3457 1.1509 0.2728
+    $atom:qz_ob_32 $mol:. @atom:cff_ob -1.0500 -10.8947 5.3960 0.2728
+    $atom:qz_ob_33 $mol:. @atom:cff_ob -1.0500 -10.8947 3.0943 1.5267
+    $atom:qz_ob_34 $mol:. @atom:cff_ob -1.0500 -13.3457 7.3395 1.5267
+    $atom:qz_ob_35 $mol:. @atom:cff_ob -1.0500 -11.4805 0.6024 2.0724
+    $atom:qz_ob_36 $mol:. @atom:cff_ob -1.0500 -13.9314 4.8476 2.0724
+    $atom:qz_oh_21 $mol:. @atom:cff_oh -0.9500 -14.3890 1.7533 3.3263
+    $atom:qz_oh_22 $mol:. @atom:cff_oh -0.9500 -11.9381 5.9984 3.3263
+    $atom:qz_oh_23 $mol:. @atom:cff_oh -0.9500 -11.9381 2.4919 3.8720
+    $atom:qz_oh_24 $mol:. @atom:cff_oh -0.9500 -14.3890 6.7371 3.8720
+    $atom:qz_si_25 $mol:. @atom:cff_st 2.1000 -10.9491 10.4741 -2.6996
+    $atom:qz_si_26 $mol:. @atom:cff_st 2.1000 -13.4001 14.7193 -2.6996
+    $atom:qz_si_27 $mol:. @atom:cff_st 2.1000 -13.4001 10.7517 -0.9000
+    $atom:qz_si_28 $mol:. @atom:cff_st 2.1000 -10.9491 14.9969 -0.9000
+    $atom:qz_oh_25 $mol:. @atom:cff_oh -0.9500 -10.8947 11.5846 -3.8721
+    $atom:qz_oh_26 $mol:. @atom:cff_oh -0.9500 -13.3457 15.8298 -3.8721
+    $atom:qz_oh_27 $mol:. @atom:cff_oh -0.9500 -11.4805 9.0927 -3.3264
+    $atom:qz_oh_28 $mol:. @atom:cff_oh -0.9500 -13.9314 13.3379 -3.3264
+    $atom:qz_ob_37 $mol:. @atom:cff_ob -1.0500 -14.3890 10.2436 -2.0725
+    $atom:qz_ob_38 $mol:. @atom:cff_ob -1.0500 -11.9381 14.4888 -2.0725
+    $atom:qz_ob_39 $mol:. @atom:cff_ob -1.0500 -11.9381 10.9823 -1.5268
+    $atom:qz_ob_40 $mol:. @atom:cff_ob -1.0500 -14.3890 15.2274 -1.5268
+    $atom:qz_si_29 $mol:. @atom:cff_st 2.1000 -12.4150 8.4903 0.8996
+    $atom:qz_si_30 $mol:. @atom:cff_st 2.1000 -9.9641 12.7355 0.8996
+    $atom:qz_si_31 $mol:. @atom:cff_st 2.1000 -10.9491 10.4741 2.6992
+    $atom:qz_si_32 $mol:. @atom:cff_st 2.1000 -13.4001 14.7193 2.6992
+    $atom:qz_ob_41 $mol:. @atom:cff_ob -1.0500 -13.9314 12.1331 -0.2729
+    $atom:qz_ob_42 $mol:. @atom:cff_ob -1.0500 -11.4805 16.3783 -0.2729
+    $atom:qz_ob_43 $mol:. @atom:cff_ob -1.0500 -13.3457 9.6412 0.2728
+    $atom:qz_ob_44 $mol:. @atom:cff_ob -1.0500 -10.8947 13.8864 0.2728
+    $atom:qz_ob_45 $mol:. @atom:cff_ob -1.0500 -10.8947 11.5846 1.5267
+    $atom:qz_ob_46 $mol:. @atom:cff_ob -1.0500 -13.3457 15.8298 1.5267
+    $atom:qz_ob_47 $mol:. @atom:cff_ob -1.0500 -11.4805 9.0927 2.0724
+    $atom:qz_ob_48 $mol:. @atom:cff_ob -1.0500 -13.9314 13.3379 2.0724
+    $atom:qz_oh_29 $mol:. @atom:cff_oh -0.9500 -14.3890 10.2436 3.3263
+    $atom:qz_oh_30 $mol:. @atom:cff_oh -0.9500 -11.9381 14.4888 3.3263
+    $atom:qz_oh_31 $mol:. @atom:cff_oh -0.9500 -11.9381 10.9823 3.8720
+    $atom:qz_oh_32 $mol:. @atom:cff_oh -0.9500 -14.3890 15.2274 3.8720
+    $atom:qz_si_33 $mol:. @atom:cff_st 2.1000 -6.0472 -14.9969 -2.6996
+    $atom:qz_si_34 $mol:. @atom:cff_st 2.1000 -8.4982 -10.7517 -2.6996
+    $atom:qz_si_35 $mol:. @atom:cff_st 2.1000 -8.4982 -14.7193 -0.9000
+    $atom:qz_si_36 $mol:. @atom:cff_st 2.1000 -6.0472 -10.4741 -0.9000
+    $atom:qz_oh_33 $mol:. @atom:cff_oh -0.9500 -5.9928 -13.8864 -3.8721
+    $atom:qz_oh_34 $mol:. @atom:cff_oh -0.9500 -8.4438 -9.6412 -3.8721
+    $atom:qz_oh_35 $mol:. @atom:cff_oh -0.9500 -6.5786 -16.3783 -3.3264
+    $atom:qz_oh_36 $mol:. @atom:cff_oh -0.9500 -9.0295 -12.1331 -3.3264
+    $atom:qz_ob_49 $mol:. @atom:cff_ob -1.0500 -9.4871 -15.2274 -2.0725
+    $atom:qz_ob_50 $mol:. @atom:cff_ob -1.0500 -7.0362 -10.9823 -2.0725
+    $atom:qz_ob_51 $mol:. @atom:cff_ob -1.0500 -7.0362 -14.4888 -1.5268
+    $atom:qz_ob_52 $mol:. @atom:cff_ob -1.0500 -9.4871 -10.2436 -1.5268
+    $atom:qz_si_37 $mol:. @atom:cff_st 2.1000 -7.5131 -16.9807 0.8996
+    $atom:qz_si_38 $mol:. @atom:cff_st 2.1000 -5.0622 -12.7355 0.8996
+    $atom:qz_si_39 $mol:. @atom:cff_st 2.1000 -6.0472 -14.9969 2.6992
+    $atom:qz_si_40 $mol:. @atom:cff_st 2.1000 -8.4982 -10.7517 2.6992
+    $atom:qz_ob_53 $mol:. @atom:cff_ob -1.0500 -9.0295 -13.3379 -0.2729
+    $atom:qz_ob_54 $mol:. @atom:cff_ob -1.0500 -6.5786 -9.0927 -0.2729
+    $atom:qz_ob_55 $mol:. @atom:cff_ob -1.0500 -8.4438 -15.8298 0.2728
+    $atom:qz_ob_56 $mol:. @atom:cff_ob -1.0500 -5.9928 -11.5846 0.2728
+    $atom:qz_ob_57 $mol:. @atom:cff_ob -1.0500 -5.9928 -13.8864 1.5267
+    $atom:qz_ob_58 $mol:. @atom:cff_ob -1.0500 -8.4438 -9.6412 1.5267
+    $atom:qz_ob_59 $mol:. @atom:cff_ob -1.0500 -6.5786 -16.3783 2.0724
+    $atom:qz_ob_60 $mol:. @atom:cff_ob -1.0500 -9.0295 -12.1331 2.0724
+    $atom:qz_oh_37 $mol:. @atom:cff_oh -0.9500 -9.4871 -15.2274 3.3263
+    $atom:qz_oh_38 $mol:. @atom:cff_oh -0.9500 -7.0362 -10.9823 3.3263
+    $atom:qz_oh_39 $mol:. @atom:cff_oh -0.9500 -7.0362 -14.4888 3.8720
+    $atom:qz_oh_40 $mol:. @atom:cff_oh -0.9500 -9.4871 -10.2436 3.8720
+    $atom:qz_si_41 $mol:. @atom:cff_st 2.1000 -6.0472 -6.5066 -2.6996
+    $atom:qz_si_42 $mol:. @atom:cff_st 2.1000 -8.4982 -2.2614 -2.6996
+    $atom:qz_si_43 $mol:. @atom:cff_st 2.1000 -8.4982 -6.2289 -0.9000
+    $atom:qz_si_44 $mol:. @atom:cff_st 2.1000 -6.0472 -1.9838 -0.9000
+    $atom:qz_oh_41 $mol:. @atom:cff_oh -0.9500 -5.9928 -5.3960 -3.8721
+    $atom:qz_oh_42 $mol:. @atom:cff_oh -0.9500 -8.4438 -1.1509 -3.8721
+    $atom:qz_oh_43 $mol:. @atom:cff_oh -0.9500 -6.5786 -7.8880 -3.3264
+    $atom:qz_oh_44 $mol:. @atom:cff_oh -0.9500 -9.0295 -3.6428 -3.3264
+    $atom:qz_ob_61 $mol:. @atom:cff_ob -1.0500 -9.4871 -6.7371 -2.0725
+    $atom:qz_ob_62 $mol:. @atom:cff_ob -1.0500 -7.0362 -2.4919 -2.0725
+    $atom:qz_ob_63 $mol:. @atom:cff_ob -1.0500 -7.0362 -5.9984 -1.5268
+    $atom:qz_ob_64 $mol:. @atom:cff_ob -1.0500 -9.4871 -1.7533 -1.5268
+    $atom:qz_si_45 $mol:. @atom:cff_st 2.1000 -7.5131 -8.4903 0.8996
+    $atom:qz_si_46 $mol:. @atom:cff_st 2.1000 -5.0622 -4.2452 0.8996
+    $atom:qz_si_47 $mol:. @atom:cff_st 2.1000 -6.0472 -6.5066 2.6992
+    $atom:qz_si_48 $mol:. @atom:cff_st 2.1000 -8.4982 -2.2614 2.6992
+    $atom:qz_ob_65 $mol:. @atom:cff_ob -1.0500 -9.0295 -4.8476 -0.2729
+    $atom:qz_ob_66 $mol:. @atom:cff_ob -1.0500 -6.5786 -0.6024 -0.2729
+    $atom:qz_ob_67 $mol:. @atom:cff_ob -1.0500 -8.4438 -7.3395 0.2728
+    $atom:qz_ob_68 $mol:. @atom:cff_ob -1.0500 -5.9928 -3.0943 0.2728
+    $atom:qz_ob_69 $mol:. @atom:cff_ob -1.0500 -5.9928 -5.3960 1.5267
+    $atom:qz_ob_70 $mol:. @atom:cff_ob -1.0500 -8.4438 -1.1509 1.5267
+    $atom:qz_ob_71 $mol:. @atom:cff_ob -1.0500 -6.5786 -7.8880 2.0724
+    $atom:qz_ob_72 $mol:. @atom:cff_ob -1.0500 -9.0295 -3.6428 2.0724
+    $atom:qz_oh_45 $mol:. @atom:cff_oh -0.9500 -9.4871 -6.7371 3.3263
+    $atom:qz_oh_46 $mol:. @atom:cff_oh -0.9500 -7.0362 -2.4919 3.3263
+    $atom:qz_oh_47 $mol:. @atom:cff_oh -0.9500 -7.0362 -5.9984 3.8720
+    $atom:qz_oh_48 $mol:. @atom:cff_oh -0.9500 -9.4871 -1.7533 3.8720
+    $atom:qz_si_49 $mol:. @atom:cff_st 2.1000 -6.0472 1.9838 -2.6996
+    $atom:qz_si_50 $mol:. @atom:cff_st 2.1000 -8.4982 6.2289 -2.6996
+    $atom:qz_si_51 $mol:. @atom:cff_st 2.1000 -8.4982 2.2614 -0.9000
+    $atom:qz_si_52 $mol:. @atom:cff_st 2.1000 -6.0472 6.5066 -0.9000
+    $atom:qz_oh_49 $mol:. @atom:cff_oh -0.9500 -5.9928 3.0943 -3.8721
+    $atom:qz_oh_50 $mol:. @atom:cff_oh -0.9500 -8.4438 7.3395 -3.8721
+    $atom:qz_oh_51 $mol:. @atom:cff_oh -0.9500 -6.5786 0.6024 -3.3264
+    $atom:qz_oh_52 $mol:. @atom:cff_oh -0.9500 -9.0295 4.8476 -3.3264
+    $atom:qz_ob_73 $mol:. @atom:cff_ob -1.0500 -9.4871 1.7533 -2.0725
+    $atom:qz_ob_74 $mol:. @atom:cff_ob -1.0500 -7.0362 5.9984 -2.0725
+    $atom:qz_ob_75 $mol:. @atom:cff_ob -1.0500 -7.0362 2.4919 -1.5268
+    $atom:qz_ob_76 $mol:. @atom:cff_ob -1.0500 -9.4871 6.7371 -1.5268
+    $atom:qz_si_53 $mol:. @atom:cff_st 2.1000 -7.5131 0.0000 0.8996
+    $atom:qz_si_54 $mol:. @atom:cff_st 2.1000 -5.0622 4.2452 0.8996
+    $atom:qz_si_55 $mol:. @atom:cff_st 2.1000 -6.0472 1.9838 2.6992
+    $atom:qz_si_56 $mol:. @atom:cff_st 2.1000 -8.4982 6.2289 2.6992
+    $atom:qz_ob_77 $mol:. @atom:cff_ob -1.0500 -9.0295 3.6428 -0.2729
+    $atom:qz_ob_78 $mol:. @atom:cff_ob -1.0500 -6.5786 7.8880 -0.2729
+    $atom:qz_ob_79 $mol:. @atom:cff_ob -1.0500 -8.4438 1.1509 0.2728
+    $atom:qz_ob_80 $mol:. @atom:cff_ob -1.0500 -5.9928 5.3960 0.2728
+    $atom:qz_ob_81 $mol:. @atom:cff_ob -1.0500 -5.9928 3.0943 1.5267
+    $atom:qz_ob_82 $mol:. @atom:cff_ob -1.0500 -8.4438 7.3395 1.5267
+    $atom:qz_ob_83 $mol:. @atom:cff_ob -1.0500 -6.5786 0.6024 2.0724
+    $atom:qz_ob_84 $mol:. @atom:cff_ob -1.0500 -9.0295 4.8476 2.0724
+    $atom:qz_oh_53 $mol:. @atom:cff_oh -0.9500 -9.4871 1.7533 3.3263
+    $atom:qz_oh_54 $mol:. @atom:cff_oh -0.9500 -7.0362 5.9984 3.3263
+    $atom:qz_oh_55 $mol:. @atom:cff_oh -0.9500 -7.0362 2.4919 3.8720
+    $atom:qz_oh_56 $mol:. @atom:cff_oh -0.9500 -9.4871 6.7371 3.8720
+    $atom:qz_si_57 $mol:. @atom:cff_st 2.1000 -6.0472 10.4741 -2.6996
+    $atom:qz_si_58 $mol:. @atom:cff_st 2.1000 -8.4982 14.7193 -2.6996
+    $atom:qz_si_59 $mol:. @atom:cff_st 2.1000 -8.4982 10.7517 -0.9000
+    $atom:qz_si_60 $mol:. @atom:cff_st 2.1000 -6.0472 14.9969 -0.9000
+    $atom:qz_oh_57 $mol:. @atom:cff_oh -0.9500 -5.9928 11.5846 -3.8721
+    $atom:qz_oh_58 $mol:. @atom:cff_oh -0.9500 -8.4438 15.8298 -3.8721
+    $atom:qz_oh_59 $mol:. @atom:cff_oh -0.9500 -6.5786 9.0927 -3.3264
+    $atom:qz_oh_60 $mol:. @atom:cff_oh -0.9500 -9.0295 13.3379 -3.3264
+    $atom:qz_ob_85 $mol:. @atom:cff_ob -1.0500 -9.4871 10.2436 -2.0725
+    $atom:qz_ob_86 $mol:. @atom:cff_ob -1.0500 -7.0362 14.4888 -2.0725
+    $atom:qz_ob_87 $mol:. @atom:cff_ob -1.0500 -7.0362 10.9823 -1.5268
+    $atom:qz_ob_88 $mol:. @atom:cff_ob -1.0500 -9.4871 15.2274 -1.5268
+    $atom:qz_si_61 $mol:. @atom:cff_st 2.1000 -7.5131 8.4903 0.8996
+    $atom:qz_si_62 $mol:. @atom:cff_st 2.1000 -5.0622 12.7355 0.8996
+    $atom:qz_si_63 $mol:. @atom:cff_st 2.1000 -6.0472 10.4741 2.6992
+    $atom:qz_si_64 $mol:. @atom:cff_st 2.1000 -8.4982 14.7193 2.6992
+    $atom:qz_ob_89 $mol:. @atom:cff_ob -1.0500 -9.0295 12.1331 -0.2729
+    $atom:qz_ob_90 $mol:. @atom:cff_ob -1.0500 -6.5786 16.3783 -0.2729
+    $atom:qz_ob_91 $mol:. @atom:cff_ob -1.0500 -8.4438 9.6412 0.2728
+    $atom:qz_ob_92 $mol:. @atom:cff_ob -1.0500 -5.9928 13.8864 0.2728
+    $atom:qz_ob_93 $mol:. @atom:cff_ob -1.0500 -5.9928 11.5846 1.5267
+    $atom:qz_ob_94 $mol:. @atom:cff_ob -1.0500 -8.4438 15.8298 1.5267
+    $atom:qz_ob_95 $mol:. @atom:cff_ob -1.0500 -6.5786 9.0927 2.0724
+    $atom:qz_ob_96 $mol:. @atom:cff_ob -1.0500 -9.0295 13.3379 2.0724
+    $atom:qz_oh_61 $mol:. @atom:cff_oh -0.9500 -9.4871 10.2436 3.3263
+    $atom:qz_oh_62 $mol:. @atom:cff_oh -0.9500 -7.0362 14.4888 3.3263
+    $atom:qz_oh_63 $mol:. @atom:cff_oh -0.9500 -7.0362 10.9823 3.8720
+    $atom:qz_oh_64 $mol:. @atom:cff_oh -0.9500 -9.4871 15.2274 3.8720
+    $atom:qz_si_65 $mol:. @atom:cff_st 2.1000 -1.1453 -14.9969 -2.6996
+    $atom:qz_si_66 $mol:. @atom:cff_st 2.1000 -3.5963 -10.7517 -2.6996
+    $atom:qz_si_67 $mol:. @atom:cff_st 2.1000 -3.5963 -14.7193 -0.9000
+    $atom:qz_si_68 $mol:. @atom:cff_st 2.1000 -1.1453 -10.4741 -0.9000
+    $atom:qz_oh_65 $mol:. @atom:cff_oh -0.9500 -1.0909 -13.8864 -3.8721
+    $atom:qz_oh_66 $mol:. @atom:cff_oh -0.9500 -3.5419 -9.6412 -3.8721
+    $atom:qz_oh_67 $mol:. @atom:cff_oh -0.9500 -1.6767 -16.3783 -3.3264
+    $atom:qz_oh_68 $mol:. @atom:cff_oh -0.9500 -4.1276 -12.1331 -3.3264
+    $atom:qz_ob_97 $mol:. @atom:cff_ob -1.0500 -4.5852 -15.2274 -2.0725
+    $atom:qz_ob_98 $mol:. @atom:cff_ob -1.0500 -2.1343 -10.9823 -2.0725
+    $atom:qz_ob_99 $mol:. @atom:cff_ob -1.0500 -2.1343 -14.4888 -1.5268
+    $atom:qz_ob_100 $mol:. @atom:cff_ob -1.0500 -4.5852 -10.2436 -1.5268
+    $atom:qz_si_69 $mol:. @atom:cff_st 2.1000 -2.6112 -16.9807 0.8996
+    $atom:qz_si_70 $mol:. @atom:cff_st 2.1000 -0.1603 -12.7355 0.8996
+    $atom:qz_si_71 $mol:. @atom:cff_st 2.1000 -1.1453 -14.9969 2.6992
+    $atom:qz_si_72 $mol:. @atom:cff_st 2.1000 -3.5963 -10.7517 2.6992
+    $atom:qz_ob_101 $mol:. @atom:cff_ob -1.0500 -4.1276 -13.3379 -0.2729
+    $atom:qz_ob_102 $mol:. @atom:cff_ob -1.0500 -1.6767 -9.0927 -0.2729
+    $atom:qz_ob_103 $mol:. @atom:cff_ob -1.0500 -3.5419 -15.8298 0.2728
+    $atom:qz_ob_104 $mol:. @atom:cff_ob -1.0500 -1.0909 -11.5846 0.2728
+    $atom:qz_ob_105 $mol:. @atom:cff_ob -1.0500 -1.0909 -13.8864 1.5267
+    $atom:qz_ob_106 $mol:. @atom:cff_ob -1.0500 -3.5419 -9.6412 1.5267
+    $atom:qz_ob_107 $mol:. @atom:cff_ob -1.0500 -1.6767 -16.3783 2.0724
+    $atom:qz_ob_108 $mol:. @atom:cff_ob -1.0500 -4.1276 -12.1331 2.0724
+    $atom:qz_oh_69 $mol:. @atom:cff_oh -0.9500 -4.5852 -15.2274 3.3263
+    $atom:qz_oh_70 $mol:. @atom:cff_oh -0.9500 -2.1343 -10.9823 3.3263
+    $atom:qz_oh_71 $mol:. @atom:cff_oh -0.9500 -2.1343 -14.4888 3.8720
+    $atom:qz_oh_72 $mol:. @atom:cff_oh -0.9500 -4.5852 -10.2436 3.8720
+    $atom:qz_si_73 $mol:. @atom:cff_st 2.1000 -1.1453 -6.5066 -2.6996
+    $atom:qz_si_74 $mol:. @atom:cff_st 2.1000 -3.5963 -2.2614 -2.6996
+    $atom:qz_si_75 $mol:. @atom:cff_st 2.1000 -3.5963 -6.2289 -0.9000
+    $atom:qz_si_76 $mol:. @atom:cff_st 2.1000 -1.1453 -1.9838 -0.9000
+    $atom:qz_oh_73 $mol:. @atom:cff_oh -0.9500 -1.0909 -5.3960 -3.8721
+    $atom:qz_oh_74 $mol:. @atom:cff_oh -0.9500 -3.5419 -1.1509 -3.8721
+    $atom:qz_oh_75 $mol:. @atom:cff_oh -0.9500 -1.6767 -7.8880 -3.3264
+    $atom:qz_oh_76 $mol:. @atom:cff_oh -0.9500 -4.1276 -3.6428 -3.3264
+    $atom:qz_ob_109 $mol:. @atom:cff_ob -1.0500 -4.5852 -6.7371 -2.0725
+    $atom:qz_ob_110 $mol:. @atom:cff_ob -1.0500 -2.1343 -2.4919 -2.0725
+    $atom:qz_ob_111 $mol:. @atom:cff_ob -1.0500 -2.1343 -5.9984 -1.5268
+    $atom:qz_ob_112 $mol:. @atom:cff_ob -1.0500 -4.5852 -1.7533 -1.5268
+    $atom:qz_si_77 $mol:. @atom:cff_st 2.1000 -2.6112 -8.4903 0.8996
+    $atom:qz_si_78 $mol:. @atom:cff_st 2.1000 -0.1603 -4.2452 0.8996
+    $atom:qz_si_79 $mol:. @atom:cff_st 2.1000 -1.1453 -6.5066 2.6992
+    $atom:qz_si_80 $mol:. @atom:cff_st 2.1000 -3.5963 -2.2614 2.6992
+    $atom:qz_ob_113 $mol:. @atom:cff_ob -1.0500 -4.1276 -4.8476 -0.2729
+    $atom:qz_ob_114 $mol:. @atom:cff_ob -1.0500 -1.6767 -0.6024 -0.2729
+    $atom:qz_ob_115 $mol:. @atom:cff_ob -1.0500 -3.5419 -7.3395 0.2728
+    $atom:qz_ob_116 $mol:. @atom:cff_ob -1.0500 -1.0909 -3.0943 0.2728
+    $atom:qz_ob_117 $mol:. @atom:cff_ob -1.0500 -1.0909 -5.3960 1.5267
+    $atom:qz_ob_118 $mol:. @atom:cff_ob -1.0500 -3.5419 -1.1509 1.5267
+    $atom:qz_ob_119 $mol:. @atom:cff_ob -1.0500 -1.6767 -7.8880 2.0724
+    $atom:qz_ob_120 $mol:. @atom:cff_ob -1.0500 -4.1276 -3.6428 2.0724
+    $atom:qz_oh_77 $mol:. @atom:cff_oh -0.9500 -4.5852 -6.7371 3.3263
+    $atom:qz_oh_78 $mol:. @atom:cff_oh -0.9500 -2.1343 -2.4919 3.3263
+    $atom:qz_oh_79 $mol:. @atom:cff_oh -0.9500 -2.1343 -5.9984 3.8720
+    $atom:qz_oh_80 $mol:. @atom:cff_oh -0.9500 -4.5852 -1.7533 3.8720
+    $atom:qz_si_81 $mol:. @atom:cff_st 2.1000 -1.1453 1.9838 -2.6996
+    $atom:qz_si_82 $mol:. @atom:cff_st 2.1000 -3.5963 6.2289 -2.6996
+    $atom:qz_si_83 $mol:. @atom:cff_st 2.1000 -3.5963 2.2614 -0.9000
+    $atom:qz_si_84 $mol:. @atom:cff_st 2.1000 -1.1453 6.5066 -0.9000
+    $atom:qz_oh_81 $mol:. @atom:cff_oh -0.9500 -1.0909 3.0943 -3.8721
+    $atom:qz_oh_82 $mol:. @atom:cff_oh -0.9500 -3.5419 7.3395 -3.8721
+    $atom:qz_oh_83 $mol:. @atom:cff_oh -0.9500 -1.6767 0.6024 -3.3264
+    $atom:qz_oh_84 $mol:. @atom:cff_oh -0.9500 -4.1276 4.8476 -3.3264
+    $atom:qz_ob_121 $mol:. @atom:cff_ob -1.0500 -4.5852 1.7533 -2.0725
+    $atom:qz_ob_122 $mol:. @atom:cff_ob -1.0500 -2.1343 5.9984 -2.0725
+    $atom:qz_ob_123 $mol:. @atom:cff_ob -1.0500 -2.1343 2.4919 -1.5268
+    $atom:qz_ob_124 $mol:. @atom:cff_ob -1.0500 -4.5852 6.7371 -1.5268
+    $atom:qz_si_85 $mol:. @atom:cff_st 2.1000 -2.6112 0.0000 0.8996
+    $atom:qz_si_86 $mol:. @atom:cff_st 2.1000 -0.1603 4.2452 0.8996
+    $atom:qz_si_87 $mol:. @atom:cff_st 2.1000 -1.1453 1.9838 2.6992
+    $atom:qz_si_88 $mol:. @atom:cff_st 2.1000 -3.5963 6.2289 2.6992
+    $atom:qz_ob_125 $mol:. @atom:cff_ob -1.0500 -4.1276 3.6428 -0.2729
+    $atom:qz_ob_126 $mol:. @atom:cff_ob -1.0500 -1.6767 7.8880 -0.2729
+    $atom:qz_ob_127 $mol:. @atom:cff_ob -1.0500 -3.5419 1.1509 0.2728
+    $atom:qz_ob_128 $mol:. @atom:cff_ob -1.0500 -1.0909 5.3960 0.2728
+    $atom:qz_ob_129 $mol:. @atom:cff_ob -1.0500 -1.0909 3.0943 1.5267
+    $atom:qz_ob_130 $mol:. @atom:cff_ob -1.0500 -3.5419 7.3395 1.5267
+    $atom:qz_ob_131 $mol:. @atom:cff_ob -1.0500 -1.6767 0.6024 2.0724
+    $atom:qz_ob_132 $mol:. @atom:cff_ob -1.0500 -4.1276 4.8476 2.0724
+    $atom:qz_oh_85 $mol:. @atom:cff_oh -0.9500 -4.5852 1.7533 3.3263
+    $atom:qz_oh_86 $mol:. @atom:cff_oh -0.9500 -2.1343 5.9984 3.3263
+    $atom:qz_oh_87 $mol:. @atom:cff_oh -0.9500 -2.1343 2.4919 3.8720
+    $atom:qz_oh_88 $mol:. @atom:cff_oh -0.9500 -4.5852 6.7371 3.8720
+    $atom:qz_si_89 $mol:. @atom:cff_st 2.1000 -1.1453 10.4741 -2.6996
+    $atom:qz_si_90 $mol:. @atom:cff_st 2.1000 -3.5963 14.7193 -2.6996
+    $atom:qz_si_91 $mol:. @atom:cff_st 2.1000 -3.5963 10.7517 -0.9000
+    $atom:qz_si_92 $mol:. @atom:cff_st 2.1000 -1.1453 14.9969 -0.9000
+    $atom:qz_oh_89 $mol:. @atom:cff_oh -0.9500 -1.0909 11.5846 -3.8721
+    $atom:qz_oh_90 $mol:. @atom:cff_oh -0.9500 -3.5419 15.8298 -3.8721
+    $atom:qz_oh_91 $mol:. @atom:cff_oh -0.9500 -1.6767 9.0927 -3.3264
+    $atom:qz_oh_92 $mol:. @atom:cff_oh -0.9500 -4.1276 13.3379 -3.3264
+    $atom:qz_ob_133 $mol:. @atom:cff_ob -1.0500 -4.5852 10.2436 -2.0725
+    $atom:qz_ob_134 $mol:. @atom:cff_ob -1.0500 -2.1343 14.4888 -2.0725
+    $atom:qz_ob_135 $mol:. @atom:cff_ob -1.0500 -2.1343 10.9823 -1.5268
+    $atom:qz_ob_136 $mol:. @atom:cff_ob -1.0500 -4.5852 15.2274 -1.5268
+    $atom:qz_si_93 $mol:. @atom:cff_st 2.1000 -2.6112 8.4903 0.8996
+    $atom:qz_si_94 $mol:. @atom:cff_st 2.1000 -0.1603 12.7355 0.8996
+    $atom:qz_si_95 $mol:. @atom:cff_st 2.1000 -1.1453 10.4741 2.6992
+    $atom:qz_si_96 $mol:. @atom:cff_st 2.1000 -3.5963 14.7193 2.6992
+    $atom:qz_ob_137 $mol:. @atom:cff_ob -1.0500 -4.1276 12.1331 -0.2729
+    $atom:qz_ob_138 $mol:. @atom:cff_ob -1.0500 -1.6767 16.3783 -0.2729
+    $atom:qz_ob_139 $mol:. @atom:cff_ob -1.0500 -3.5419 9.6412 0.2728
+    $atom:qz_ob_140 $mol:. @atom:cff_ob -1.0500 -1.0909 13.8864 0.2728
+    $atom:qz_ob_141 $mol:. @atom:cff_ob -1.0500 -1.0909 11.5846 1.5267
+    $atom:qz_ob_142 $mol:. @atom:cff_ob -1.0500 -3.5419 15.8298 1.5267
+    $atom:qz_ob_143 $mol:. @atom:cff_ob -1.0500 -1.6767 9.0927 2.0724
+    $atom:qz_ob_144 $mol:. @atom:cff_ob -1.0500 -4.1276 13.3379 2.0724
+    $atom:qz_oh_93 $mol:. @atom:cff_oh -0.9500 -4.5852 10.2436 3.3263
+    $atom:qz_oh_94 $mol:. @atom:cff_oh -0.9500 -2.1343 14.4888 3.3263
+    $atom:qz_oh_95 $mol:. @atom:cff_oh -0.9500 -2.1343 10.9823 3.8720
+    $atom:qz_oh_96 $mol:. @atom:cff_oh -0.9500 -4.5852 15.2274 3.8720
+    $atom:qz_si_97 $mol:. @atom:cff_st 2.1000 3.7566 -14.9969 -2.6996
+    $atom:qz_si_98 $mol:. @atom:cff_st 2.1000 1.3056 -10.7517 -2.6996
+    $atom:qz_si_99 $mol:. @atom:cff_st 2.1000 1.3056 -14.7193 -0.9000
+    $atom:qz_si_100 $mol:. @atom:cff_st 2.1000 3.7566 -10.4741 -0.9000
+    $atom:qz_oh_97 $mol:. @atom:cff_oh -0.9500 3.8110 -13.8864 -3.8721
+    $atom:qz_oh_98 $mol:. @atom:cff_oh -0.9500 1.3600 -9.6412 -3.8721
+    $atom:qz_oh_99 $mol:. @atom:cff_oh -0.9500 3.2252 -16.3783 -3.3264
+    $atom:qz_oh_100 $mol:. @atom:cff_oh -0.9500 0.7743 -12.1331 -3.3264
+    $atom:qz_ob_145 $mol:. @atom:cff_ob -1.0500 0.3167 -15.2274 -2.0725
+    $atom:qz_ob_146 $mol:. @atom:cff_ob -1.0500 2.7676 -10.9823 -2.0725
+    $atom:qz_ob_147 $mol:. @atom:cff_ob -1.0500 2.7676 -14.4888 -1.5268
+    $atom:qz_ob_148 $mol:. @atom:cff_ob -1.0500 0.3167 -10.2436 -1.5268
+    $atom:qz_si_101 $mol:. @atom:cff_st 2.1000 2.2907 -16.9807 0.8996
+    $atom:qz_si_102 $mol:. @atom:cff_st 2.1000 4.7416 -12.7355 0.8996
+    $atom:qz_si_103 $mol:. @atom:cff_st 2.1000 3.7566 -14.9969 2.6992
+    $atom:qz_si_104 $mol:. @atom:cff_st 2.1000 1.3056 -10.7517 2.6992
+    $atom:qz_ob_149 $mol:. @atom:cff_ob -1.0500 0.7743 -13.3379 -0.2729
+    $atom:qz_ob_150 $mol:. @atom:cff_ob -1.0500 3.2252 -9.0927 -0.2729
+    $atom:qz_ob_151 $mol:. @atom:cff_ob -1.0500 1.3600 -15.8298 0.2728
+    $atom:qz_ob_152 $mol:. @atom:cff_ob -1.0500 3.8110 -11.5846 0.2728
+    $atom:qz_ob_153 $mol:. @atom:cff_ob -1.0500 3.8110 -13.8864 1.5267
+    $atom:qz_ob_154 $mol:. @atom:cff_ob -1.0500 1.3600 -9.6412 1.5267
+    $atom:qz_ob_155 $mol:. @atom:cff_ob -1.0500 3.2252 -16.3783 2.0724
+    $atom:qz_ob_156 $mol:. @atom:cff_ob -1.0500 0.7743 -12.1331 2.0724
+    $atom:qz_oh_101 $mol:. @atom:cff_oh -0.9500 0.3167 -15.2274 3.3263
+    $atom:qz_oh_102 $mol:. @atom:cff_oh -0.9500 2.7676 -10.9823 3.3263
+    $atom:qz_oh_103 $mol:. @atom:cff_oh -0.9500 2.7676 -14.4888 3.8720
+    $atom:qz_oh_104 $mol:. @atom:cff_oh -0.9500 0.3167 -10.2436 3.8720
+    $atom:qz_si_105 $mol:. @atom:cff_st 2.1000 3.7566 -6.5066 -2.6996
+    $atom:qz_si_106 $mol:. @atom:cff_st 2.1000 1.3056 -2.2614 -2.6996
+    $atom:qz_si_107 $mol:. @atom:cff_st 2.1000 1.3056 -6.2289 -0.9000
+    $atom:qz_si_108 $mol:. @atom:cff_st 2.1000 3.7566 -1.9838 -0.9000
+    $atom:qz_oh_105 $mol:. @atom:cff_oh -0.9500 3.8110 -5.3960 -3.8721
+    $atom:qz_oh_106 $mol:. @atom:cff_oh -0.9500 1.3600 -1.1509 -3.8721
+    $atom:qz_oh_107 $mol:. @atom:cff_oh -0.9500 3.2252 -7.8880 -3.3264
+    $atom:qz_oh_108 $mol:. @atom:cff_oh -0.9500 0.7743 -3.6428 -3.3264
+    $atom:qz_ob_157 $mol:. @atom:cff_ob -1.0500 0.3167 -6.7371 -2.0725
+    $atom:qz_ob_158 $mol:. @atom:cff_ob -1.0500 2.7676 -2.4919 -2.0725
+    $atom:qz_ob_159 $mol:. @atom:cff_ob -1.0500 2.7676 -5.9984 -1.5268
+    $atom:qz_ob_160 $mol:. @atom:cff_ob -1.0500 0.3167 -1.7533 -1.5268
+    $atom:qz_si_109 $mol:. @atom:cff_st 2.1000 2.2907 -8.4903 0.8996
+    $atom:qz_si_110 $mol:. @atom:cff_st 2.1000 4.7416 -4.2452 0.8996
+    $atom:qz_si_111 $mol:. @atom:cff_st 2.1000 3.7566 -6.5066 2.6992
+    $atom:qz_si_112 $mol:. @atom:cff_st 2.1000 1.3056 -2.2614 2.6992
+    $atom:qz_ob_161 $mol:. @atom:cff_ob -1.0500 0.7743 -4.8476 -0.2729
+    $atom:qz_ob_162 $mol:. @atom:cff_ob -1.0500 3.2252 -0.6024 -0.2729
+    $atom:qz_ob_163 $mol:. @atom:cff_ob -1.0500 1.3600 -7.3395 0.2728
+    $atom:qz_ob_164 $mol:. @atom:cff_ob -1.0500 3.8110 -3.0943 0.2728
+    $atom:qz_ob_165 $mol:. @atom:cff_ob -1.0500 3.8110 -5.3960 1.5267
+    $atom:qz_ob_166 $mol:. @atom:cff_ob -1.0500 1.3600 -1.1509 1.5267
+    $atom:qz_ob_167 $mol:. @atom:cff_ob -1.0500 3.2252 -7.8880 2.0724
+    $atom:qz_ob_168 $mol:. @atom:cff_ob -1.0500 0.7743 -3.6428 2.0724
+    $atom:qz_oh_109 $mol:. @atom:cff_oh -0.9500 0.3167 -6.7371 3.3263
+    $atom:qz_oh_110 $mol:. @atom:cff_oh -0.9500 2.7676 -2.4919 3.3263
+    $atom:qz_oh_111 $mol:. @atom:cff_oh -0.9500 2.7676 -5.9984 3.8720
+    $atom:qz_oh_112 $mol:. @atom:cff_oh -0.9500 0.3167 -1.7533 3.8720
+    $atom:qz_si_113 $mol:. @atom:cff_st 2.1000 3.7566 1.9838 -2.6996
+    $atom:qz_si_114 $mol:. @atom:cff_st 2.1000 1.3056 6.2289 -2.6996
+    $atom:qz_si_115 $mol:. @atom:cff_st 2.1000 1.3056 2.2614 -0.9000
+    $atom:qz_si_116 $mol:. @atom:cff_st 2.1000 3.7566 6.5066 -0.9000
+    $atom:qz_oh_113 $mol:. @atom:cff_oh -0.9500 3.8110 3.0943 -3.8721
+    $atom:qz_oh_114 $mol:. @atom:cff_oh -0.9500 1.3600 7.3395 -3.8721
+    $atom:qz_oh_115 $mol:. @atom:cff_oh -0.9500 3.2252 0.6024 -3.3264
+    $atom:qz_oh_116 $mol:. @atom:cff_oh -0.9500 0.7743 4.8476 -3.3264
+    $atom:qz_ob_169 $mol:. @atom:cff_ob -1.0500 0.3167 1.7533 -2.0725
+    $atom:qz_ob_170 $mol:. @atom:cff_ob -1.0500 2.7676 5.9984 -2.0725
+    $atom:qz_ob_171 $mol:. @atom:cff_ob -1.0500 2.7676 2.4919 -1.5268
+    $atom:qz_ob_172 $mol:. @atom:cff_ob -1.0500 0.3167 6.7371 -1.5268
+    $atom:qz_si_117 $mol:. @atom:cff_st 2.1000 2.2907 0.0000 0.8996
+    $atom:qz_si_118 $mol:. @atom:cff_st 2.1000 4.7416 4.2452 0.8996
+    $atom:qz_si_119 $mol:. @atom:cff_st 2.1000 3.7566 1.9838 2.6992
+    $atom:qz_si_120 $mol:. @atom:cff_st 2.1000 1.3056 6.2289 2.6992
+    $atom:qz_ob_173 $mol:. @atom:cff_ob -1.0500 0.7743 3.6428 -0.2729
+    $atom:qz_ob_174 $mol:. @atom:cff_ob -1.0500 3.2252 7.8880 -0.2729
+    $atom:qz_ob_175 $mol:. @atom:cff_ob -1.0500 1.3600 1.1509 0.2728
+    $atom:qz_ob_176 $mol:. @atom:cff_ob -1.0500 3.8110 5.3960 0.2728
+    $atom:qz_ob_177 $mol:. @atom:cff_ob -1.0500 3.8110 3.0943 1.5267
+    $atom:qz_ob_178 $mol:. @atom:cff_ob -1.0500 1.3600 7.3395 1.5267
+    $atom:qz_ob_179 $mol:. @atom:cff_ob -1.0500 3.2252 0.6024 2.0724
+    $atom:qz_ob_180 $mol:. @atom:cff_ob -1.0500 0.7743 4.8476 2.0724
+    $atom:qz_oh_117 $mol:. @atom:cff_oh -0.9500 0.3167 1.7533 3.3263
+    $atom:qz_oh_118 $mol:. @atom:cff_oh -0.9500 2.7676 5.9984 3.3263
+    $atom:qz_oh_119 $mol:. @atom:cff_oh -0.9500 2.7676 2.4919 3.8720
+    $atom:qz_oh_120 $mol:. @atom:cff_oh -0.9500 0.3167 6.7371 3.8720
+    $atom:qz_si_121 $mol:. @atom:cff_st 2.1000 3.7566 10.4741 -2.6996
+    $atom:qz_si_122 $mol:. @atom:cff_st 2.1000 1.3056 14.7193 -2.6996
+    $atom:qz_si_123 $mol:. @atom:cff_st 2.1000 1.3056 10.7517 -0.9000
+    $atom:qz_si_124 $mol:. @atom:cff_st 2.1000 3.7566 14.9969 -0.9000
+    $atom:qz_oh_121 $mol:. @atom:cff_oh -0.9500 3.8110 11.5846 -3.8721
+    $atom:qz_oh_122 $mol:. @atom:cff_oh -0.9500 1.3600 15.8298 -3.8721
+    $atom:qz_oh_123 $mol:. @atom:cff_oh -0.9500 3.2252 9.0927 -3.3264
+    $atom:qz_oh_124 $mol:. @atom:cff_oh -0.9500 0.7743 13.3379 -3.3264
+    $atom:qz_ob_181 $mol:. @atom:cff_ob -1.0500 0.3167 10.2436 -2.0725
+    $atom:qz_ob_182 $mol:. @atom:cff_ob -1.0500 2.7676 14.4888 -2.0725
+    $atom:qz_ob_183 $mol:. @atom:cff_ob -1.0500 2.7676 10.9823 -1.5268
+    $atom:qz_ob_184 $mol:. @atom:cff_ob -1.0500 0.3167 15.2274 -1.5268
+    $atom:qz_si_125 $mol:. @atom:cff_st 2.1000 2.2907 8.4903 0.8996
+    $atom:qz_si_126 $mol:. @atom:cff_st 2.1000 4.7416 12.7355 0.8996
+    $atom:qz_si_127 $mol:. @atom:cff_st 2.1000 3.7566 10.4741 2.6992
+    $atom:qz_si_128 $mol:. @atom:cff_st 2.1000 1.3056 14.7193 2.6992
+    $atom:qz_ob_185 $mol:. @atom:cff_ob -1.0500 0.7743 12.1331 -0.2729
+    $atom:qz_ob_186 $mol:. @atom:cff_ob -1.0500 3.2252 16.3783 -0.2729
+    $atom:qz_ob_187 $mol:. @atom:cff_ob -1.0500 1.3600 9.6412 0.2728
+    $atom:qz_ob_188 $mol:. @atom:cff_ob -1.0500 3.8110 13.8864 0.2728
+    $atom:qz_ob_189 $mol:. @atom:cff_ob -1.0500 3.8110 11.5846 1.5267
+    $atom:qz_ob_190 $mol:. @atom:cff_ob -1.0500 1.3600 15.8298 1.5267
+    $atom:qz_ob_191 $mol:. @atom:cff_ob -1.0500 3.2252 9.0927 2.0724
+    $atom:qz_ob_192 $mol:. @atom:cff_ob -1.0500 0.7743 13.3379 2.0724
+    $atom:qz_oh_125 $mol:. @atom:cff_oh -0.9500 0.3167 10.2436 3.3263
+    $atom:qz_oh_126 $mol:. @atom:cff_oh -0.9500 2.7676 14.4888 3.3263
+    $atom:qz_oh_127 $mol:. @atom:cff_oh -0.9500 2.7676 10.9823 3.8720
+    $atom:qz_oh_128 $mol:. @atom:cff_oh -0.9500 0.3167 15.2274 3.8720
+    $atom:qz_si_129 $mol:. @atom:cff_st 2.1000 8.6585 -14.9969 -2.6996
+    $atom:qz_si_130 $mol:. @atom:cff_st 2.1000 6.2075 -10.7517 -2.6996
+    $atom:qz_si_131 $mol:. @atom:cff_st 2.1000 6.2075 -14.7193 -0.9000
+    $atom:qz_si_132 $mol:. @atom:cff_st 2.1000 8.6585 -10.4741 -0.9000
+    $atom:qz_oh_129 $mol:. @atom:cff_oh -0.9500 8.7129 -13.8864 -3.8721
+    $atom:qz_oh_130 $mol:. @atom:cff_oh -0.9500 6.2619 -9.6412 -3.8721
+    $atom:qz_oh_131 $mol:. @atom:cff_oh -0.9500 8.1271 -16.3783 -3.3264
+    $atom:qz_oh_132 $mol:. @atom:cff_oh -0.9500 5.6762 -12.1331 -3.3264
+    $atom:qz_ob_193 $mol:. @atom:cff_ob -1.0500 5.2186 -15.2274 -2.0725
+    $atom:qz_ob_194 $mol:. @atom:cff_ob -1.0500 7.6695 -10.9823 -2.0725
+    $atom:qz_ob_195 $mol:. @atom:cff_ob -1.0500 7.6695 -14.4888 -1.5268
+    $atom:qz_ob_196 $mol:. @atom:cff_ob -1.0500 5.2186 -10.2436 -1.5268
+    $atom:qz_si_133 $mol:. @atom:cff_st 2.1000 7.1926 -16.9807 0.8996
+    $atom:qz_si_134 $mol:. @atom:cff_st 2.1000 9.6435 -12.7355 0.8996
+    $atom:qz_si_135 $mol:. @atom:cff_st 2.1000 8.6585 -14.9969 2.6992
+    $atom:qz_si_136 $mol:. @atom:cff_st 2.1000 6.2075 -10.7517 2.6992
+    $atom:qz_ob_197 $mol:. @atom:cff_ob -1.0500 5.6762 -13.3379 -0.2729
+    $atom:qz_ob_198 $mol:. @atom:cff_ob -1.0500 8.1271 -9.0927 -0.2729
+    $atom:qz_ob_199 $mol:. @atom:cff_ob -1.0500 6.2619 -15.8298 0.2728
+    $atom:qz_ob_200 $mol:. @atom:cff_ob -1.0500 8.7129 -11.5846 0.2728
+    $atom:qz_ob_201 $mol:. @atom:cff_ob -1.0500 8.7129 -13.8864 1.5267
+    $atom:qz_ob_202 $mol:. @atom:cff_ob -1.0500 6.2619 -9.6412 1.5267
+    $atom:qz_ob_203 $mol:. @atom:cff_ob -1.0500 8.1271 -16.3783 2.0724
+    $atom:qz_ob_204 $mol:. @atom:cff_ob -1.0500 5.6762 -12.1331 2.0724
+    $atom:qz_oh_133 $mol:. @atom:cff_oh -0.9500 5.2186 -15.2274 3.3263
+    $atom:qz_oh_134 $mol:. @atom:cff_oh -0.9500 7.6695 -10.9823 3.3263
+    $atom:qz_oh_135 $mol:. @atom:cff_oh -0.9500 7.6695 -14.4888 3.8720
+    $atom:qz_oh_136 $mol:. @atom:cff_oh -0.9500 5.2186 -10.2436 3.8720
+    $atom:qz_si_137 $mol:. @atom:cff_st 2.1000 8.6585 -6.5066 -2.6996
+    $atom:qz_si_138 $mol:. @atom:cff_st 2.1000 6.2075 -2.2614 -2.6996
+    $atom:qz_si_139 $mol:. @atom:cff_st 2.1000 6.2075 -6.2289 -0.9000
+    $atom:qz_si_140 $mol:. @atom:cff_st 2.1000 8.6585 -1.9838 -0.9000
+    $atom:qz_oh_137 $mol:. @atom:cff_oh -0.9500 8.7129 -5.3960 -3.8721
+    $atom:qz_oh_138 $mol:. @atom:cff_oh -0.9500 6.2619 -1.1509 -3.8721
+    $atom:qz_oh_139 $mol:. @atom:cff_oh -0.9500 8.1271 -7.8880 -3.3264
+    $atom:qz_oh_140 $mol:. @atom:cff_oh -0.9500 5.6762 -3.6428 -3.3264
+    $atom:qz_ob_205 $mol:. @atom:cff_ob -1.0500 5.2186 -6.7371 -2.0725
+    $atom:qz_ob_206 $mol:. @atom:cff_ob -1.0500 7.6695 -2.4919 -2.0725
+    $atom:qz_ob_207 $mol:. @atom:cff_ob -1.0500 7.6695 -5.9984 -1.5268
+    $atom:qz_ob_208 $mol:. @atom:cff_ob -1.0500 5.2186 -1.7533 -1.5268
+    $atom:qz_si_141 $mol:. @atom:cff_st 2.1000 7.1926 -8.4903 0.8996
+    $atom:qz_si_142 $mol:. @atom:cff_st 2.1000 9.6435 -4.2452 0.8996
+    $atom:qz_si_143 $mol:. @atom:cff_st 2.1000 8.6585 -6.5066 2.6992
+    $atom:qz_si_144 $mol:. @atom:cff_st 2.1000 6.2075 -2.2614 2.6992
+    $atom:qz_ob_209 $mol:. @atom:cff_ob -1.0500 5.6762 -4.8476 -0.2729
+    $atom:qz_ob_210 $mol:. @atom:cff_ob -1.0500 8.1271 -0.6024 -0.2729
+    $atom:qz_ob_211 $mol:. @atom:cff_ob -1.0500 6.2619 -7.3395 0.2728
+    $atom:qz_ob_212 $mol:. @atom:cff_ob -1.0500 8.7129 -3.0943 0.2728
+    $atom:qz_ob_213 $mol:. @atom:cff_ob -1.0500 8.7129 -5.3960 1.5267
+    $atom:qz_ob_214 $mol:. @atom:cff_ob -1.0500 6.2619 -1.1509 1.5267
+    $atom:qz_ob_215 $mol:. @atom:cff_ob -1.0500 8.1271 -7.8880 2.0724
+    $atom:qz_ob_216 $mol:. @atom:cff_ob -1.0500 5.6762 -3.6428 2.0724
+    $atom:qz_oh_141 $mol:. @atom:cff_oh -0.9500 5.2186 -6.7371 3.3263
+    $atom:qz_oh_142 $mol:. @atom:cff_oh -0.9500 7.6695 -2.4919 3.3263
+    $atom:qz_oh_143 $mol:. @atom:cff_oh -0.9500 7.6695 -5.9984 3.8720
+    $atom:qz_oh_144 $mol:. @atom:cff_oh -0.9500 5.2186 -1.7533 3.8720
+    $atom:qz_si_145 $mol:. @atom:cff_st 2.1000 8.6585 1.9838 -2.6996
+    $atom:qz_si_146 $mol:. @atom:cff_st 2.1000 6.2075 6.2289 -2.6996
+    $atom:qz_si_147 $mol:. @atom:cff_st 2.1000 6.2075 2.2614 -0.9000
+    $atom:qz_si_148 $mol:. @atom:cff_st 2.1000 8.6585 6.5066 -0.9000
+    $atom:qz_oh_145 $mol:. @atom:cff_oh -0.9500 8.7129 3.0943 -3.8721
+    $atom:qz_oh_146 $mol:. @atom:cff_oh -0.9500 6.2619 7.3395 -3.8721
+    $atom:qz_oh_147 $mol:. @atom:cff_oh -0.9500 8.1271 0.6024 -3.3264
+    $atom:qz_oh_148 $mol:. @atom:cff_oh -0.9500 5.6762 4.8476 -3.3264
+    $atom:qz_ob_217 $mol:. @atom:cff_ob -1.0500 5.2186 1.7533 -2.0725
+    $atom:qz_ob_218 $mol:. @atom:cff_ob -1.0500 7.6695 5.9984 -2.0725
+    $atom:qz_ob_219 $mol:. @atom:cff_ob -1.0500 7.6695 2.4919 -1.5268
+    $atom:qz_ob_220 $mol:. @atom:cff_ob -1.0500 5.2186 6.7371 -1.5268
+    $atom:qz_si_149 $mol:. @atom:cff_st 2.1000 7.1926 0.0000 0.8996
+    $atom:qz_si_150 $mol:. @atom:cff_st 2.1000 9.6435 4.2452 0.8996
+    $atom:qz_si_151 $mol:. @atom:cff_st 2.1000 8.6585 1.9838 2.6992
+    $atom:qz_si_152 $mol:. @atom:cff_st 2.1000 6.2075 6.2289 2.6992
+    $atom:qz_ob_221 $mol:. @atom:cff_ob -1.0500 5.6762 3.6428 -0.2729
+    $atom:qz_ob_222 $mol:. @atom:cff_ob -1.0500 8.1271 7.8880 -0.2729
+    $atom:qz_ob_223 $mol:. @atom:cff_ob -1.0500 6.2619 1.1509 0.2728
+    $atom:qz_ob_224 $mol:. @atom:cff_ob -1.0500 8.7129 5.3960 0.2728
+    $atom:qz_ob_225 $mol:. @atom:cff_ob -1.0500 8.7129 3.0943 1.5267
+    $atom:qz_ob_226 $mol:. @atom:cff_ob -1.0500 6.2619 7.3395 1.5267
+    $atom:qz_ob_227 $mol:. @atom:cff_ob -1.0500 8.1271 0.6024 2.0724
+    $atom:qz_ob_228 $mol:. @atom:cff_ob -1.0500 5.6762 4.8476 2.0724
+    $atom:qz_oh_149 $mol:. @atom:cff_oh -0.9500 5.2186 1.7533 3.3263
+    $atom:qz_oh_150 $mol:. @atom:cff_oh -0.9500 7.6695 5.9984 3.3263
+    $atom:qz_oh_151 $mol:. @atom:cff_oh -0.9500 7.6695 2.4919 3.8720
+    $atom:qz_oh_152 $mol:. @atom:cff_oh -0.9500 5.2186 6.7371 3.8720
+    $atom:qz_si_153 $mol:. @atom:cff_st 2.1000 8.6585 10.4741 -2.6996
+    $atom:qz_si_154 $mol:. @atom:cff_st 2.1000 6.2075 14.7193 -2.6996
+    $atom:qz_si_155 $mol:. @atom:cff_st 2.1000 6.2075 10.7517 -0.9000
+    $atom:qz_si_156 $mol:. @atom:cff_st 2.1000 8.6585 14.9969 -0.9000
+    $atom:qz_oh_153 $mol:. @atom:cff_oh -0.9500 8.7129 11.5846 -3.8721
+    $atom:qz_oh_154 $mol:. @atom:cff_oh -0.9500 6.2619 15.8298 -3.8721
+    $atom:qz_oh_155 $mol:. @atom:cff_oh -0.9500 8.1271 9.0927 -3.3264
+    $atom:qz_oh_156 $mol:. @atom:cff_oh -0.9500 5.6762 13.3379 -3.3264
+    $atom:qz_ob_229 $mol:. @atom:cff_ob -1.0500 5.2186 10.2436 -2.0725
+    $atom:qz_ob_230 $mol:. @atom:cff_ob -1.0500 7.6695 14.4888 -2.0725
+    $atom:qz_ob_231 $mol:. @atom:cff_ob -1.0500 7.6695 10.9823 -1.5268
+    $atom:qz_ob_232 $mol:. @atom:cff_ob -1.0500 5.2186 15.2274 -1.5268
+    $atom:qz_si_157 $mol:. @atom:cff_st 2.1000 7.1926 8.4903 0.8996
+    $atom:qz_si_158 $mol:. @atom:cff_st 2.1000 9.6435 12.7355 0.8996
+    $atom:qz_si_159 $mol:. @atom:cff_st 2.1000 8.6585 10.4741 2.6992
+    $atom:qz_si_160 $mol:. @atom:cff_st 2.1000 6.2075 14.7193 2.6992
+    $atom:qz_ob_233 $mol:. @atom:cff_ob -1.0500 5.6762 12.1331 -0.2729
+    $atom:qz_ob_234 $mol:. @atom:cff_ob -1.0500 8.1271 16.3783 -0.2729
+    $atom:qz_ob_235 $mol:. @atom:cff_ob -1.0500 6.2619 9.6412 0.2728
+    $atom:qz_ob_236 $mol:. @atom:cff_ob -1.0500 8.7129 13.8864 0.2728
+    $atom:qz_ob_237 $mol:. @atom:cff_ob -1.0500 8.7129 11.5846 1.5267
+    $atom:qz_ob_238 $mol:. @atom:cff_ob -1.0500 6.2619 15.8298 1.5267
+    $atom:qz_ob_239 $mol:. @atom:cff_ob -1.0500 8.1271 9.0927 2.0724
+    $atom:qz_ob_240 $mol:. @atom:cff_ob -1.0500 5.6762 13.3379 2.0724
+    $atom:qz_oh_157 $mol:. @atom:cff_oh -0.9500 5.2186 10.2436 3.3263
+    $atom:qz_oh_158 $mol:. @atom:cff_oh -0.9500 7.6695 14.4888 3.3263
+    $atom:qz_oh_159 $mol:. @atom:cff_oh -0.9500 7.6695 10.9823 3.8720
+    $atom:qz_oh_160 $mol:. @atom:cff_oh -0.9500 5.2186 15.2274 3.8720
+    $atom:qz_si_161 $mol:. @atom:cff_st 2.1000 13.5604 -14.9969 -2.6996
+    $atom:qz_si_162 $mol:. @atom:cff_st 2.1000 11.1094 -10.7517 -2.6996
+    $atom:qz_si_163 $mol:. @atom:cff_st 2.1000 11.1094 -14.7193 -0.9000
+    $atom:qz_si_164 $mol:. @atom:cff_st 2.1000 13.5604 -10.4741 -0.9000
+    $atom:qz_oh_161 $mol:. @atom:cff_oh -0.9500 13.6148 -13.8864 -3.8721
+    $atom:qz_oh_162 $mol:. @atom:cff_oh -0.9500 11.1638 -9.6412 -3.8721
+    $atom:qz_oh_163 $mol:. @atom:cff_oh -0.9500 13.0290 -16.3783 -3.3264
+    $atom:qz_oh_164 $mol:. @atom:cff_oh -0.9500 10.5781 -12.1331 -3.3264
+    $atom:qz_ob_241 $mol:. @atom:cff_ob -1.0500 10.1205 -15.2274 -2.0725
+    $atom:qz_ob_242 $mol:. @atom:cff_ob -1.0500 12.5714 -10.9823 -2.0725
+    $atom:qz_ob_243 $mol:. @atom:cff_ob -1.0500 12.5714 -14.4888 -1.5268
+    $atom:qz_ob_244 $mol:. @atom:cff_ob -1.0500 10.1205 -10.2436 -1.5268
+    $atom:qz_si_165 $mol:. @atom:cff_st 2.1000 12.0945 -16.9807 0.8996
+    $atom:qz_si_166 $mol:. @atom:cff_st 2.1000 14.5454 -12.7355 0.8996
+    $atom:qz_si_167 $mol:. @atom:cff_st 2.1000 13.5604 -14.9969 2.6992
+    $atom:qz_si_168 $mol:. @atom:cff_st 2.1000 11.1094 -10.7517 2.6992
+    $atom:qz_ob_245 $mol:. @atom:cff_ob -1.0500 10.5781 -13.3379 -0.2729
+    $atom:qz_ob_246 $mol:. @atom:cff_ob -1.0500 13.0290 -9.0927 -0.2729
+    $atom:qz_ob_247 $mol:. @atom:cff_ob -1.0500 11.1638 -15.8298 0.2728
+    $atom:qz_ob_248 $mol:. @atom:cff_ob -1.0500 13.6148 -11.5846 0.2728
+    $atom:qz_ob_249 $mol:. @atom:cff_ob -1.0500 13.6148 -13.8864 1.5267
+    $atom:qz_ob_250 $mol:. @atom:cff_ob -1.0500 11.1638 -9.6412 1.5267
+    $atom:qz_ob_251 $mol:. @atom:cff_ob -1.0500 13.0290 -16.3783 2.0724
+    $atom:qz_ob_252 $mol:. @atom:cff_ob -1.0500 10.5781 -12.1331 2.0724
+    $atom:qz_oh_165 $mol:. @atom:cff_oh -0.9500 10.1205 -15.2274 3.3263
+    $atom:qz_oh_166 $mol:. @atom:cff_oh -0.9500 12.5714 -10.9823 3.3263
+    $atom:qz_oh_167 $mol:. @atom:cff_oh -0.9500 12.5714 -14.4888 3.8720
+    $atom:qz_oh_168 $mol:. @atom:cff_oh -0.9500 10.1205 -10.2436 3.8720
+    $atom:qz_si_169 $mol:. @atom:cff_st 2.1000 13.5604 -6.5066 -2.6996
+    $atom:qz_si_170 $mol:. @atom:cff_st 2.1000 11.1094 -2.2614 -2.6996
+    $atom:qz_si_171 $mol:. @atom:cff_st 2.1000 11.1094 -6.2289 -0.9000
+    $atom:qz_si_172 $mol:. @atom:cff_st 2.1000 13.5604 -1.9838 -0.9000
+    $atom:qz_oh_169 $mol:. @atom:cff_oh -0.9500 13.6148 -5.3960 -3.8721
+    $atom:qz_oh_170 $mol:. @atom:cff_oh -0.9500 11.1638 -1.1509 -3.8721
+    $atom:qz_oh_171 $mol:. @atom:cff_oh -0.9500 13.0290 -7.8880 -3.3264
+    $atom:qz_oh_172 $mol:. @atom:cff_oh -0.9500 10.5781 -3.6428 -3.3264
+    $atom:qz_ob_253 $mol:. @atom:cff_ob -1.0500 10.1205 -6.7371 -2.0725
+    $atom:qz_ob_254 $mol:. @atom:cff_ob -1.0500 12.5714 -2.4919 -2.0725
+    $atom:qz_ob_255 $mol:. @atom:cff_ob -1.0500 12.5714 -5.9984 -1.5268
+    $atom:qz_ob_256 $mol:. @atom:cff_ob -1.0500 10.1205 -1.7533 -1.5268
+    $atom:qz_si_173 $mol:. @atom:cff_st 2.1000 12.0945 -8.4903 0.8996
+    $atom:qz_si_174 $mol:. @atom:cff_st 2.1000 14.5454 -4.2452 0.8996
+    $atom:qz_si_175 $mol:. @atom:cff_st 2.1000 13.5604 -6.5066 2.6992
+    $atom:qz_si_176 $mol:. @atom:cff_st 2.1000 11.1094 -2.2614 2.6992
+    $atom:qz_ob_257 $mol:. @atom:cff_ob -1.0500 10.5781 -4.8476 -0.2729
+    $atom:qz_ob_258 $mol:. @atom:cff_ob -1.0500 13.0290 -0.6024 -0.2729
+    $atom:qz_ob_259 $mol:. @atom:cff_ob -1.0500 11.1638 -7.3395 0.2728
+    $atom:qz_ob_260 $mol:. @atom:cff_ob -1.0500 13.6148 -3.0943 0.2728
+    $atom:qz_ob_261 $mol:. @atom:cff_ob -1.0500 13.6148 -5.3960 1.5267
+    $atom:qz_ob_262 $mol:. @atom:cff_ob -1.0500 11.1638 -1.1509 1.5267
+    $atom:qz_ob_263 $mol:. @atom:cff_ob -1.0500 13.0290 -7.8880 2.0724
+    $atom:qz_ob_264 $mol:. @atom:cff_ob -1.0500 10.5781 -3.6428 2.0724
+    $atom:qz_oh_173 $mol:. @atom:cff_oh -0.9500 10.1205 -6.7371 3.3263
+    $atom:qz_oh_174 $mol:. @atom:cff_oh -0.9500 12.5714 -2.4919 3.3263
+    $atom:qz_oh_175 $mol:. @atom:cff_oh -0.9500 12.5714 -5.9984 3.8720
+    $atom:qz_oh_176 $mol:. @atom:cff_oh -0.9500 10.1205 -1.7533 3.8720
+    $atom:qz_si_177 $mol:. @atom:cff_st 2.1000 13.5604 1.9838 -2.6996
+    $atom:qz_si_178 $mol:. @atom:cff_st 2.1000 11.1094 6.2289 -2.6996
+    $atom:qz_si_179 $mol:. @atom:cff_st 2.1000 11.1094 2.2614 -0.9000
+    $atom:qz_si_180 $mol:. @atom:cff_st 2.1000 13.5604 6.5066 -0.9000
+    $atom:qz_oh_177 $mol:. @atom:cff_oh -0.9500 13.6148 3.0943 -3.8721
+    $atom:qz_oh_178 $mol:. @atom:cff_oh -0.9500 11.1638 7.3395 -3.8721
+    $atom:qz_oh_179 $mol:. @atom:cff_oh -0.9500 13.0290 0.6024 -3.3264
+    $atom:qz_oh_180 $mol:. @atom:cff_oh -0.9500 10.5781 4.8476 -3.3264
+    $atom:qz_ob_265 $mol:. @atom:cff_ob -1.0500 10.1205 1.7533 -2.0725
+    $atom:qz_ob_266 $mol:. @atom:cff_ob -1.0500 12.5714 5.9984 -2.0725
+    $atom:qz_ob_267 $mol:. @atom:cff_ob -1.0500 12.5714 2.4919 -1.5268
+    $atom:qz_ob_268 $mol:. @atom:cff_ob -1.0500 10.1205 6.7371 -1.5268
+    $atom:qz_si_181 $mol:. @atom:cff_st 2.1000 12.0945 0.0000 0.8996
+    $atom:qz_si_182 $mol:. @atom:cff_st 2.1000 14.5454 4.2452 0.8996
+    $atom:qz_si_183 $mol:. @atom:cff_st 2.1000 13.5604 1.9838 2.6992
+    $atom:qz_si_184 $mol:. @atom:cff_st 2.1000 11.1094 6.2289 2.6992
+    $atom:qz_ob_269 $mol:. @atom:cff_ob -1.0500 10.5781 3.6428 -0.2729
+    $atom:qz_ob_270 $mol:. @atom:cff_ob -1.0500 13.0290 7.8880 -0.2729
+    $atom:qz_ob_271 $mol:. @atom:cff_ob -1.0500 11.1638 1.1509 0.2728
+    $atom:qz_ob_272 $mol:. @atom:cff_ob -1.0500 13.6148 5.3960 0.2728
+    $atom:qz_ob_273 $mol:. @atom:cff_ob -1.0500 13.6148 3.0943 1.5267
+    $atom:qz_ob_274 $mol:. @atom:cff_ob -1.0500 11.1638 7.3395 1.5267
+    $atom:qz_ob_275 $mol:. @atom:cff_ob -1.0500 13.0290 0.6024 2.0724
+    $atom:qz_ob_276 $mol:. @atom:cff_ob -1.0500 10.5781 4.8476 2.0724
+    $atom:qz_oh_181 $mol:. @atom:cff_oh -0.9500 10.1205 1.7533 3.3263
+    $atom:qz_oh_182 $mol:. @atom:cff_oh -0.9500 12.5714 5.9984 3.3263
+    $atom:qz_oh_183 $mol:. @atom:cff_oh -0.9500 12.5714 2.4919 3.8720
+    $atom:qz_oh_184 $mol:. @atom:cff_oh -0.9500 10.1205 6.7371 3.8720
+    $atom:qz_si_185 $mol:. @atom:cff_st 2.1000 13.5604 10.4741 -2.6996
+    $atom:qz_si_186 $mol:. @atom:cff_st 2.1000 11.1094 14.7193 -2.6996
+    $atom:qz_si_187 $mol:. @atom:cff_st 2.1000 11.1094 10.7517 -0.9000
+    $atom:qz_si_188 $mol:. @atom:cff_st 2.1000 13.5604 14.9969 -0.9000
+    $atom:qz_oh_185 $mol:. @atom:cff_oh -0.9500 13.6148 11.5846 -3.8721
+    $atom:qz_oh_186 $mol:. @atom:cff_oh -0.9500 11.1638 15.8298 -3.8721
+    $atom:qz_oh_187 $mol:. @atom:cff_oh -0.9500 13.0290 9.0927 -3.3264
+    $atom:qz_oh_188 $mol:. @atom:cff_oh -0.9500 10.5781 13.3379 -3.3264
+    $atom:qz_ob_277 $mol:. @atom:cff_ob -1.0500 10.1205 10.2436 -2.0725
+    $atom:qz_ob_278 $mol:. @atom:cff_ob -1.0500 12.5714 14.4888 -2.0725
+    $atom:qz_ob_279 $mol:. @atom:cff_ob -1.0500 12.5714 10.9823 -1.5268
+    $atom:qz_ob_280 $mol:. @atom:cff_ob -1.0500 10.1205 15.2274 -1.5268
+    $atom:qz_si_189 $mol:. @atom:cff_st 2.1000 12.0945 8.4903 0.8996
+    $atom:qz_si_190 $mol:. @atom:cff_st 2.1000 14.5454 12.7355 0.8996
+    $atom:qz_si_191 $mol:. @atom:cff_st 2.1000 13.5604 10.4741 2.6992
+    $atom:qz_si_192 $mol:. @atom:cff_st 2.1000 11.1094 14.7193 2.6992
+    $atom:qz_ob_281 $mol:. @atom:cff_ob -1.0500 10.5781 12.1331 -0.2729
+    $atom:qz_ob_282 $mol:. @atom:cff_ob -1.0500 13.0290 16.3783 -0.2729
+    $atom:qz_ob_283 $mol:. @atom:cff_ob -1.0500 11.1638 9.6412 0.2728
+    $atom:qz_ob_284 $mol:. @atom:cff_ob -1.0500 13.6148 13.8864 0.2728
+    $atom:qz_ob_285 $mol:. @atom:cff_ob -1.0500 13.6148 11.5846 1.5267
+    $atom:qz_ob_286 $mol:. @atom:cff_ob -1.0500 11.1638 15.8298 1.5267
+    $atom:qz_ob_287 $mol:. @atom:cff_ob -1.0500 13.0290 9.0927 2.0724
+    $atom:qz_ob_288 $mol:. @atom:cff_ob -1.0500 10.5781 13.3379 2.0724
+    $atom:qz_oh_189 $mol:. @atom:cff_oh -0.9500 10.1205 10.2436 3.3263
+    $atom:qz_oh_190 $mol:. @atom:cff_oh -0.9500 12.5714 14.4888 3.3263
+    $atom:qz_oh_191 $mol:. @atom:cff_oh -0.9500 12.5714 10.9823 3.8720
+    $atom:qz_oh_192 $mol:. @atom:cff_oh -0.9500 10.1205 15.2274 3.8720
+    $atom:qz_ho_1 $mol:. @atom:cff_ho 0.4250 14.0226 -15.2357 3.3488
+    $atom:qz_ho_2 $mol:. @atom:cff_ho 0.4250 -11.0286 -11.1257 3.7165
+    $atom:qz_ho_3 $mol:. @atom:cff_ho 0.4250 -12.5500 -14.1743 4.5977
+    $atom:qz_ho_4 $mol:. @atom:cff_ho 0.4250 14.4104 -9.9292 4.5977
+    $atom:qz_ho_5 $mol:. @atom:cff_ho 0.4250 14.0226 -6.7453 3.3488
+    $atom:qz_ho_6 $mol:. @atom:cff_ho 0.4250 -11.0286 -2.6353 3.7165
+    $atom:qz_ho_7 $mol:. @atom:cff_ho 0.4250 -12.5500 -5.6840 4.5977
+    $atom:qz_ho_8 $mol:. @atom:cff_ho 0.4250 14.4104 -1.4388 4.5977
+    $atom:qz_ho_9 $mol:. @atom:cff_ho 0.4250 14.0226 1.7450 3.3488
+    $atom:qz_ho_10 $mol:. @atom:cff_ho 0.4250 -11.0286 5.8550 3.7165
+    $atom:qz_ho_11 $mol:. @atom:cff_ho 0.4250 -12.5500 2.8063 4.5977
+    $atom:qz_ho_12 $mol:. @atom:cff_ho 0.4250 14.4104 7.0515 4.5977
+    $atom:qz_ho_13 $mol:. @atom:cff_ho 0.4250 14.0226 10.2353 3.3488
+    $atom:qz_ho_14 $mol:. @atom:cff_ho 0.4250 -11.0286 14.3454 3.7165
+    $atom:qz_ho_15 $mol:. @atom:cff_ho 0.4250 -12.5500 11.2967 4.5977
+    $atom:qz_ho_16 $mol:. @atom:cff_ho 0.4250 14.4104 15.5419 4.5977
+    $atom:qz_ho_17 $mol:. @atom:cff_ho 0.4250 -8.5776 -15.3708 3.7165
+    $atom:qz_ho_18 $mol:. @atom:cff_ho 0.4250 -6.1267 -11.1257 3.7165
+    $atom:qz_ho_19 $mol:. @atom:cff_ho 0.4250 -7.6481 -14.1743 4.5977
+    $atom:qz_ho_20 $mol:. @atom:cff_ho 0.4250 -10.0991 -9.9292 4.5977
+    $atom:qz_ho_21 $mol:. @atom:cff_ho 0.4250 -8.5776 -6.8805 3.7165
+    $atom:qz_ho_22 $mol:. @atom:cff_ho 0.4250 -6.1267 -2.6353 3.7165
+    $atom:qz_ho_23 $mol:. @atom:cff_ho 0.4250 -7.6481 -5.6840 4.5977
+    $atom:qz_ho_24 $mol:. @atom:cff_ho 0.4250 -10.0991 -1.4388 4.5977
+    $atom:qz_ho_25 $mol:. @atom:cff_ho 0.4250 -8.5776 1.6099 3.7165
+    $atom:qz_ho_26 $mol:. @atom:cff_ho 0.4250 -6.1267 5.8550 3.7165
+    $atom:qz_ho_27 $mol:. @atom:cff_ho 0.4250 -7.6481 2.8063 4.5977
+    $atom:qz_ho_28 $mol:. @atom:cff_ho 0.4250 -10.0991 7.0515 4.5977
+    $atom:qz_ho_29 $mol:. @atom:cff_ho 0.4250 -8.5776 10.1002 3.7165
+    $atom:qz_ho_30 $mol:. @atom:cff_ho 0.4250 -6.1267 14.3454 3.7165
+    $atom:qz_ho_31 $mol:. @atom:cff_ho 0.4250 -7.6481 11.2967 4.5977
+    $atom:qz_ho_32 $mol:. @atom:cff_ho 0.4250 -10.0991 15.5419 4.5977
+    $atom:qz_ho_33 $mol:. @atom:cff_ho 0.4250 -3.6757 -15.3708 3.7165
+    $atom:qz_ho_34 $mol:. @atom:cff_ho 0.4250 -1.2248 -11.1257 3.7165
+    $atom:qz_ho_35 $mol:. @atom:cff_ho 0.4250 -2.7462 -14.1743 4.5977
+    $atom:qz_ho_36 $mol:. @atom:cff_ho 0.4250 -5.1972 -9.9292 4.5977
+    $atom:qz_ho_37 $mol:. @atom:cff_ho 0.4250 -3.6757 -6.8805 3.7165
+    $atom:qz_ho_38 $mol:. @atom:cff_ho 0.4250 -1.2248 -2.6353 3.7165
+    $atom:qz_ho_39 $mol:. @atom:cff_ho 0.4250 -2.7462 -5.6840 4.5977
+    $atom:qz_ho_40 $mol:. @atom:cff_ho 0.4250 -5.1972 -1.4388 4.5977
+    $atom:qz_ho_41 $mol:. @atom:cff_ho 0.4250 -3.6757 1.6099 3.7165
+    $atom:qz_ho_42 $mol:. @atom:cff_ho 0.4250 -1.2248 5.8550 3.7165
+    $atom:qz_ho_43 $mol:. @atom:cff_ho 0.4250 -2.7462 2.8063 4.5977
+    $atom:qz_ho_44 $mol:. @atom:cff_ho 0.4250 -5.1972 7.0515 4.5977
+    $atom:qz_ho_45 $mol:. @atom:cff_ho 0.4250 -3.6757 10.1002 3.7165
+    $atom:qz_ho_46 $mol:. @atom:cff_ho 0.4250 -1.2248 14.3454 3.7165
+    $atom:qz_ho_47 $mol:. @atom:cff_ho 0.4250 -2.7462 11.2967 4.5977
+    $atom:qz_ho_48 $mol:. @atom:cff_ho 0.4250 -5.1972 15.5419 4.5977
+    $atom:qz_ho_49 $mol:. @atom:cff_ho 0.4250 1.2262 -15.3708 3.7165
+    $atom:qz_ho_50 $mol:. @atom:cff_ho 0.4250 3.6771 -11.1257 3.7165
+    $atom:qz_ho_51 $mol:. @atom:cff_ho 0.4250 2.1557 -14.1743 4.5977
+    $atom:qz_ho_52 $mol:. @atom:cff_ho 0.4250 -0.2953 -9.9292 4.5977
+    $atom:qz_ho_53 $mol:. @atom:cff_ho 0.4250 1.2262 -6.8805 3.7165
+    $atom:qz_ho_54 $mol:. @atom:cff_ho 0.4250 3.6771 -2.6353 3.7165
+    $atom:qz_ho_55 $mol:. @atom:cff_ho 0.4250 2.1557 -5.6840 4.5977
+    $atom:qz_ho_56 $mol:. @atom:cff_ho 0.4250 -0.2953 -1.4388 4.5977
+    $atom:qz_ho_57 $mol:. @atom:cff_ho 0.4250 1.2262 1.6099 3.7165
+    $atom:qz_ho_58 $mol:. @atom:cff_ho 0.4250 3.6771 5.8550 3.7165
+    $atom:qz_ho_59 $mol:. @atom:cff_ho 0.4250 2.1557 2.8063 4.5977
+    $atom:qz_ho_60 $mol:. @atom:cff_ho 0.4250 -0.2953 7.0515 4.5977
+    $atom:qz_ho_61 $mol:. @atom:cff_ho 0.4250 1.2262 10.1002 3.7165
+    $atom:qz_ho_62 $mol:. @atom:cff_ho 0.4250 3.6771 14.3454 3.7165
+    $atom:qz_ho_63 $mol:. @atom:cff_ho 0.4250 2.1557 11.2967 4.5977
+    $atom:qz_ho_64 $mol:. @atom:cff_ho 0.4250 -0.2953 15.5419 4.5977
+    $atom:qz_ho_65 $mol:. @atom:cff_ho 0.4250 6.1281 -15.3708 3.7165
+    $atom:qz_ho_66 $mol:. @atom:cff_ho 0.4250 8.5790 -11.1257 3.7165
+    $atom:qz_ho_67 $mol:. @atom:cff_ho 0.4250 7.0576 -14.1743 4.5977
+    $atom:qz_ho_68 $mol:. @atom:cff_ho 0.4250 4.6066 -9.9292 4.5977
+    $atom:qz_ho_69 $mol:. @atom:cff_ho 0.4250 6.1281 -6.8805 3.7165
+    $atom:qz_ho_70 $mol:. @atom:cff_ho 0.4250 8.5790 -2.6353 3.7165
+    $atom:qz_ho_71 $mol:. @atom:cff_ho 0.4250 7.0576 -5.6840 4.5977
+    $atom:qz_ho_72 $mol:. @atom:cff_ho 0.4250 4.6066 -1.4388 4.5977
+    $atom:qz_ho_73 $mol:. @atom:cff_ho 0.4250 6.1281 1.6099 3.7165
+    $atom:qz_ho_74 $mol:. @atom:cff_ho 0.4250 8.5790 5.8550 3.7165
+    $atom:qz_ho_75 $mol:. @atom:cff_ho 0.4250 7.0576 2.8063 4.5977
+    $atom:qz_ho_76 $mol:. @atom:cff_ho 0.4250 4.6066 7.0515 4.5977
+    $atom:qz_ho_77 $mol:. @atom:cff_ho 0.4250 6.1281 10.1002 3.7165
+    $atom:qz_ho_78 $mol:. @atom:cff_ho 0.4250 8.5790 14.3454 3.7165
+    $atom:qz_ho_79 $mol:. @atom:cff_ho 0.4250 7.0576 11.2967 4.5977
+    $atom:qz_ho_80 $mol:. @atom:cff_ho 0.4250 4.6066 15.5419 4.5977
+    $atom:qz_ho_81 $mol:. @atom:cff_ho 0.4250 11.0300 -15.3708 3.7165
+    $atom:qz_ho_82 $mol:. @atom:cff_ho 0.4250 13.4809 -11.1257 3.7165
+    $atom:qz_ho_83 $mol:. @atom:cff_ho 0.4250 11.9595 -14.1743 4.5977
+    $atom:qz_ho_84 $mol:. @atom:cff_ho 0.4250 9.5085 -9.9292 4.5977
+    $atom:qz_ho_85 $mol:. @atom:cff_ho 0.4250 11.0300 -6.8805 3.7165
+    $atom:qz_ho_86 $mol:. @atom:cff_ho 0.4250 13.4809 -2.6353 3.7165
+    $atom:qz_ho_87 $mol:. @atom:cff_ho 0.4250 11.9595 -5.6840 4.5977
+    $atom:qz_ho_88 $mol:. @atom:cff_ho 0.4250 9.5085 -1.4388 4.5977
+    $atom:qz_ho_89 $mol:. @atom:cff_ho 0.4250 11.0300 1.6099 3.7165
+    $atom:qz_ho_90 $mol:. @atom:cff_ho 0.4250 13.4809 5.8550 3.7165
+    $atom:qz_ho_91 $mol:. @atom:cff_ho 0.4250 11.9595 2.8063 4.5977
+    $atom:qz_ho_92 $mol:. @atom:cff_ho 0.4250 9.5085 7.0515 4.5977
+    $atom:qz_ho_93 $mol:. @atom:cff_ho 0.4250 11.0300 10.1002 3.7165
+    $atom:qz_ho_94 $mol:. @atom:cff_ho 0.4250 13.4809 14.3454 3.7165
+    $atom:qz_ho_95 $mol:. @atom:cff_ho 0.4250 11.9595 11.2967 4.5977
+    $atom:qz_ho_96 $mol:. @atom:cff_ho 0.4250 9.5085 15.5419 4.5977
+    $atom:qz_ho_97 $mol:. @atom:cff_ho 0.4250 -10.8610 -13.1991 -4.5977
+    $atom:qz_ho_98 $mol:. @atom:cff_ho 0.4250 -13.3120 -8.9539 -4.5977
+    $atom:qz_ho_99 $mol:. @atom:cff_ho 0.4250 -11.8111 16.7236 -3.7164
+    $atom:qz_ho_100 $mol:. @atom:cff_ho 0.4250 -14.2620 -12.9926 -3.7164
+    $atom:qz_ho_101 $mol:. @atom:cff_ho 0.4250 -10.8610 -4.7087 -4.5977
+    $atom:qz_ho_102 $mol:. @atom:cff_ho 0.4250 -13.3120 -0.4636 -4.5977
+    $atom:qz_ho_103 $mol:. @atom:cff_ho 0.4250 -11.8111 -8.7474 -3.7164
+    $atom:qz_ho_104 $mol:. @atom:cff_ho 0.4250 -14.2620 -4.5022 -3.7164
+    $atom:qz_ho_105 $mol:. @atom:cff_ho 0.4250 -10.8610 3.7816 -4.5977
+    $atom:qz_ho_106 $mol:. @atom:cff_ho 0.4250 -13.3120 8.0268 -4.5977
+    $atom:qz_ho_107 $mol:. @atom:cff_ho 0.4250 -11.8111 -0.2570 -3.7164
+    $atom:qz_ho_108 $mol:. @atom:cff_ho 0.4250 -14.2620 3.9881 -3.7164
+    $atom:qz_ho_109 $mol:. @atom:cff_ho 0.4250 -10.8610 12.2719 -4.5977
+    $atom:qz_ho_110 $mol:. @atom:cff_ho 0.4250 -13.3120 16.5171 -4.5977
+    $atom:qz_ho_111 $mol:. @atom:cff_ho 0.4250 -11.8111 8.2333 -3.7164
+    $atom:qz_ho_112 $mol:. @atom:cff_ho 0.4250 -14.2620 12.4785 -3.7164
+    $atom:qz_ho_113 $mol:. @atom:cff_ho 0.4250 -5.9591 -13.1991 -4.5977
+    $atom:qz_ho_114 $mol:. @atom:cff_ho 0.4250 -8.4101 -8.9539 -4.5977
+    $atom:qz_ho_115 $mol:. @atom:cff_ho 0.4250 -6.9092 16.7236 -3.7164
+    $atom:qz_ho_116 $mol:. @atom:cff_ho 0.4250 -9.3601 -12.9926 -3.7164
+    $atom:qz_ho_117 $mol:. @atom:cff_ho 0.4250 -5.9591 -4.7087 -4.5977
+    $atom:qz_ho_118 $mol:. @atom:cff_ho 0.4250 -8.4101 -0.4636 -4.5977
+    $atom:qz_ho_119 $mol:. @atom:cff_ho 0.4250 -6.9092 -8.7474 -3.7164
+    $atom:qz_ho_120 $mol:. @atom:cff_ho 0.4250 -9.3601 -4.5022 -3.7164
+    $atom:qz_ho_121 $mol:. @atom:cff_ho 0.4250 -5.9591 3.7816 -4.5977
+    $atom:qz_ho_122 $mol:. @atom:cff_ho 0.4250 -8.4101 8.0268 -4.5977
+    $atom:qz_ho_123 $mol:. @atom:cff_ho 0.4250 -6.9092 -0.2570 -3.7164
+    $atom:qz_ho_124 $mol:. @atom:cff_ho 0.4250 -9.3601 3.9881 -3.7164
+    $atom:qz_ho_125 $mol:. @atom:cff_ho 0.4250 -5.9591 12.2719 -4.5977
+    $atom:qz_ho_126 $mol:. @atom:cff_ho 0.4250 -8.4101 16.5171 -4.5977
+    $atom:qz_ho_127 $mol:. @atom:cff_ho 0.4250 -6.9092 8.2333 -3.7164
+    $atom:qz_ho_128 $mol:. @atom:cff_ho 0.4250 -9.3601 12.4785 -3.7164
+    $atom:qz_ho_129 $mol:. @atom:cff_ho 0.4250 -1.0572 -13.1991 -4.5977
+    $atom:qz_ho_130 $mol:. @atom:cff_ho 0.4250 -3.5082 -8.9539 -4.5977
+    $atom:qz_ho_131 $mol:. @atom:cff_ho 0.4250 -2.0073 16.7236 -3.7164
+    $atom:qz_ho_132 $mol:. @atom:cff_ho 0.4250 -4.4582 -12.9926 -3.7164
+    $atom:qz_ho_133 $mol:. @atom:cff_ho 0.4250 -1.0572 -4.7087 -4.5977
+    $atom:qz_ho_134 $mol:. @atom:cff_ho 0.4250 -3.5082 -0.4636 -4.5977
+    $atom:qz_ho_135 $mol:. @atom:cff_ho 0.4250 -2.0073 -8.7474 -3.7164
+    $atom:qz_ho_136 $mol:. @atom:cff_ho 0.4250 -4.4582 -4.5022 -3.7164
+    $atom:qz_ho_137 $mol:. @atom:cff_ho 0.4250 -1.0572 3.7816 -4.5977
+    $atom:qz_ho_138 $mol:. @atom:cff_ho 0.4250 -3.5082 8.0268 -4.5977
+    $atom:qz_ho_139 $mol:. @atom:cff_ho 0.4250 -2.0073 -0.2570 -3.7164
+    $atom:qz_ho_140 $mol:. @atom:cff_ho 0.4250 -4.4582 3.9881 -3.7164
+    $atom:qz_ho_141 $mol:. @atom:cff_ho 0.4250 -1.0572 12.2719 -4.5977
+    $atom:qz_ho_142 $mol:. @atom:cff_ho 0.4250 -3.5082 16.5171 -4.5977
+    $atom:qz_ho_143 $mol:. @atom:cff_ho 0.4250 -2.0073 8.2333 -3.7164
+    $atom:qz_ho_144 $mol:. @atom:cff_ho 0.4250 -4.4582 12.4785 -3.7164
+    $atom:qz_ho_145 $mol:. @atom:cff_ho 0.4250 3.8447 -13.1991 -4.5977
+    $atom:qz_ho_146 $mol:. @atom:cff_ho 0.4250 1.3937 -8.9539 -4.5977
+    $atom:qz_ho_147 $mol:. @atom:cff_ho 0.4250 2.8946 16.7236 -3.7164
+    $atom:qz_ho_148 $mol:. @atom:cff_ho 0.4250 0.4437 -12.9926 -3.7164
+    $atom:qz_ho_149 $mol:. @atom:cff_ho 0.4250 3.8447 -4.7087 -4.5977
+    $atom:qz_ho_150 $mol:. @atom:cff_ho 0.4250 1.3937 -0.4636 -4.5977
+    $atom:qz_ho_151 $mol:. @atom:cff_ho 0.4250 2.8946 -8.7474 -3.7164
+    $atom:qz_ho_152 $mol:. @atom:cff_ho 0.4250 0.4437 -4.5022 -3.7164
+    $atom:qz_ho_153 $mol:. @atom:cff_ho 0.4250 3.8447 3.7816 -4.5977
+    $atom:qz_ho_154 $mol:. @atom:cff_ho 0.4250 1.3937 8.0268 -4.5977
+    $atom:qz_ho_155 $mol:. @atom:cff_ho 0.4250 2.8946 -0.2570 -3.7164
+    $atom:qz_ho_156 $mol:. @atom:cff_ho 0.4250 0.4437 3.9881 -3.7164
+    $atom:qz_ho_157 $mol:. @atom:cff_ho 0.4250 3.8447 12.2719 -4.5977
+    $atom:qz_ho_158 $mol:. @atom:cff_ho 0.4250 1.3937 16.5171 -4.5977
+    $atom:qz_ho_159 $mol:. @atom:cff_ho 0.4250 2.8946 8.2333 -3.7164
+    $atom:qz_ho_160 $mol:. @atom:cff_ho 0.4250 0.4437 12.4785 -3.7164
+    $atom:qz_ho_161 $mol:. @atom:cff_ho 0.4250 8.7466 -13.1991 -4.5977
+    $atom:qz_ho_162 $mol:. @atom:cff_ho 0.4250 6.2956 -8.9539 -4.5977
+    $atom:qz_ho_163 $mol:. @atom:cff_ho 0.4250 7.7965 16.7236 -3.7164
+    $atom:qz_ho_164 $mol:. @atom:cff_ho 0.4250 5.3456 -12.9926 -3.7164
+    $atom:qz_ho_165 $mol:. @atom:cff_ho 0.4250 8.7466 -4.7087 -4.5977
+    $atom:qz_ho_166 $mol:. @atom:cff_ho 0.4250 6.2956 -0.4636 -4.5977
+    $atom:qz_ho_167 $mol:. @atom:cff_ho 0.4250 7.7965 -8.7474 -3.7164
+    $atom:qz_ho_168 $mol:. @atom:cff_ho 0.4250 5.3456 -4.5022 -3.7164
+    $atom:qz_ho_169 $mol:. @atom:cff_ho 0.4250 8.7466 3.7816 -4.5977
+    $atom:qz_ho_170 $mol:. @atom:cff_ho 0.4250 6.2956 8.0268 -4.5977
+    $atom:qz_ho_171 $mol:. @atom:cff_ho 0.4250 7.7965 -0.2570 -3.7164
+    $atom:qz_ho_172 $mol:. @atom:cff_ho 0.4250 5.3456 3.9881 -3.7164
+    $atom:qz_ho_173 $mol:. @atom:cff_ho 0.4250 8.7466 12.2719 -4.5977
+    $atom:qz_ho_174 $mol:. @atom:cff_ho 0.4250 6.2956 16.5171 -4.5977
+    $atom:qz_ho_175 $mol:. @atom:cff_ho 0.4250 7.7965 8.2333 -3.7164
+    $atom:qz_ho_176 $mol:. @atom:cff_ho 0.4250 5.3456 12.4785 -3.7164
+    $atom:qz_ho_177 $mol:. @atom:cff_ho 0.4250 13.6485 -13.1991 -4.5977
+    $atom:qz_ho_178 $mol:. @atom:cff_ho 0.4250 11.1975 -8.9539 -4.5977
+    $atom:qz_ho_179 $mol:. @atom:cff_ho 0.4250 12.6984 16.7236 -3.7164
+    $atom:qz_ho_180 $mol:. @atom:cff_ho 0.4250 10.2475 -12.9926 -3.7164
+    $atom:qz_ho_181 $mol:. @atom:cff_ho 0.4250 13.6485 -4.7087 -4.5977
+    $atom:qz_ho_182 $mol:. @atom:cff_ho 0.4250 11.1975 -0.4636 -4.5977
+    $atom:qz_ho_183 $mol:. @atom:cff_ho 0.4250 12.6984 -8.7474 -3.7164
+    $atom:qz_ho_184 $mol:. @atom:cff_ho 0.4250 10.2475 -4.5022 -3.7164
+    $atom:qz_ho_185 $mol:. @atom:cff_ho 0.4250 13.6485 3.7816 -4.5977
+    $atom:qz_ho_186 $mol:. @atom:cff_ho 0.4250 11.1975 8.0268 -4.5977
+    $atom:qz_ho_187 $mol:. @atom:cff_ho 0.4250 12.6984 -0.2570 -3.7164
+    $atom:qz_ho_188 $mol:. @atom:cff_ho 0.4250 10.2475 3.9881 -3.7164
+    $atom:qz_ho_189 $mol:. @atom:cff_ho 0.4250 13.6485 12.2719 -4.5977
+    $atom:qz_ho_190 $mol:. @atom:cff_ho 0.4250 11.1975 16.5171 -4.5977
+    $atom:qz_ho_191 $mol:. @atom:cff_ho 0.4250 12.6984 8.2333 -3.7164
+    $atom:qz_ho_192 $mol:. @atom:cff_ho 0.4250 10.2475 12.4785 -3.7164
+  }
+
+  write_once("In Settings") {
+    bond_coeff @bond:quartzslab_si_o 0.0 1.6117
+    bond_coeff @bond:quartzslab_o_h 0.0 1.0000
+  }
+
+  write("Data Bonds") {
+    $bond:b1 @bond:quartzslab_si_o $atom:qz_si_1 $atom:qz_oh_1
+    $bond:b2 @bond:quartzslab_si_o $atom:qz_si_1 $atom:qz_oh_3
+    $bond:b3 @bond:quartzslab_si_o $atom:qz_si_1 $atom:qz_ob_3
+    $bond:b4 @bond:quartzslab_si_o $atom:qz_si_1 $atom:qz_ob_49
+    $bond:b5 @bond:quartzslab_si_o $atom:qz_si_2 $atom:qz_oh_2
+    $bond:b6 @bond:quartzslab_si_o $atom:qz_si_2 $atom:qz_oh_4
+    $bond:b7 @bond:quartzslab_si_o $atom:qz_si_2 $atom:qz_ob_2
+    $bond:b8 @bond:quartzslab_si_o $atom:qz_si_2 $atom:qz_ob_4
+    $bond:b9 @bond:quartzslab_si_o $atom:qz_si_3 $atom:qz_ob_1
+    $bond:b10 @bond:quartzslab_si_o $atom:qz_si_3 $atom:qz_ob_3
+    $bond:b11 @bond:quartzslab_si_o $atom:qz_si_3 $atom:qz_ob_5
+    $bond:b12 @bond:quartzslab_si_o $atom:qz_si_3 $atom:qz_ob_7
+    $bond:b13 @bond:quartzslab_si_o $atom:qz_si_4 $atom:qz_ob_2
+    $bond:b14 @bond:quartzslab_si_o $atom:qz_si_4 $atom:qz_ob_6
+    $bond:b15 @bond:quartzslab_si_o $atom:qz_si_4 $atom:qz_ob_8
+    $bond:b16 @bond:quartzslab_si_o $atom:qz_si_4 $atom:qz_ob_52
+    $bond:b17 @bond:quartzslab_si_o $atom:qz_si_5 $atom:qz_ob_7
+    $bond:b18 @bond:quartzslab_si_o $atom:qz_si_5 $atom:qz_ob_11
+    $bond:b19 @bond:quartzslab_si_o $atom:qz_si_5 $atom:qz_ob_42
+    $bond:b20 @bond:quartzslab_si_o $atom:qz_si_5 $atom:qz_ob_46
+    $bond:b21 @bond:quartzslab_si_o $atom:qz_si_6 $atom:qz_ob_8
+    $bond:b22 @bond:quartzslab_si_o $atom:qz_si_6 $atom:qz_ob_9
+    $bond:b23 @bond:quartzslab_si_o $atom:qz_si_6 $atom:qz_ob_53
+    $bond:b24 @bond:quartzslab_si_o $atom:qz_si_6 $atom:qz_ob_60
+    $bond:b25 @bond:quartzslab_si_o $atom:qz_si_7 $atom:qz_ob_9
+    $bond:b26 @bond:quartzslab_si_o $atom:qz_si_7 $atom:qz_ob_11
+    $bond:b27 @bond:quartzslab_si_o $atom:qz_si_7 $atom:qz_oh_7
+    $bond:b28 @bond:quartzslab_si_o $atom:qz_si_7 $atom:qz_oh_37
+    $bond:b29 @bond:quartzslab_si_o $atom:qz_si_8 $atom:qz_ob_10
+    $bond:b30 @bond:quartzslab_si_o $atom:qz_si_8 $atom:qz_ob_12
+    $bond:b31 @bond:quartzslab_si_o $atom:qz_si_8 $atom:qz_oh_6
+    $bond:b32 @bond:quartzslab_si_o $atom:qz_si_8 $atom:qz_oh_8
+    $bond:b33 @bond:quartzslab_si_o $atom:qz_si_9 $atom:qz_oh_9
+    $bond:b34 @bond:quartzslab_si_o $atom:qz_si_9 $atom:qz_oh_11
+    $bond:b35 @bond:quartzslab_si_o $atom:qz_si_9 $atom:qz_ob_15
+    $bond:b36 @bond:quartzslab_si_o $atom:qz_si_9 $atom:qz_ob_61
+    $bond:b37 @bond:quartzslab_si_o $atom:qz_si_10 $atom:qz_oh_10
+    $bond:b38 @bond:quartzslab_si_o $atom:qz_si_10 $atom:qz_oh_12
+    $bond:b39 @bond:quartzslab_si_o $atom:qz_si_10 $atom:qz_ob_14
+    $bond:b40 @bond:quartzslab_si_o $atom:qz_si_10 $atom:qz_ob_16
+    $bond:b41 @bond:quartzslab_si_o $atom:qz_si_11 $atom:qz_ob_13
+    $bond:b42 @bond:quartzslab_si_o $atom:qz_si_11 $atom:qz_ob_15
+    $bond:b43 @bond:quartzslab_si_o $atom:qz_si_11 $atom:qz_ob_17
+    $bond:b44 @bond:quartzslab_si_o $atom:qz_si_11 $atom:qz_ob_19
+    $bond:b45 @bond:quartzslab_si_o $atom:qz_si_12 $atom:qz_ob_14
+    $bond:b46 @bond:quartzslab_si_o $atom:qz_si_12 $atom:qz_ob_18
+    $bond:b47 @bond:quartzslab_si_o $atom:qz_si_12 $atom:qz_ob_20
+    $bond:b48 @bond:quartzslab_si_o $atom:qz_si_12 $atom:qz_ob_64
+    $bond:b49 @bond:quartzslab_si_o $atom:qz_si_13 $atom:qz_ob_6
+    $bond:b50 @bond:quartzslab_si_o $atom:qz_si_13 $atom:qz_ob_10
+    $bond:b51 @bond:quartzslab_si_o $atom:qz_si_13 $atom:qz_ob_19
+    $bond:b52 @bond:quartzslab_si_o $atom:qz_si_13 $atom:qz_ob_23
+    $bond:b53 @bond:quartzslab_si_o $atom:qz_si_14 $atom:qz_ob_20
+    $bond:b54 @bond:quartzslab_si_o $atom:qz_si_14 $atom:qz_ob_21
+    $bond:b55 @bond:quartzslab_si_o $atom:qz_si_14 $atom:qz_ob_65
+    $bond:b56 @bond:quartzslab_si_o $atom:qz_si_14 $atom:qz_ob_72
+    $bond:b57 @bond:quartzslab_si_o $atom:qz_si_15 $atom:qz_ob_21
+    $bond:b58 @bond:quartzslab_si_o $atom:qz_si_15 $atom:qz_ob_23
+    $bond:b59 @bond:quartzslab_si_o $atom:qz_si_15 $atom:qz_oh_15
+    $bond:b60 @bond:quartzslab_si_o $atom:qz_si_15 $atom:qz_oh_45
+    $bond:b61 @bond:quartzslab_si_o $atom:qz_si_16 $atom:qz_ob_22
+    $bond:b62 @bond:quartzslab_si_o $atom:qz_si_16 $atom:qz_ob_24
+    $bond:b63 @bond:quartzslab_si_o $atom:qz_si_16 $atom:qz_oh_14
+    $bond:b64 @bond:quartzslab_si_o $atom:qz_si_16 $atom:qz_oh_16
+    $bond:b65 @bond:quartzslab_si_o $atom:qz_si_17 $atom:qz_oh_17
+    $bond:b66 @bond:quartzslab_si_o $atom:qz_si_17 $atom:qz_oh_19
+    $bond:b67 @bond:quartzslab_si_o $atom:qz_si_17 $atom:qz_ob_27
+    $bond:b68 @bond:quartzslab_si_o $atom:qz_si_17 $atom:qz_ob_73
+    $bond:b69 @bond:quartzslab_si_o $atom:qz_si_18 $atom:qz_oh_18
+    $bond:b70 @bond:quartzslab_si_o $atom:qz_si_18 $atom:qz_oh_20
+    $bond:b71 @bond:quartzslab_si_o $atom:qz_si_18 $atom:qz_ob_26
+    $bond:b72 @bond:quartzslab_si_o $atom:qz_si_18 $atom:qz_ob_28
+    $bond:b73 @bond:quartzslab_si_o $atom:qz_si_19 $atom:qz_ob_25
+    $bond:b74 @bond:quartzslab_si_o $atom:qz_si_19 $atom:qz_ob_27
+    $bond:b75 @bond:quartzslab_si_o $atom:qz_si_19 $atom:qz_ob_29
+    $bond:b76 @bond:quartzslab_si_o $atom:qz_si_19 $atom:qz_ob_31
+    $bond:b77 @bond:quartzslab_si_o $atom:qz_si_20 $atom:qz_ob_26
+    $bond:b78 @bond:quartzslab_si_o $atom:qz_si_20 $atom:qz_ob_30
+    $bond:b79 @bond:quartzslab_si_o $atom:qz_si_20 $atom:qz_ob_32
+    $bond:b80 @bond:quartzslab_si_o $atom:qz_si_20 $atom:qz_ob_76
+    $bond:b81 @bond:quartzslab_si_o $atom:qz_si_21 $atom:qz_ob_18
+    $bond:b82 @bond:quartzslab_si_o $atom:qz_si_21 $atom:qz_ob_22
+    $bond:b83 @bond:quartzslab_si_o $atom:qz_si_21 $atom:qz_ob_31
+    $bond:b84 @bond:quartzslab_si_o $atom:qz_si_21 $atom:qz_ob_35
+    $bond:b85 @bond:quartzslab_si_o $atom:qz_si_22 $atom:qz_ob_32
+    $bond:b86 @bond:quartzslab_si_o $atom:qz_si_22 $atom:qz_ob_33
+    $bond:b87 @bond:quartzslab_si_o $atom:qz_si_22 $atom:qz_ob_77
+    $bond:b88 @bond:quartzslab_si_o $atom:qz_si_22 $atom:qz_ob_84
+    $bond:b89 @bond:quartzslab_si_o $atom:qz_si_23 $atom:qz_ob_33
+    $bond:b90 @bond:quartzslab_si_o $atom:qz_si_23 $atom:qz_ob_35
+    $bond:b91 @bond:quartzslab_si_o $atom:qz_si_23 $atom:qz_oh_23
+    $bond:b92 @bond:quartzslab_si_o $atom:qz_si_23 $atom:qz_oh_53
+    $bond:b93 @bond:quartzslab_si_o $atom:qz_si_24 $atom:qz_ob_34
+    $bond:b94 @bond:quartzslab_si_o $atom:qz_si_24 $atom:qz_ob_36
+    $bond:b95 @bond:quartzslab_si_o $atom:qz_si_24 $atom:qz_oh_22
+    $bond:b96 @bond:quartzslab_si_o $atom:qz_si_24 $atom:qz_oh_24
+    $bond:b97 @bond:quartzslab_si_o $atom:qz_si_25 $atom:qz_oh_25
+    $bond:b98 @bond:quartzslab_si_o $atom:qz_si_25 $atom:qz_oh_27
+    $bond:b99 @bond:quartzslab_si_o $atom:qz_si_25 $atom:qz_ob_39
+    $bond:b100 @bond:quartzslab_si_o $atom:qz_si_25 $atom:qz_ob_85
+    $bond:b101 @bond:quartzslab_si_o $atom:qz_si_26 $atom:qz_oh_26
+    $bond:b102 @bond:quartzslab_si_o $atom:qz_si_26 $atom:qz_oh_28
+    $bond:b103 @bond:quartzslab_si_o $atom:qz_si_26 $atom:qz_ob_38
+    $bond:b104 @bond:quartzslab_si_o $atom:qz_si_26 $atom:qz_ob_40
+    $bond:b105 @bond:quartzslab_si_o $atom:qz_si_27 $atom:qz_ob_37
+    $bond:b106 @bond:quartzslab_si_o $atom:qz_si_27 $atom:qz_ob_39
+    $bond:b107 @bond:quartzslab_si_o $atom:qz_si_27 $atom:qz_ob_41
+    $bond:b108 @bond:quartzslab_si_o $atom:qz_si_27 $atom:qz_ob_43
+    $bond:b109 @bond:quartzslab_si_o $atom:qz_si_28 $atom:qz_ob_38
+    $bond:b110 @bond:quartzslab_si_o $atom:qz_si_28 $atom:qz_ob_42
+    $bond:b111 @bond:quartzslab_si_o $atom:qz_si_28 $atom:qz_ob_44
+    $bond:b112 @bond:quartzslab_si_o $atom:qz_si_28 $atom:qz_ob_88
+    $bond:b113 @bond:quartzslab_si_o $atom:qz_si_29 $atom:qz_ob_30
+    $bond:b114 @bond:quartzslab_si_o $atom:qz_si_29 $atom:qz_ob_34
+    $bond:b115 @bond:quartzslab_si_o $atom:qz_si_29 $atom:qz_ob_43
+    $bond:b116 @bond:quartzslab_si_o $atom:qz_si_29 $atom:qz_ob_47
+    $bond:b117 @bond:quartzslab_si_o $atom:qz_si_30 $atom:qz_ob_44
+    $bond:b118 @bond:quartzslab_si_o $atom:qz_si_30 $atom:qz_ob_45
+    $bond:b119 @bond:quartzslab_si_o $atom:qz_si_30 $atom:qz_ob_89
+    $bond:b120 @bond:quartzslab_si_o $atom:qz_si_30 $atom:qz_ob_96
+    $bond:b121 @bond:quartzslab_si_o $atom:qz_si_31 $atom:qz_ob_45
+    $bond:b122 @bond:quartzslab_si_o $atom:qz_si_31 $atom:qz_ob_47
+    $bond:b123 @bond:quartzslab_si_o $atom:qz_si_31 $atom:qz_oh_31
+    $bond:b124 @bond:quartzslab_si_o $atom:qz_si_31 $atom:qz_oh_61
+    $bond:b125 @bond:quartzslab_si_o $atom:qz_si_32 $atom:qz_ob_46
+    $bond:b126 @bond:quartzslab_si_o $atom:qz_si_32 $atom:qz_ob_48
+    $bond:b127 @bond:quartzslab_si_o $atom:qz_si_32 $atom:qz_oh_30
+    $bond:b128 @bond:quartzslab_si_o $atom:qz_si_32 $atom:qz_oh_32
+    $bond:b129 @bond:quartzslab_si_o $atom:qz_si_33 $atom:qz_oh_33
+    $bond:b130 @bond:quartzslab_si_o $atom:qz_si_33 $atom:qz_oh_35
+    $bond:b131 @bond:quartzslab_si_o $atom:qz_si_33 $atom:qz_ob_51
+    $bond:b132 @bond:quartzslab_si_o $atom:qz_si_33 $atom:qz_ob_97
+    $bond:b133 @bond:quartzslab_si_o $atom:qz_si_34 $atom:qz_oh_34
+    $bond:b134 @bond:quartzslab_si_o $atom:qz_si_34 $atom:qz_oh_36
+    $bond:b135 @bond:quartzslab_si_o $atom:qz_si_34 $atom:qz_ob_50
+    $bond:b136 @bond:quartzslab_si_o $atom:qz_si_34 $atom:qz_ob_52
+    $bond:b137 @bond:quartzslab_si_o $atom:qz_si_35 $atom:qz_ob_49
+    $bond:b138 @bond:quartzslab_si_o $atom:qz_si_35 $atom:qz_ob_51
+    $bond:b139 @bond:quartzslab_si_o $atom:qz_si_35 $atom:qz_ob_53
+    $bond:b140 @bond:quartzslab_si_o $atom:qz_si_35 $atom:qz_ob_55
+    $bond:b141 @bond:quartzslab_si_o $atom:qz_si_36 $atom:qz_ob_50
+    $bond:b142 @bond:quartzslab_si_o $atom:qz_si_36 $atom:qz_ob_54
+    $bond:b143 @bond:quartzslab_si_o $atom:qz_si_36 $atom:qz_ob_56
+    $bond:b144 @bond:quartzslab_si_o $atom:qz_si_36 $atom:qz_ob_100
+    $bond:b145 @bond:quartzslab_si_o $atom:qz_si_37 $atom:qz_ob_55
+    $bond:b146 @bond:quartzslab_si_o $atom:qz_si_37 $atom:qz_ob_59
+    $bond:b147 @bond:quartzslab_si_o $atom:qz_si_37 $atom:qz_ob_90
+    $bond:b148 @bond:quartzslab_si_o $atom:qz_si_37 $atom:qz_ob_94
+    $bond:b149 @bond:quartzslab_si_o $atom:qz_si_38 $atom:qz_ob_56
+    $bond:b150 @bond:quartzslab_si_o $atom:qz_si_38 $atom:qz_ob_57
+    $bond:b151 @bond:quartzslab_si_o $atom:qz_si_38 $atom:qz_ob_101
+    $bond:b152 @bond:quartzslab_si_o $atom:qz_si_38 $atom:qz_ob_108
+    $bond:b153 @bond:quartzslab_si_o $atom:qz_si_39 $atom:qz_ob_57
+    $bond:b154 @bond:quartzslab_si_o $atom:qz_si_39 $atom:qz_ob_59
+    $bond:b155 @bond:quartzslab_si_o $atom:qz_si_39 $atom:qz_oh_39
+    $bond:b156 @bond:quartzslab_si_o $atom:qz_si_39 $atom:qz_oh_69
+    $bond:b157 @bond:quartzslab_si_o $atom:qz_si_40 $atom:qz_ob_58
+    $bond:b158 @bond:quartzslab_si_o $atom:qz_si_40 $atom:qz_ob_60
+    $bond:b159 @bond:quartzslab_si_o $atom:qz_si_40 $atom:qz_oh_38
+    $bond:b160 @bond:quartzslab_si_o $atom:qz_si_40 $atom:qz_oh_40
+    $bond:b161 @bond:quartzslab_si_o $atom:qz_si_41 $atom:qz_oh_41
+    $bond:b162 @bond:quartzslab_si_o $atom:qz_si_41 $atom:qz_oh_43
+    $bond:b163 @bond:quartzslab_si_o $atom:qz_si_41 $atom:qz_ob_63
+    $bond:b164 @bond:quartzslab_si_o $atom:qz_si_41 $atom:qz_ob_109
+    $bond:b165 @bond:quartzslab_si_o $atom:qz_si_42 $atom:qz_oh_42
+    $bond:b166 @bond:quartzslab_si_o $atom:qz_si_42 $atom:qz_oh_44
+    $bond:b167 @bond:quartzslab_si_o $atom:qz_si_42 $atom:qz_ob_62
+    $bond:b168 @bond:quartzslab_si_o $atom:qz_si_42 $atom:qz_ob_64
+    $bond:b169 @bond:quartzslab_si_o $atom:qz_si_43 $atom:qz_ob_61
+    $bond:b170 @bond:quartzslab_si_o $atom:qz_si_43 $atom:qz_ob_63
+    $bond:b171 @bond:quartzslab_si_o $atom:qz_si_43 $atom:qz_ob_65
+    $bond:b172 @bond:quartzslab_si_o $atom:qz_si_43 $atom:qz_ob_67
+    $bond:b173 @bond:quartzslab_si_o $atom:qz_si_44 $atom:qz_ob_62
+    $bond:b174 @bond:quartzslab_si_o $atom:qz_si_44 $atom:qz_ob_66
+    $bond:b175 @bond:quartzslab_si_o $atom:qz_si_44 $atom:qz_ob_68
+    $bond:b176 @bond:quartzslab_si_o $atom:qz_si_44 $atom:qz_ob_112
+    $bond:b177 @bond:quartzslab_si_o $atom:qz_si_45 $atom:qz_ob_54
+    $bond:b178 @bond:quartzslab_si_o $atom:qz_si_45 $atom:qz_ob_58
+    $bond:b179 @bond:quartzslab_si_o $atom:qz_si_45 $atom:qz_ob_67
+    $bond:b180 @bond:quartzslab_si_o $atom:qz_si_45 $atom:qz_ob_71
+    $bond:b181 @bond:quartzslab_si_o $atom:qz_si_46 $atom:qz_ob_68
+    $bond:b182 @bond:quartzslab_si_o $atom:qz_si_46 $atom:qz_ob_69
+    $bond:b183 @bond:quartzslab_si_o $atom:qz_si_46 $atom:qz_ob_113
+    $bond:b184 @bond:quartzslab_si_o $atom:qz_si_46 $atom:qz_ob_120
+    $bond:b185 @bond:quartzslab_si_o $atom:qz_si_47 $atom:qz_ob_69
+    $bond:b186 @bond:quartzslab_si_o $atom:qz_si_47 $atom:qz_ob_71
+    $bond:b187 @bond:quartzslab_si_o $atom:qz_si_47 $atom:qz_oh_47
+    $bond:b188 @bond:quartzslab_si_o $atom:qz_si_47 $atom:qz_oh_77
+    $bond:b189 @bond:quartzslab_si_o $atom:qz_si_48 $atom:qz_ob_70
+    $bond:b190 @bond:quartzslab_si_o $atom:qz_si_48 $atom:qz_ob_72
+    $bond:b191 @bond:quartzslab_si_o $atom:qz_si_48 $atom:qz_oh_46
+    $bond:b192 @bond:quartzslab_si_o $atom:qz_si_48 $atom:qz_oh_48
+    $bond:b193 @bond:quartzslab_si_o $atom:qz_si_49 $atom:qz_oh_49
+    $bond:b194 @bond:quartzslab_si_o $atom:qz_si_49 $atom:qz_oh_51
+    $bond:b195 @bond:quartzslab_si_o $atom:qz_si_49 $atom:qz_ob_75
+    $bond:b196 @bond:quartzslab_si_o $atom:qz_si_49 $atom:qz_ob_121
+    $bond:b197 @bond:quartzslab_si_o $atom:qz_si_50 $atom:qz_oh_50
+    $bond:b198 @bond:quartzslab_si_o $atom:qz_si_50 $atom:qz_oh_52
+    $bond:b199 @bond:quartzslab_si_o $atom:qz_si_50 $atom:qz_ob_74
+    $bond:b200 @bond:quartzslab_si_o $atom:qz_si_50 $atom:qz_ob_76
+    $bond:b201 @bond:quartzslab_si_o $atom:qz_si_51 $atom:qz_ob_73
+    $bond:b202 @bond:quartzslab_si_o $atom:qz_si_51 $atom:qz_ob_75
+    $bond:b203 @bond:quartzslab_si_o $atom:qz_si_51 $atom:qz_ob_77
+    $bond:b204 @bond:quartzslab_si_o $atom:qz_si_51 $atom:qz_ob_79
+    $bond:b205 @bond:quartzslab_si_o $atom:qz_si_52 $atom:qz_ob_74
+    $bond:b206 @bond:quartzslab_si_o $atom:qz_si_52 $atom:qz_ob_78
+    $bond:b207 @bond:quartzslab_si_o $atom:qz_si_52 $atom:qz_ob_80
+    $bond:b208 @bond:quartzslab_si_o $atom:qz_si_52 $atom:qz_ob_124
+    $bond:b209 @bond:quartzslab_si_o $atom:qz_si_53 $atom:qz_ob_66
+    $bond:b210 @bond:quartzslab_si_o $atom:qz_si_53 $atom:qz_ob_70
+    $bond:b211 @bond:quartzslab_si_o $atom:qz_si_53 $atom:qz_ob_79
+    $bond:b212 @bond:quartzslab_si_o $atom:qz_si_53 $atom:qz_ob_83
+    $bond:b213 @bond:quartzslab_si_o $atom:qz_si_54 $atom:qz_ob_80
+    $bond:b214 @bond:quartzslab_si_o $atom:qz_si_54 $atom:qz_ob_81
+    $bond:b215 @bond:quartzslab_si_o $atom:qz_si_54 $atom:qz_ob_125
+    $bond:b216 @bond:quartzslab_si_o $atom:qz_si_54 $atom:qz_ob_132
+    $bond:b217 @bond:quartzslab_si_o $atom:qz_si_55 $atom:qz_ob_81
+    $bond:b218 @bond:quartzslab_si_o $atom:qz_si_55 $atom:qz_ob_83
+    $bond:b219 @bond:quartzslab_si_o $atom:qz_si_55 $atom:qz_oh_55
+    $bond:b220 @bond:quartzslab_si_o $atom:qz_si_55 $atom:qz_oh_85
+    $bond:b221 @bond:quartzslab_si_o $atom:qz_si_56 $atom:qz_ob_82
+    $bond:b222 @bond:quartzslab_si_o $atom:qz_si_56 $atom:qz_ob_84
+    $bond:b223 @bond:quartzslab_si_o $atom:qz_si_56 $atom:qz_oh_54
+    $bond:b224 @bond:quartzslab_si_o $atom:qz_si_56 $atom:qz_oh_56
+    $bond:b225 @bond:quartzslab_si_o $atom:qz_si_57 $atom:qz_oh_57
+    $bond:b226 @bond:quartzslab_si_o $atom:qz_si_57 $atom:qz_oh_59
+    $bond:b227 @bond:quartzslab_si_o $atom:qz_si_57 $atom:qz_ob_87
+    $bond:b228 @bond:quartzslab_si_o $atom:qz_si_57 $atom:qz_ob_133
+    $bond:b229 @bond:quartzslab_si_o $atom:qz_si_58 $atom:qz_oh_58
+    $bond:b230 @bond:quartzslab_si_o $atom:qz_si_58 $atom:qz_oh_60
+    $bond:b231 @bond:quartzslab_si_o $atom:qz_si_58 $atom:qz_ob_86
+    $bond:b232 @bond:quartzslab_si_o $atom:qz_si_58 $atom:qz_ob_88
+    $bond:b233 @bond:quartzslab_si_o $atom:qz_si_59 $atom:qz_ob_85
+    $bond:b234 @bond:quartzslab_si_o $atom:qz_si_59 $atom:qz_ob_87
+    $bond:b235 @bond:quartzslab_si_o $atom:qz_si_59 $atom:qz_ob_89
+    $bond:b236 @bond:quartzslab_si_o $atom:qz_si_59 $atom:qz_ob_91
+    $bond:b237 @bond:quartzslab_si_o $atom:qz_si_60 $atom:qz_ob_86
+    $bond:b238 @bond:quartzslab_si_o $atom:qz_si_60 $atom:qz_ob_90
+    $bond:b239 @bond:quartzslab_si_o $atom:qz_si_60 $atom:qz_ob_92
+    $bond:b240 @bond:quartzslab_si_o $atom:qz_si_60 $atom:qz_ob_136
+    $bond:b241 @bond:quartzslab_si_o $atom:qz_si_61 $atom:qz_ob_78
+    $bond:b242 @bond:quartzslab_si_o $atom:qz_si_61 $atom:qz_ob_82
+    $bond:b243 @bond:quartzslab_si_o $atom:qz_si_61 $atom:qz_ob_91
+    $bond:b244 @bond:quartzslab_si_o $atom:qz_si_61 $atom:qz_ob_95
+    $bond:b245 @bond:quartzslab_si_o $atom:qz_si_62 $atom:qz_ob_92
+    $bond:b246 @bond:quartzslab_si_o $atom:qz_si_62 $atom:qz_ob_93
+    $bond:b247 @bond:quartzslab_si_o $atom:qz_si_62 $atom:qz_ob_137
+    $bond:b248 @bond:quartzslab_si_o $atom:qz_si_62 $atom:qz_ob_144
+    $bond:b249 @bond:quartzslab_si_o $atom:qz_si_63 $atom:qz_ob_93
+    $bond:b250 @bond:quartzslab_si_o $atom:qz_si_63 $atom:qz_ob_95
+    $bond:b251 @bond:quartzslab_si_o $atom:qz_si_63 $atom:qz_oh_63
+    $bond:b252 @bond:quartzslab_si_o $atom:qz_si_63 $atom:qz_oh_93
+    $bond:b253 @bond:quartzslab_si_o $atom:qz_si_64 $atom:qz_ob_94
+    $bond:b254 @bond:quartzslab_si_o $atom:qz_si_64 $atom:qz_ob_96
+    $bond:b255 @bond:quartzslab_si_o $atom:qz_si_64 $atom:qz_oh_62
+    $bond:b256 @bond:quartzslab_si_o $atom:qz_si_64 $atom:qz_oh_64
+    $bond:b257 @bond:quartzslab_si_o $atom:qz_si_65 $atom:qz_oh_65
+    $bond:b258 @bond:quartzslab_si_o $atom:qz_si_65 $atom:qz_oh_67
+    $bond:b259 @bond:quartzslab_si_o $atom:qz_si_65 $atom:qz_ob_99
+    $bond:b260 @bond:quartzslab_si_o $atom:qz_si_65 $atom:qz_ob_145
+    $bond:b261 @bond:quartzslab_si_o $atom:qz_si_66 $atom:qz_oh_66
+    $bond:b262 @bond:quartzslab_si_o $atom:qz_si_66 $atom:qz_oh_68
+    $bond:b263 @bond:quartzslab_si_o $atom:qz_si_66 $atom:qz_ob_98
+    $bond:b264 @bond:quartzslab_si_o $atom:qz_si_66 $atom:qz_ob_100
+    $bond:b265 @bond:quartzslab_si_o $atom:qz_si_67 $atom:qz_ob_97
+    $bond:b266 @bond:quartzslab_si_o $atom:qz_si_67 $atom:qz_ob_99
+    $bond:b267 @bond:quartzslab_si_o $atom:qz_si_67 $atom:qz_ob_101
+    $bond:b268 @bond:quartzslab_si_o $atom:qz_si_67 $atom:qz_ob_103
+    $bond:b269 @bond:quartzslab_si_o $atom:qz_si_68 $atom:qz_ob_98
+    $bond:b270 @bond:quartzslab_si_o $atom:qz_si_68 $atom:qz_ob_102
+    $bond:b271 @bond:quartzslab_si_o $atom:qz_si_68 $atom:qz_ob_104
+    $bond:b272 @bond:quartzslab_si_o $atom:qz_si_68 $atom:qz_ob_148
+    $bond:b273 @bond:quartzslab_si_o $atom:qz_si_69 $atom:qz_ob_103
+    $bond:b274 @bond:quartzslab_si_o $atom:qz_si_69 $atom:qz_ob_107
+    $bond:b275 @bond:quartzslab_si_o $atom:qz_si_69 $atom:qz_ob_138
+    $bond:b276 @bond:quartzslab_si_o $atom:qz_si_69 $atom:qz_ob_142
+    $bond:b277 @bond:quartzslab_si_o $atom:qz_si_70 $atom:qz_ob_104
+    $bond:b278 @bond:quartzslab_si_o $atom:qz_si_70 $atom:qz_ob_105
+    $bond:b279 @bond:quartzslab_si_o $atom:qz_si_70 $atom:qz_ob_149
+    $bond:b280 @bond:quartzslab_si_o $atom:qz_si_70 $atom:qz_ob_156
+    $bond:b281 @bond:quartzslab_si_o $atom:qz_si_71 $atom:qz_ob_105
+    $bond:b282 @bond:quartzslab_si_o $atom:qz_si_71 $atom:qz_ob_107
+    $bond:b283 @bond:quartzslab_si_o $atom:qz_si_71 $atom:qz_oh_71
+    $bond:b284 @bond:quartzslab_si_o $atom:qz_si_71 $atom:qz_oh_101
+    $bond:b285 @bond:quartzslab_si_o $atom:qz_si_72 $atom:qz_ob_106
+    $bond:b286 @bond:quartzslab_si_o $atom:qz_si_72 $atom:qz_ob_108
+    $bond:b287 @bond:quartzslab_si_o $atom:qz_si_72 $atom:qz_oh_70
+    $bond:b288 @bond:quartzslab_si_o $atom:qz_si_72 $atom:qz_oh_72
+    $bond:b289 @bond:quartzslab_si_o $atom:qz_si_73 $atom:qz_oh_73
+    $bond:b290 @bond:quartzslab_si_o $atom:qz_si_73 $atom:qz_oh_75
+    $bond:b291 @bond:quartzslab_si_o $atom:qz_si_73 $atom:qz_ob_111
+    $bond:b292 @bond:quartzslab_si_o $atom:qz_si_73 $atom:qz_ob_157
+    $bond:b293 @bond:quartzslab_si_o $atom:qz_si_74 $atom:qz_oh_74
+    $bond:b294 @bond:quartzslab_si_o $atom:qz_si_74 $atom:qz_oh_76
+    $bond:b295 @bond:quartzslab_si_o $atom:qz_si_74 $atom:qz_ob_110
+    $bond:b296 @bond:quartzslab_si_o $atom:qz_si_74 $atom:qz_ob_112
+    $bond:b297 @bond:quartzslab_si_o $atom:qz_si_75 $atom:qz_ob_109
+    $bond:b298 @bond:quartzslab_si_o $atom:qz_si_75 $atom:qz_ob_111
+    $bond:b299 @bond:quartzslab_si_o $atom:qz_si_75 $atom:qz_ob_113
+    $bond:b300 @bond:quartzslab_si_o $atom:qz_si_75 $atom:qz_ob_115
+    $bond:b301 @bond:quartzslab_si_o $atom:qz_si_76 $atom:qz_ob_110
+    $bond:b302 @bond:quartzslab_si_o $atom:qz_si_76 $atom:qz_ob_114
+    $bond:b303 @bond:quartzslab_si_o $atom:qz_si_76 $atom:qz_ob_116
+    $bond:b304 @bond:quartzslab_si_o $atom:qz_si_76 $atom:qz_ob_160
+    $bond:b305 @bond:quartzslab_si_o $atom:qz_si_77 $atom:qz_ob_102
+    $bond:b306 @bond:quartzslab_si_o $atom:qz_si_77 $atom:qz_ob_106
+    $bond:b307 @bond:quartzslab_si_o $atom:qz_si_77 $atom:qz_ob_115
+    $bond:b308 @bond:quartzslab_si_o $atom:qz_si_77 $atom:qz_ob_119
+    $bond:b309 @bond:quartzslab_si_o $atom:qz_si_78 $atom:qz_ob_116
+    $bond:b310 @bond:quartzslab_si_o $atom:qz_si_78 $atom:qz_ob_117
+    $bond:b311 @bond:quartzslab_si_o $atom:qz_si_78 $atom:qz_ob_161
+    $bond:b312 @bond:quartzslab_si_o $atom:qz_si_78 $atom:qz_ob_168
+    $bond:b313 @bond:quartzslab_si_o $atom:qz_si_79 $atom:qz_ob_117
+    $bond:b314 @bond:quartzslab_si_o $atom:qz_si_79 $atom:qz_ob_119
+    $bond:b315 @bond:quartzslab_si_o $atom:qz_si_79 $atom:qz_oh_79
+    $bond:b316 @bond:quartzslab_si_o $atom:qz_si_79 $atom:qz_oh_109
+    $bond:b317 @bond:quartzslab_si_o $atom:qz_si_80 $atom:qz_ob_118
+    $bond:b318 @bond:quartzslab_si_o $atom:qz_si_80 $atom:qz_ob_120
+    $bond:b319 @bond:quartzslab_si_o $atom:qz_si_80 $atom:qz_oh_78
+    $bond:b320 @bond:quartzslab_si_o $atom:qz_si_80 $atom:qz_oh_80
+    $bond:b321 @bond:quartzslab_si_o $atom:qz_si_81 $atom:qz_oh_81
+    $bond:b322 @bond:quartzslab_si_o $atom:qz_si_81 $atom:qz_oh_83
+    $bond:b323 @bond:quartzslab_si_o $atom:qz_si_81 $atom:qz_ob_123
+    $bond:b324 @bond:quartzslab_si_o $atom:qz_si_81 $atom:qz_ob_169
+    $bond:b325 @bond:quartzslab_si_o $atom:qz_si_82 $atom:qz_oh_82
+    $bond:b326 @bond:quartzslab_si_o $atom:qz_si_82 $atom:qz_oh_84
+    $bond:b327 @bond:quartzslab_si_o $atom:qz_si_82 $atom:qz_ob_122
+    $bond:b328 @bond:quartzslab_si_o $atom:qz_si_82 $atom:qz_ob_124
+    $bond:b329 @bond:quartzslab_si_o $atom:qz_si_83 $atom:qz_ob_121
+    $bond:b330 @bond:quartzslab_si_o $atom:qz_si_83 $atom:qz_ob_123
+    $bond:b331 @bond:quartzslab_si_o $atom:qz_si_83 $atom:qz_ob_125
+    $bond:b332 @bond:quartzslab_si_o $atom:qz_si_83 $atom:qz_ob_127
+    $bond:b333 @bond:quartzslab_si_o $atom:qz_si_84 $atom:qz_ob_122
+    $bond:b334 @bond:quartzslab_si_o $atom:qz_si_84 $atom:qz_ob_126
+    $bond:b335 @bond:quartzslab_si_o $atom:qz_si_84 $atom:qz_ob_128
+    $bond:b336 @bond:quartzslab_si_o $atom:qz_si_84 $atom:qz_ob_172
+    $bond:b337 @bond:quartzslab_si_o $atom:qz_si_85 $atom:qz_ob_114
+    $bond:b338 @bond:quartzslab_si_o $atom:qz_si_85 $atom:qz_ob_118
+    $bond:b339 @bond:quartzslab_si_o $atom:qz_si_85 $atom:qz_ob_127
+    $bond:b340 @bond:quartzslab_si_o $atom:qz_si_85 $atom:qz_ob_131
+    $bond:b341 @bond:quartzslab_si_o $atom:qz_si_86 $atom:qz_ob_128
+    $bond:b342 @bond:quartzslab_si_o $atom:qz_si_86 $atom:qz_ob_129
+    $bond:b343 @bond:quartzslab_si_o $atom:qz_si_86 $atom:qz_ob_173
+    $bond:b344 @bond:quartzslab_si_o $atom:qz_si_86 $atom:qz_ob_180
+    $bond:b345 @bond:quartzslab_si_o $atom:qz_si_87 $atom:qz_ob_129
+    $bond:b346 @bond:quartzslab_si_o $atom:qz_si_87 $atom:qz_ob_131
+    $bond:b347 @bond:quartzslab_si_o $atom:qz_si_87 $atom:qz_oh_87
+    $bond:b348 @bond:quartzslab_si_o $atom:qz_si_87 $atom:qz_oh_117
+    $bond:b349 @bond:quartzslab_si_o $atom:qz_si_88 $atom:qz_ob_130
+    $bond:b350 @bond:quartzslab_si_o $atom:qz_si_88 $atom:qz_ob_132
+    $bond:b351 @bond:quartzslab_si_o $atom:qz_si_88 $atom:qz_oh_86
+    $bond:b352 @bond:quartzslab_si_o $atom:qz_si_88 $atom:qz_oh_88
+    $bond:b353 @bond:quartzslab_si_o $atom:qz_si_89 $atom:qz_oh_89
+    $bond:b354 @bond:quartzslab_si_o $atom:qz_si_89 $atom:qz_oh_91
+    $bond:b355 @bond:quartzslab_si_o $atom:qz_si_89 $atom:qz_ob_135
+    $bond:b356 @bond:quartzslab_si_o $atom:qz_si_89 $atom:qz_ob_181
+    $bond:b357 @bond:quartzslab_si_o $atom:qz_si_90 $atom:qz_oh_90
+    $bond:b358 @bond:quartzslab_si_o $atom:qz_si_90 $atom:qz_oh_92
+    $bond:b359 @bond:quartzslab_si_o $atom:qz_si_90 $atom:qz_ob_134
+    $bond:b360 @bond:quartzslab_si_o $atom:qz_si_90 $atom:qz_ob_136
+    $bond:b361 @bond:quartzslab_si_o $atom:qz_si_91 $atom:qz_ob_133
+    $bond:b362 @bond:quartzslab_si_o $atom:qz_si_91 $atom:qz_ob_135
+    $bond:b363 @bond:quartzslab_si_o $atom:qz_si_91 $atom:qz_ob_137
+    $bond:b364 @bond:quartzslab_si_o $atom:qz_si_91 $atom:qz_ob_139
+    $bond:b365 @bond:quartzslab_si_o $atom:qz_si_92 $atom:qz_ob_134
+    $bond:b366 @bond:quartzslab_si_o $atom:qz_si_92 $atom:qz_ob_138
+    $bond:b367 @bond:quartzslab_si_o $atom:qz_si_92 $atom:qz_ob_140
+    $bond:b368 @bond:quartzslab_si_o $atom:qz_si_92 $atom:qz_ob_184
+    $bond:b369 @bond:quartzslab_si_o $atom:qz_si_93 $atom:qz_ob_126
+    $bond:b370 @bond:quartzslab_si_o $atom:qz_si_93 $atom:qz_ob_130
+    $bond:b371 @bond:quartzslab_si_o $atom:qz_si_93 $atom:qz_ob_139
+    $bond:b372 @bond:quartzslab_si_o $atom:qz_si_93 $atom:qz_ob_143
+    $bond:b373 @bond:quartzslab_si_o $atom:qz_si_94 $atom:qz_ob_140
+    $bond:b374 @bond:quartzslab_si_o $atom:qz_si_94 $atom:qz_ob_141
+    $bond:b375 @bond:quartzslab_si_o $atom:qz_si_94 $atom:qz_ob_185
+    $bond:b376 @bond:quartzslab_si_o $atom:qz_si_94 $atom:qz_ob_192
+    $bond:b377 @bond:quartzslab_si_o $atom:qz_si_95 $atom:qz_ob_141
+    $bond:b378 @bond:quartzslab_si_o $atom:qz_si_95 $atom:qz_ob_143
+    $bond:b379 @bond:quartzslab_si_o $atom:qz_si_95 $atom:qz_oh_95
+    $bond:b380 @bond:quartzslab_si_o $atom:qz_si_95 $atom:qz_oh_125
+    $bond:b381 @bond:quartzslab_si_o $atom:qz_si_96 $atom:qz_ob_142
+    $bond:b382 @bond:quartzslab_si_o $atom:qz_si_96 $atom:qz_ob_144
+    $bond:b383 @bond:quartzslab_si_o $atom:qz_si_96 $atom:qz_oh_94
+    $bond:b384 @bond:quartzslab_si_o $atom:qz_si_96 $atom:qz_oh_96
+    $bond:b385 @bond:quartzslab_si_o $atom:qz_si_97 $atom:qz_oh_97
+    $bond:b386 @bond:quartzslab_si_o $atom:qz_si_97 $atom:qz_oh_99
+    $bond:b387 @bond:quartzslab_si_o $atom:qz_si_97 $atom:qz_ob_147
+    $bond:b388 @bond:quartzslab_si_o $atom:qz_si_97 $atom:qz_ob_193
+    $bond:b389 @bond:quartzslab_si_o $atom:qz_si_98 $atom:qz_oh_98
+    $bond:b390 @bond:quartzslab_si_o $atom:qz_si_98 $atom:qz_oh_100
+    $bond:b391 @bond:quartzslab_si_o $atom:qz_si_98 $atom:qz_ob_146
+    $bond:b392 @bond:quartzslab_si_o $atom:qz_si_98 $atom:qz_ob_148
+    $bond:b393 @bond:quartzslab_si_o $atom:qz_si_99 $atom:qz_ob_145
+    $bond:b394 @bond:quartzslab_si_o $atom:qz_si_99 $atom:qz_ob_147
+    $bond:b395 @bond:quartzslab_si_o $atom:qz_si_99 $atom:qz_ob_149
+    $bond:b396 @bond:quartzslab_si_o $atom:qz_si_99 $atom:qz_ob_151
+    $bond:b397 @bond:quartzslab_si_o $atom:qz_si_100 $atom:qz_ob_146
+    $bond:b398 @bond:quartzslab_si_o $atom:qz_si_100 $atom:qz_ob_150
+    $bond:b399 @bond:quartzslab_si_o $atom:qz_si_100 $atom:qz_ob_152
+    $bond:b400 @bond:quartzslab_si_o $atom:qz_si_100 $atom:qz_ob_196
+    $bond:b401 @bond:quartzslab_si_o $atom:qz_si_101 $atom:qz_ob_151
+    $bond:b402 @bond:quartzslab_si_o $atom:qz_si_101 $atom:qz_ob_155
+    $bond:b403 @bond:quartzslab_si_o $atom:qz_si_101 $atom:qz_ob_186
+    $bond:b404 @bond:quartzslab_si_o $atom:qz_si_101 $atom:qz_ob_190
+    $bond:b405 @bond:quartzslab_si_o $atom:qz_si_102 $atom:qz_ob_152
+    $bond:b406 @bond:quartzslab_si_o $atom:qz_si_102 $atom:qz_ob_153
+    $bond:b407 @bond:quartzslab_si_o $atom:qz_si_102 $atom:qz_ob_197
+    $bond:b408 @bond:quartzslab_si_o $atom:qz_si_102 $atom:qz_ob_204
+    $bond:b409 @bond:quartzslab_si_o $atom:qz_si_103 $atom:qz_ob_153
+    $bond:b410 @bond:quartzslab_si_o $atom:qz_si_103 $atom:qz_ob_155
+    $bond:b411 @bond:quartzslab_si_o $atom:qz_si_103 $atom:qz_oh_103
+    $bond:b412 @bond:quartzslab_si_o $atom:qz_si_103 $atom:qz_oh_133
+    $bond:b413 @bond:quartzslab_si_o $atom:qz_si_104 $atom:qz_ob_154
+    $bond:b414 @bond:quartzslab_si_o $atom:qz_si_104 $atom:qz_ob_156
+    $bond:b415 @bond:quartzslab_si_o $atom:qz_si_104 $atom:qz_oh_102
+    $bond:b416 @bond:quartzslab_si_o $atom:qz_si_104 $atom:qz_oh_104
+    $bond:b417 @bond:quartzslab_si_o $atom:qz_si_105 $atom:qz_oh_105
+    $bond:b418 @bond:quartzslab_si_o $atom:qz_si_105 $atom:qz_oh_107
+    $bond:b419 @bond:quartzslab_si_o $atom:qz_si_105 $atom:qz_ob_159
+    $bond:b420 @bond:quartzslab_si_o $atom:qz_si_105 $atom:qz_ob_205
+    $bond:b421 @bond:quartzslab_si_o $atom:qz_si_106 $atom:qz_oh_106
+    $bond:b422 @bond:quartzslab_si_o $atom:qz_si_106 $atom:qz_oh_108
+    $bond:b423 @bond:quartzslab_si_o $atom:qz_si_106 $atom:qz_ob_158
+    $bond:b424 @bond:quartzslab_si_o $atom:qz_si_106 $atom:qz_ob_160
+    $bond:b425 @bond:quartzslab_si_o $atom:qz_si_107 $atom:qz_ob_157
+    $bond:b426 @bond:quartzslab_si_o $atom:qz_si_107 $atom:qz_ob_159
+    $bond:b427 @bond:quartzslab_si_o $atom:qz_si_107 $atom:qz_ob_161
+    $bond:b428 @bond:quartzslab_si_o $atom:qz_si_107 $atom:qz_ob_163
+    $bond:b429 @bond:quartzslab_si_o $atom:qz_si_108 $atom:qz_ob_158
+    $bond:b430 @bond:quartzslab_si_o $atom:qz_si_108 $atom:qz_ob_162
+    $bond:b431 @bond:quartzslab_si_o $atom:qz_si_108 $atom:qz_ob_164
+    $bond:b432 @bond:quartzslab_si_o $atom:qz_si_108 $atom:qz_ob_208
+    $bond:b433 @bond:quartzslab_si_o $atom:qz_si_109 $atom:qz_ob_150
+    $bond:b434 @bond:quartzslab_si_o $atom:qz_si_109 $atom:qz_ob_154
+    $bond:b435 @bond:quartzslab_si_o $atom:qz_si_109 $atom:qz_ob_163
+    $bond:b436 @bond:quartzslab_si_o $atom:qz_si_109 $atom:qz_ob_167
+    $bond:b437 @bond:quartzslab_si_o $atom:qz_si_110 $atom:qz_ob_164
+    $bond:b438 @bond:quartzslab_si_o $atom:qz_si_110 $atom:qz_ob_165
+    $bond:b439 @bond:quartzslab_si_o $atom:qz_si_110 $atom:qz_ob_209
+    $bond:b440 @bond:quartzslab_si_o $atom:qz_si_110 $atom:qz_ob_216
+    $bond:b441 @bond:quartzslab_si_o $atom:qz_si_111 $atom:qz_ob_165
+    $bond:b442 @bond:quartzslab_si_o $atom:qz_si_111 $atom:qz_ob_167
+    $bond:b443 @bond:quartzslab_si_o $atom:qz_si_111 $atom:qz_oh_111
+    $bond:b444 @bond:quartzslab_si_o $atom:qz_si_111 $atom:qz_oh_141
+    $bond:b445 @bond:quartzslab_si_o $atom:qz_si_112 $atom:qz_ob_166
+    $bond:b446 @bond:quartzslab_si_o $atom:qz_si_112 $atom:qz_ob_168
+    $bond:b447 @bond:quartzslab_si_o $atom:qz_si_112 $atom:qz_oh_110
+    $bond:b448 @bond:quartzslab_si_o $atom:qz_si_112 $atom:qz_oh_112
+    $bond:b449 @bond:quartzslab_si_o $atom:qz_si_113 $atom:qz_oh_113
+    $bond:b450 @bond:quartzslab_si_o $atom:qz_si_113 $atom:qz_oh_115
+    $bond:b451 @bond:quartzslab_si_o $atom:qz_si_113 $atom:qz_ob_171
+    $bond:b452 @bond:quartzslab_si_o $atom:qz_si_113 $atom:qz_ob_217
+    $bond:b453 @bond:quartzslab_si_o $atom:qz_si_114 $atom:qz_oh_114
+    $bond:b454 @bond:quartzslab_si_o $atom:qz_si_114 $atom:qz_oh_116
+    $bond:b455 @bond:quartzslab_si_o $atom:qz_si_114 $atom:qz_ob_170
+    $bond:b456 @bond:quartzslab_si_o $atom:qz_si_114 $atom:qz_ob_172
+    $bond:b457 @bond:quartzslab_si_o $atom:qz_si_115 $atom:qz_ob_169
+    $bond:b458 @bond:quartzslab_si_o $atom:qz_si_115 $atom:qz_ob_171
+    $bond:b459 @bond:quartzslab_si_o $atom:qz_si_115 $atom:qz_ob_173
+    $bond:b460 @bond:quartzslab_si_o $atom:qz_si_115 $atom:qz_ob_175
+    $bond:b461 @bond:quartzslab_si_o $atom:qz_si_116 $atom:qz_ob_170
+    $bond:b462 @bond:quartzslab_si_o $atom:qz_si_116 $atom:qz_ob_174
+    $bond:b463 @bond:quartzslab_si_o $atom:qz_si_116 $atom:qz_ob_176
+    $bond:b464 @bond:quartzslab_si_o $atom:qz_si_116 $atom:qz_ob_220
+    $bond:b465 @bond:quartzslab_si_o $atom:qz_si_117 $atom:qz_ob_162
+    $bond:b466 @bond:quartzslab_si_o $atom:qz_si_117 $atom:qz_ob_166
+    $bond:b467 @bond:quartzslab_si_o $atom:qz_si_117 $atom:qz_ob_175
+    $bond:b468 @bond:quartzslab_si_o $atom:qz_si_117 $atom:qz_ob_179
+    $bond:b469 @bond:quartzslab_si_o $atom:qz_si_118 $atom:qz_ob_176
+    $bond:b470 @bond:quartzslab_si_o $atom:qz_si_118 $atom:qz_ob_177
+    $bond:b471 @bond:quartzslab_si_o $atom:qz_si_118 $atom:qz_ob_221
+    $bond:b472 @bond:quartzslab_si_o $atom:qz_si_118 $atom:qz_ob_228
+    $bond:b473 @bond:quartzslab_si_o $atom:qz_si_119 $atom:qz_ob_177
+    $bond:b474 @bond:quartzslab_si_o $atom:qz_si_119 $atom:qz_ob_179
+    $bond:b475 @bond:quartzslab_si_o $atom:qz_si_119 $atom:qz_oh_119
+    $bond:b476 @bond:quartzslab_si_o $atom:qz_si_119 $atom:qz_oh_149
+    $bond:b477 @bond:quartzslab_si_o $atom:qz_si_120 $atom:qz_ob_178
+    $bond:b478 @bond:quartzslab_si_o $atom:qz_si_120 $atom:qz_ob_180
+    $bond:b479 @bond:quartzslab_si_o $atom:qz_si_120 $atom:qz_oh_118
+    $bond:b480 @bond:quartzslab_si_o $atom:qz_si_120 $atom:qz_oh_120
+    $bond:b481 @bond:quartzslab_si_o $atom:qz_si_121 $atom:qz_oh_121
+    $bond:b482 @bond:quartzslab_si_o $atom:qz_si_121 $atom:qz_oh_123
+    $bond:b483 @bond:quartzslab_si_o $atom:qz_si_121 $atom:qz_ob_183
+    $bond:b484 @bond:quartzslab_si_o $atom:qz_si_121 $atom:qz_ob_229
+    $bond:b485 @bond:quartzslab_si_o $atom:qz_si_122 $atom:qz_oh_122
+    $bond:b486 @bond:quartzslab_si_o $atom:qz_si_122 $atom:qz_oh_124
+    $bond:b487 @bond:quartzslab_si_o $atom:qz_si_122 $atom:qz_ob_182
+    $bond:b488 @bond:quartzslab_si_o $atom:qz_si_122 $atom:qz_ob_184
+    $bond:b489 @bond:quartzslab_si_o $atom:qz_si_123 $atom:qz_ob_181
+    $bond:b490 @bond:quartzslab_si_o $atom:qz_si_123 $atom:qz_ob_183
+    $bond:b491 @bond:quartzslab_si_o $atom:qz_si_123 $atom:qz_ob_185
+    $bond:b492 @bond:quartzslab_si_o $atom:qz_si_123 $atom:qz_ob_187
+    $bond:b493 @bond:quartzslab_si_o $atom:qz_si_124 $atom:qz_ob_182
+    $bond:b494 @bond:quartzslab_si_o $atom:qz_si_124 $atom:qz_ob_186
+    $bond:b495 @bond:quartzslab_si_o $atom:qz_si_124 $atom:qz_ob_188
+    $bond:b496 @bond:quartzslab_si_o $atom:qz_si_124 $atom:qz_ob_232
+    $bond:b497 @bond:quartzslab_si_o $atom:qz_si_125 $atom:qz_ob_174
+    $bond:b498 @bond:quartzslab_si_o $atom:qz_si_125 $atom:qz_ob_178
+    $bond:b499 @bond:quartzslab_si_o $atom:qz_si_125 $atom:qz_ob_187
+    $bond:b500 @bond:quartzslab_si_o $atom:qz_si_125 $atom:qz_ob_191
+    $bond:b501 @bond:quartzslab_si_o $atom:qz_si_126 $atom:qz_ob_188
+    $bond:b502 @bond:quartzslab_si_o $atom:qz_si_126 $atom:qz_ob_189
+    $bond:b503 @bond:quartzslab_si_o $atom:qz_si_126 $atom:qz_ob_233
+    $bond:b504 @bond:quartzslab_si_o $atom:qz_si_126 $atom:qz_ob_240
+    $bond:b505 @bond:quartzslab_si_o $atom:qz_si_127 $atom:qz_ob_189
+    $bond:b506 @bond:quartzslab_si_o $atom:qz_si_127 $atom:qz_ob_191
+    $bond:b507 @bond:quartzslab_si_o $atom:qz_si_127 $atom:qz_oh_127
+    $bond:b508 @bond:quartzslab_si_o $atom:qz_si_127 $atom:qz_oh_157
+    $bond:b509 @bond:quartzslab_si_o $atom:qz_si_128 $atom:qz_ob_190
+    $bond:b510 @bond:quartzslab_si_o $atom:qz_si_128 $atom:qz_ob_192
+    $bond:b511 @bond:quartzslab_si_o $atom:qz_si_128 $atom:qz_oh_126
+    $bond:b512 @bond:quartzslab_si_o $atom:qz_si_128 $atom:qz_oh_128
+    $bond:b513 @bond:quartzslab_si_o $atom:qz_si_129 $atom:qz_oh_129
+    $bond:b514 @bond:quartzslab_si_o $atom:qz_si_129 $atom:qz_oh_131
+    $bond:b515 @bond:quartzslab_si_o $atom:qz_si_129 $atom:qz_ob_195
+    $bond:b516 @bond:quartzslab_si_o $atom:qz_si_129 $atom:qz_ob_241
+    $bond:b517 @bond:quartzslab_si_o $atom:qz_si_130 $atom:qz_oh_130
+    $bond:b518 @bond:quartzslab_si_o $atom:qz_si_130 $atom:qz_oh_132
+    $bond:b519 @bond:quartzslab_si_o $atom:qz_si_130 $atom:qz_ob_194
+    $bond:b520 @bond:quartzslab_si_o $atom:qz_si_130 $atom:qz_ob_196
+    $bond:b521 @bond:quartzslab_si_o $atom:qz_si_131 $atom:qz_ob_193
+    $bond:b522 @bond:quartzslab_si_o $atom:qz_si_131 $atom:qz_ob_195
+    $bond:b523 @bond:quartzslab_si_o $atom:qz_si_131 $atom:qz_ob_197
+    $bond:b524 @bond:quartzslab_si_o $atom:qz_si_131 $atom:qz_ob_199
+    $bond:b525 @bond:quartzslab_si_o $atom:qz_si_132 $atom:qz_ob_194
+    $bond:b526 @bond:quartzslab_si_o $atom:qz_si_132 $atom:qz_ob_198
+    $bond:b527 @bond:quartzslab_si_o $atom:qz_si_132 $atom:qz_ob_200
+    $bond:b528 @bond:quartzslab_si_o $atom:qz_si_132 $atom:qz_ob_244
+    $bond:b529 @bond:quartzslab_si_o $atom:qz_si_133 $atom:qz_ob_199
+    $bond:b530 @bond:quartzslab_si_o $atom:qz_si_133 $atom:qz_ob_203
+    $bond:b531 @bond:quartzslab_si_o $atom:qz_si_133 $atom:qz_ob_234
+    $bond:b532 @bond:quartzslab_si_o $atom:qz_si_133 $atom:qz_ob_238
+    $bond:b533 @bond:quartzslab_si_o $atom:qz_si_134 $atom:qz_ob_200
+    $bond:b534 @bond:quartzslab_si_o $atom:qz_si_134 $atom:qz_ob_201
+    $bond:b535 @bond:quartzslab_si_o $atom:qz_si_134 $atom:qz_ob_245
+    $bond:b536 @bond:quartzslab_si_o $atom:qz_si_134 $atom:qz_ob_252
+    $bond:b537 @bond:quartzslab_si_o $atom:qz_si_135 $atom:qz_ob_201
+    $bond:b538 @bond:quartzslab_si_o $atom:qz_si_135 $atom:qz_ob_203
+    $bond:b539 @bond:quartzslab_si_o $atom:qz_si_135 $atom:qz_oh_135
+    $bond:b540 @bond:quartzslab_si_o $atom:qz_si_135 $atom:qz_oh_165
+    $bond:b541 @bond:quartzslab_si_o $atom:qz_si_136 $atom:qz_ob_202
+    $bond:b542 @bond:quartzslab_si_o $atom:qz_si_136 $atom:qz_ob_204
+    $bond:b543 @bond:quartzslab_si_o $atom:qz_si_136 $atom:qz_oh_134
+    $bond:b544 @bond:quartzslab_si_o $atom:qz_si_136 $atom:qz_oh_136
+    $bond:b545 @bond:quartzslab_si_o $atom:qz_si_137 $atom:qz_oh_137
+    $bond:b546 @bond:quartzslab_si_o $atom:qz_si_137 $atom:qz_oh_139
+    $bond:b547 @bond:quartzslab_si_o $atom:qz_si_137 $atom:qz_ob_207
+    $bond:b548 @bond:quartzslab_si_o $atom:qz_si_137 $atom:qz_ob_253
+    $bond:b549 @bond:quartzslab_si_o $atom:qz_si_138 $atom:qz_oh_138
+    $bond:b550 @bond:quartzslab_si_o $atom:qz_si_138 $atom:qz_oh_140
+    $bond:b551 @bond:quartzslab_si_o $atom:qz_si_138 $atom:qz_ob_206
+    $bond:b552 @bond:quartzslab_si_o $atom:qz_si_138 $atom:qz_ob_208
+    $bond:b553 @bond:quartzslab_si_o $atom:qz_si_139 $atom:qz_ob_205
+    $bond:b554 @bond:quartzslab_si_o $atom:qz_si_139 $atom:qz_ob_207
+    $bond:b555 @bond:quartzslab_si_o $atom:qz_si_139 $atom:qz_ob_209
+    $bond:b556 @bond:quartzslab_si_o $atom:qz_si_139 $atom:qz_ob_211
+    $bond:b557 @bond:quartzslab_si_o $atom:qz_si_140 $atom:qz_ob_206
+    $bond:b558 @bond:quartzslab_si_o $atom:qz_si_140 $atom:qz_ob_210
+    $bond:b559 @bond:quartzslab_si_o $atom:qz_si_140 $atom:qz_ob_212
+    $bond:b560 @bond:quartzslab_si_o $atom:qz_si_140 $atom:qz_ob_256
+    $bond:b561 @bond:quartzslab_si_o $atom:qz_si_141 $atom:qz_ob_198
+    $bond:b562 @bond:quartzslab_si_o $atom:qz_si_141 $atom:qz_ob_202
+    $bond:b563 @bond:quartzslab_si_o $atom:qz_si_141 $atom:qz_ob_211
+    $bond:b564 @bond:quartzslab_si_o $atom:qz_si_141 $atom:qz_ob_215
+    $bond:b565 @bond:quartzslab_si_o $atom:qz_si_142 $atom:qz_ob_212
+    $bond:b566 @bond:quartzslab_si_o $atom:qz_si_142 $atom:qz_ob_213
+    $bond:b567 @bond:quartzslab_si_o $atom:qz_si_142 $atom:qz_ob_257
+    $bond:b568 @bond:quartzslab_si_o $atom:qz_si_142 $atom:qz_ob_264
+    $bond:b569 @bond:quartzslab_si_o $atom:qz_si_143 $atom:qz_ob_213
+    $bond:b570 @bond:quartzslab_si_o $atom:qz_si_143 $atom:qz_ob_215
+    $bond:b571 @bond:quartzslab_si_o $atom:qz_si_143 $atom:qz_oh_143
+    $bond:b572 @bond:quartzslab_si_o $atom:qz_si_143 $atom:qz_oh_173
+    $bond:b573 @bond:quartzslab_si_o $atom:qz_si_144 $atom:qz_ob_214
+    $bond:b574 @bond:quartzslab_si_o $atom:qz_si_144 $atom:qz_ob_216
+    $bond:b575 @bond:quartzslab_si_o $atom:qz_si_144 $atom:qz_oh_142
+    $bond:b576 @bond:quartzslab_si_o $atom:qz_si_144 $atom:qz_oh_144
+    $bond:b577 @bond:quartzslab_si_o $atom:qz_si_145 $atom:qz_oh_145
+    $bond:b578 @bond:quartzslab_si_o $atom:qz_si_145 $atom:qz_oh_147
+    $bond:b579 @bond:quartzslab_si_o $atom:qz_si_145 $atom:qz_ob_219
+    $bond:b580 @bond:quartzslab_si_o $atom:qz_si_145 $atom:qz_ob_265
+    $bond:b581 @bond:quartzslab_si_o $atom:qz_si_146 $atom:qz_oh_146
+    $bond:b582 @bond:quartzslab_si_o $atom:qz_si_146 $atom:qz_oh_148
+    $bond:b583 @bond:quartzslab_si_o $atom:qz_si_146 $atom:qz_ob_218
+    $bond:b584 @bond:quartzslab_si_o $atom:qz_si_146 $atom:qz_ob_220
+    $bond:b585 @bond:quartzslab_si_o $atom:qz_si_147 $atom:qz_ob_217
+    $bond:b586 @bond:quartzslab_si_o $atom:qz_si_147 $atom:qz_ob_219
+    $bond:b587 @bond:quartzslab_si_o $atom:qz_si_147 $atom:qz_ob_221
+    $bond:b588 @bond:quartzslab_si_o $atom:qz_si_147 $atom:qz_ob_223
+    $bond:b589 @bond:quartzslab_si_o $atom:qz_si_148 $atom:qz_ob_218
+    $bond:b590 @bond:quartzslab_si_o $atom:qz_si_148 $atom:qz_ob_222
+    $bond:b591 @bond:quartzslab_si_o $atom:qz_si_148 $atom:qz_ob_224
+    $bond:b592 @bond:quartzslab_si_o $atom:qz_si_148 $atom:qz_ob_268
+    $bond:b593 @bond:quartzslab_si_o $atom:qz_si_149 $atom:qz_ob_210
+    $bond:b594 @bond:quartzslab_si_o $atom:qz_si_149 $atom:qz_ob_214
+    $bond:b595 @bond:quartzslab_si_o $atom:qz_si_149 $atom:qz_ob_223
+    $bond:b596 @bond:quartzslab_si_o $atom:qz_si_149 $atom:qz_ob_227
+    $bond:b597 @bond:quartzslab_si_o $atom:qz_si_150 $atom:qz_ob_224
+    $bond:b598 @bond:quartzslab_si_o $atom:qz_si_150 $atom:qz_ob_225
+    $bond:b599 @bond:quartzslab_si_o $atom:qz_si_150 $atom:qz_ob_269
+    $bond:b600 @bond:quartzslab_si_o $atom:qz_si_150 $atom:qz_ob_276
+    $bond:b601 @bond:quartzslab_si_o $atom:qz_si_151 $atom:qz_ob_225
+    $bond:b602 @bond:quartzslab_si_o $atom:qz_si_151 $atom:qz_ob_227
+    $bond:b603 @bond:quartzslab_si_o $atom:qz_si_151 $atom:qz_oh_151
+    $bond:b604 @bond:quartzslab_si_o $atom:qz_si_151 $atom:qz_oh_181
+    $bond:b605 @bond:quartzslab_si_o $atom:qz_si_152 $atom:qz_ob_226
+    $bond:b606 @bond:quartzslab_si_o $atom:qz_si_152 $atom:qz_ob_228
+    $bond:b607 @bond:quartzslab_si_o $atom:qz_si_152 $atom:qz_oh_150
+    $bond:b608 @bond:quartzslab_si_o $atom:qz_si_152 $atom:qz_oh_152
+    $bond:b609 @bond:quartzslab_si_o $atom:qz_si_153 $atom:qz_oh_153
+    $bond:b610 @bond:quartzslab_si_o $atom:qz_si_153 $atom:qz_oh_155
+    $bond:b611 @bond:quartzslab_si_o $atom:qz_si_153 $atom:qz_ob_231
+    $bond:b612 @bond:quartzslab_si_o $atom:qz_si_153 $atom:qz_ob_277
+    $bond:b613 @bond:quartzslab_si_o $atom:qz_si_154 $atom:qz_oh_154
+    $bond:b614 @bond:quartzslab_si_o $atom:qz_si_154 $atom:qz_oh_156
+    $bond:b615 @bond:quartzslab_si_o $atom:qz_si_154 $atom:qz_ob_230
+    $bond:b616 @bond:quartzslab_si_o $atom:qz_si_154 $atom:qz_ob_232
+    $bond:b617 @bond:quartzslab_si_o $atom:qz_si_155 $atom:qz_ob_229
+    $bond:b618 @bond:quartzslab_si_o $atom:qz_si_155 $atom:qz_ob_231
+    $bond:b619 @bond:quartzslab_si_o $atom:qz_si_155 $atom:qz_ob_233
+    $bond:b620 @bond:quartzslab_si_o $atom:qz_si_155 $atom:qz_ob_235
+    $bond:b621 @bond:quartzslab_si_o $atom:qz_si_156 $atom:qz_ob_230
+    $bond:b622 @bond:quartzslab_si_o $atom:qz_si_156 $atom:qz_ob_234
+    $bond:b623 @bond:quartzslab_si_o $atom:qz_si_156 $atom:qz_ob_236
+    $bond:b624 @bond:quartzslab_si_o $atom:qz_si_156 $atom:qz_ob_280
+    $bond:b625 @bond:quartzslab_si_o $atom:qz_si_157 $atom:qz_ob_222
+    $bond:b626 @bond:quartzslab_si_o $atom:qz_si_157 $atom:qz_ob_226
+    $bond:b627 @bond:quartzslab_si_o $atom:qz_si_157 $atom:qz_ob_235
+    $bond:b628 @bond:quartzslab_si_o $atom:qz_si_157 $atom:qz_ob_239
+    $bond:b629 @bond:quartzslab_si_o $atom:qz_si_158 $atom:qz_ob_236
+    $bond:b630 @bond:quartzslab_si_o $atom:qz_si_158 $atom:qz_ob_237
+    $bond:b631 @bond:quartzslab_si_o $atom:qz_si_158 $atom:qz_ob_281
+    $bond:b632 @bond:quartzslab_si_o $atom:qz_si_158 $atom:qz_ob_288
+    $bond:b633 @bond:quartzslab_si_o $atom:qz_si_159 $atom:qz_ob_237
+    $bond:b634 @bond:quartzslab_si_o $atom:qz_si_159 $atom:qz_ob_239
+    $bond:b635 @bond:quartzslab_si_o $atom:qz_si_159 $atom:qz_oh_159
+    $bond:b636 @bond:quartzslab_si_o $atom:qz_si_159 $atom:qz_oh_189
+    $bond:b637 @bond:quartzslab_si_o $atom:qz_si_160 $atom:qz_ob_238
+    $bond:b638 @bond:quartzslab_si_o $atom:qz_si_160 $atom:qz_ob_240
+    $bond:b639 @bond:quartzslab_si_o $atom:qz_si_160 $atom:qz_oh_158
+    $bond:b640 @bond:quartzslab_si_o $atom:qz_si_160 $atom:qz_oh_160
+    $bond:b641 @bond:quartzslab_si_o $atom:qz_si_161 $atom:qz_ob_1
+    $bond:b642 @bond:quartzslab_si_o $atom:qz_si_161 $atom:qz_oh_161
+    $bond:b643 @bond:quartzslab_si_o $atom:qz_si_161 $atom:qz_oh_163
+    $bond:b644 @bond:quartzslab_si_o $atom:qz_si_161 $atom:qz_ob_243
+    $bond:b645 @bond:quartzslab_si_o $atom:qz_si_162 $atom:qz_oh_162
+    $bond:b646 @bond:quartzslab_si_o $atom:qz_si_162 $atom:qz_oh_164
+    $bond:b647 @bond:quartzslab_si_o $atom:qz_si_162 $atom:qz_ob_242
+    $bond:b648 @bond:quartzslab_si_o $atom:qz_si_162 $atom:qz_ob_244
+    $bond:b649 @bond:quartzslab_si_o $atom:qz_si_163 $atom:qz_ob_241
+    $bond:b650 @bond:quartzslab_si_o $atom:qz_si_163 $atom:qz_ob_243
+    $bond:b651 @bond:quartzslab_si_o $atom:qz_si_163 $atom:qz_ob_245
+    $bond:b652 @bond:quartzslab_si_o $atom:qz_si_163 $atom:qz_ob_247
+    $bond:b653 @bond:quartzslab_si_o $atom:qz_si_164 $atom:qz_ob_4
+    $bond:b654 @bond:quartzslab_si_o $atom:qz_si_164 $atom:qz_ob_242
+    $bond:b655 @bond:quartzslab_si_o $atom:qz_si_164 $atom:qz_ob_246
+    $bond:b656 @bond:quartzslab_si_o $atom:qz_si_164 $atom:qz_ob_248
+    $bond:b657 @bond:quartzslab_si_o $atom:qz_si_165 $atom:qz_ob_247
+    $bond:b658 @bond:quartzslab_si_o $atom:qz_si_165 $atom:qz_ob_251
+    $bond:b659 @bond:quartzslab_si_o $atom:qz_si_165 $atom:qz_ob_282
+    $bond:b660 @bond:quartzslab_si_o $atom:qz_si_165 $atom:qz_ob_286
+    $bond:b661 @bond:quartzslab_si_o $atom:qz_si_166 $atom:qz_ob_5
+    $bond:b662 @bond:quartzslab_si_o $atom:qz_si_166 $atom:qz_ob_12
+    $bond:b663 @bond:quartzslab_si_o $atom:qz_si_166 $atom:qz_ob_248
+    $bond:b664 @bond:quartzslab_si_o $atom:qz_si_166 $atom:qz_ob_249
+    $bond:b665 @bond:quartzslab_si_o $atom:qz_si_167 $atom:qz_oh_5
+    $bond:b666 @bond:quartzslab_si_o $atom:qz_si_167 $atom:qz_ob_249
+    $bond:b667 @bond:quartzslab_si_o $atom:qz_si_167 $atom:qz_ob_251
+    $bond:b668 @bond:quartzslab_si_o $atom:qz_si_167 $atom:qz_oh_167
+    $bond:b669 @bond:quartzslab_si_o $atom:qz_si_168 $atom:qz_ob_250
+    $bond:b670 @bond:quartzslab_si_o $atom:qz_si_168 $atom:qz_ob_252
+    $bond:b671 @bond:quartzslab_si_o $atom:qz_si_168 $atom:qz_oh_166
+    $bond:b672 @bond:quartzslab_si_o $atom:qz_si_168 $atom:qz_oh_168
+    $bond:b673 @bond:quartzslab_si_o $atom:qz_si_169 $atom:qz_ob_13
+    $bond:b674 @bond:quartzslab_si_o $atom:qz_si_169 $atom:qz_oh_169
+    $bond:b675 @bond:quartzslab_si_o $atom:qz_si_169 $atom:qz_oh_171
+    $bond:b676 @bond:quartzslab_si_o $atom:qz_si_169 $atom:qz_ob_255
+    $bond:b677 @bond:quartzslab_si_o $atom:qz_si_170 $atom:qz_oh_170
+    $bond:b678 @bond:quartzslab_si_o $atom:qz_si_170 $atom:qz_oh_172
+    $bond:b679 @bond:quartzslab_si_o $atom:qz_si_170 $atom:qz_ob_254
+    $bond:b680 @bond:quartzslab_si_o $atom:qz_si_170 $atom:qz_ob_256
+    $bond:b681 @bond:quartzslab_si_o $atom:qz_si_171 $atom:qz_ob_253
+    $bond:b682 @bond:quartzslab_si_o $atom:qz_si_171 $atom:qz_ob_255
+    $bond:b683 @bond:quartzslab_si_o $atom:qz_si_171 $atom:qz_ob_257
+    $bond:b684 @bond:quartzslab_si_o $atom:qz_si_171 $atom:qz_ob_259
+    $bond:b685 @bond:quartzslab_si_o $atom:qz_si_172 $atom:qz_ob_16
+    $bond:b686 @bond:quartzslab_si_o $atom:qz_si_172 $atom:qz_ob_254
+    $bond:b687 @bond:quartzslab_si_o $atom:qz_si_172 $atom:qz_ob_258
+    $bond:b688 @bond:quartzslab_si_o $atom:qz_si_172 $atom:qz_ob_260
+    $bond:b689 @bond:quartzslab_si_o $atom:qz_si_173 $atom:qz_ob_246
+    $bond:b690 @bond:quartzslab_si_o $atom:qz_si_173 $atom:qz_ob_250
+    $bond:b691 @bond:quartzslab_si_o $atom:qz_si_173 $atom:qz_ob_259
+    $bond:b692 @bond:quartzslab_si_o $atom:qz_si_173 $atom:qz_ob_263
+    $bond:b693 @bond:quartzslab_si_o $atom:qz_si_174 $atom:qz_ob_17
+    $bond:b694 @bond:quartzslab_si_o $atom:qz_si_174 $atom:qz_ob_24
+    $bond:b695 @bond:quartzslab_si_o $atom:qz_si_174 $atom:qz_ob_260
+    $bond:b696 @bond:quartzslab_si_o $atom:qz_si_174 $atom:qz_ob_261
+    $bond:b697 @bond:quartzslab_si_o $atom:qz_si_175 $atom:qz_oh_13
+    $bond:b698 @bond:quartzslab_si_o $atom:qz_si_175 $atom:qz_ob_261
+    $bond:b699 @bond:quartzslab_si_o $atom:qz_si_175 $atom:qz_ob_263
+    $bond:b700 @bond:quartzslab_si_o $atom:qz_si_175 $atom:qz_oh_175
+    $bond:b701 @bond:quartzslab_si_o $atom:qz_si_176 $atom:qz_ob_262
+    $bond:b702 @bond:quartzslab_si_o $atom:qz_si_176 $atom:qz_ob_264
+    $bond:b703 @bond:quartzslab_si_o $atom:qz_si_176 $atom:qz_oh_174
+    $bond:b704 @bond:quartzslab_si_o $atom:qz_si_176 $atom:qz_oh_176
+    $bond:b705 @bond:quartzslab_si_o $atom:qz_si_177 $atom:qz_ob_25
+    $bond:b706 @bond:quartzslab_si_o $atom:qz_si_177 $atom:qz_oh_177
+    $bond:b707 @bond:quartzslab_si_o $atom:qz_si_177 $atom:qz_oh_179
+    $bond:b708 @bond:quartzslab_si_o $atom:qz_si_177 $atom:qz_ob_267
+    $bond:b709 @bond:quartzslab_si_o $atom:qz_si_178 $atom:qz_oh_178
+    $bond:b710 @bond:quartzslab_si_o $atom:qz_si_178 $atom:qz_oh_180
+    $bond:b711 @bond:quartzslab_si_o $atom:qz_si_178 $atom:qz_ob_266
+    $bond:b712 @bond:quartzslab_si_o $atom:qz_si_178 $atom:qz_ob_268
+    $bond:b713 @bond:quartzslab_si_o $atom:qz_si_179 $atom:qz_ob_265
+    $bond:b714 @bond:quartzslab_si_o $atom:qz_si_179 $atom:qz_ob_267
+    $bond:b715 @bond:quartzslab_si_o $atom:qz_si_179 $atom:qz_ob_269
+    $bond:b716 @bond:quartzslab_si_o $atom:qz_si_179 $atom:qz_ob_271
+    $bond:b717 @bond:quartzslab_si_o $atom:qz_si_180 $atom:qz_ob_28
+    $bond:b718 @bond:quartzslab_si_o $atom:qz_si_180 $atom:qz_ob_266
+    $bond:b719 @bond:quartzslab_si_o $atom:qz_si_180 $atom:qz_ob_270
+    $bond:b720 @bond:quartzslab_si_o $atom:qz_si_180 $atom:qz_ob_272
+    $bond:b721 @bond:quartzslab_si_o $atom:qz_si_181 $atom:qz_ob_258
+    $bond:b722 @bond:quartzslab_si_o $atom:qz_si_181 $atom:qz_ob_262
+    $bond:b723 @bond:quartzslab_si_o $atom:qz_si_181 $atom:qz_ob_271
+    $bond:b724 @bond:quartzslab_si_o $atom:qz_si_181 $atom:qz_ob_275
+    $bond:b725 @bond:quartzslab_si_o $atom:qz_si_182 $atom:qz_ob_29
+    $bond:b726 @bond:quartzslab_si_o $atom:qz_si_182 $atom:qz_ob_36
+    $bond:b727 @bond:quartzslab_si_o $atom:qz_si_182 $atom:qz_ob_272
+    $bond:b728 @bond:quartzslab_si_o $atom:qz_si_182 $atom:qz_ob_273
+    $bond:b729 @bond:quartzslab_si_o $atom:qz_si_183 $atom:qz_oh_21
+    $bond:b730 @bond:quartzslab_si_o $atom:qz_si_183 $atom:qz_ob_273
+    $bond:b731 @bond:quartzslab_si_o $atom:qz_si_183 $atom:qz_ob_275
+    $bond:b732 @bond:quartzslab_si_o $atom:qz_si_183 $atom:qz_oh_183
+    $bond:b733 @bond:quartzslab_si_o $atom:qz_si_184 $atom:qz_ob_274
+    $bond:b734 @bond:quartzslab_si_o $atom:qz_si_184 $atom:qz_ob_276
+    $bond:b735 @bond:quartzslab_si_o $atom:qz_si_184 $atom:qz_oh_182
+    $bond:b736 @bond:quartzslab_si_o $atom:qz_si_184 $atom:qz_oh_184
+    $bond:b737 @bond:quartzslab_si_o $atom:qz_si_185 $atom:qz_ob_37
+    $bond:b738 @bond:quartzslab_si_o $atom:qz_si_185 $atom:qz_oh_185
+    $bond:b739 @bond:quartzslab_si_o $atom:qz_si_185 $atom:qz_oh_187
+    $bond:b740 @bond:quartzslab_si_o $atom:qz_si_185 $atom:qz_ob_279
+    $bond:b741 @bond:quartzslab_si_o $atom:qz_si_186 $atom:qz_oh_186
+    $bond:b742 @bond:quartzslab_si_o $atom:qz_si_186 $atom:qz_oh_188
+    $bond:b743 @bond:quartzslab_si_o $atom:qz_si_186 $atom:qz_ob_278
+    $bond:b744 @bond:quartzslab_si_o $atom:qz_si_186 $atom:qz_ob_280
+    $bond:b745 @bond:quartzslab_si_o $atom:qz_si_187 $atom:qz_ob_277
+    $bond:b746 @bond:quartzslab_si_o $atom:qz_si_187 $atom:qz_ob_279
+    $bond:b747 @bond:quartzslab_si_o $atom:qz_si_187 $atom:qz_ob_281
+    $bond:b748 @bond:quartzslab_si_o $atom:qz_si_187 $atom:qz_ob_283
+    $bond:b749 @bond:quartzslab_si_o $atom:qz_si_188 $atom:qz_ob_40
+    $bond:b750 @bond:quartzslab_si_o $atom:qz_si_188 $atom:qz_ob_278
+    $bond:b751 @bond:quartzslab_si_o $atom:qz_si_188 $atom:qz_ob_282
+    $bond:b752 @bond:quartzslab_si_o $atom:qz_si_188 $atom:qz_ob_284
+    $bond:b753 @bond:quartzslab_si_o $atom:qz_si_189 $atom:qz_ob_270
+    $bond:b754 @bond:quartzslab_si_o $atom:qz_si_189 $atom:qz_ob_274
+    $bond:b755 @bond:quartzslab_si_o $atom:qz_si_189 $atom:qz_ob_283
+    $bond:b756 @bond:quartzslab_si_o $atom:qz_si_189 $atom:qz_ob_287
+    $bond:b757 @bond:quartzslab_si_o $atom:qz_si_190 $atom:qz_ob_41
+    $bond:b758 @bond:quartzslab_si_o $atom:qz_si_190 $atom:qz_ob_48
+    $bond:b759 @bond:quartzslab_si_o $atom:qz_si_190 $atom:qz_ob_284
+    $bond:b760 @bond:quartzslab_si_o $atom:qz_si_190 $atom:qz_ob_285
+    $bond:b761 @bond:quartzslab_si_o $atom:qz_si_191 $atom:qz_oh_29
+    $bond:b762 @bond:quartzslab_si_o $atom:qz_si_191 $atom:qz_ob_285
+    $bond:b763 @bond:quartzslab_si_o $atom:qz_si_191 $atom:qz_ob_287
+    $bond:b764 @bond:quartzslab_si_o $atom:qz_si_191 $atom:qz_oh_191
+    $bond:b765 @bond:quartzslab_si_o $atom:qz_si_192 $atom:qz_ob_286
+    $bond:b766 @bond:quartzslab_si_o $atom:qz_si_192 $atom:qz_ob_288
+    $bond:b767 @bond:quartzslab_si_o $atom:qz_si_192 $atom:qz_oh_190
+    $bond:b768 @bond:quartzslab_si_o $atom:qz_si_192 $atom:qz_oh_192
+    $bond:b769 @bond:quartzslab_o_h $atom:qz_oh_5 $atom:qz_ho_1
+    $bond:b770 @bond:quartzslab_o_h $atom:qz_oh_6 $atom:qz_ho_2
+    $bond:b771 @bond:quartzslab_o_h $atom:qz_oh_7 $atom:qz_ho_3
+    $bond:b772 @bond:quartzslab_o_h $atom:qz_oh_8 $atom:qz_ho_4
+    $bond:b773 @bond:quartzslab_o_h $atom:qz_oh_13 $atom:qz_ho_5
+    $bond:b774 @bond:quartzslab_o_h $atom:qz_oh_14 $atom:qz_ho_6
+    $bond:b775 @bond:quartzslab_o_h $atom:qz_oh_15 $atom:qz_ho_7
+    $bond:b776 @bond:quartzslab_o_h $atom:qz_oh_16 $atom:qz_ho_8
+    $bond:b777 @bond:quartzslab_o_h $atom:qz_oh_21 $atom:qz_ho_9
+    $bond:b778 @bond:quartzslab_o_h $atom:qz_oh_22 $atom:qz_ho_10
+    $bond:b779 @bond:quartzslab_o_h $atom:qz_oh_23 $atom:qz_ho_11
+    $bond:b780 @bond:quartzslab_o_h $atom:qz_oh_24 $atom:qz_ho_12
+    $bond:b781 @bond:quartzslab_o_h $atom:qz_oh_29 $atom:qz_ho_13
+    $bond:b782 @bond:quartzslab_o_h $atom:qz_oh_30 $atom:qz_ho_14
+    $bond:b783 @bond:quartzslab_o_h $atom:qz_oh_31 $atom:qz_ho_15
+    $bond:b784 @bond:quartzslab_o_h $atom:qz_oh_32 $atom:qz_ho_16
+    $bond:b785 @bond:quartzslab_o_h $atom:qz_oh_37 $atom:qz_ho_17
+    $bond:b786 @bond:quartzslab_o_h $atom:qz_oh_38 $atom:qz_ho_18
+    $bond:b787 @bond:quartzslab_o_h $atom:qz_oh_39 $atom:qz_ho_19
+    $bond:b788 @bond:quartzslab_o_h $atom:qz_oh_40 $atom:qz_ho_20
+    $bond:b789 @bond:quartzslab_o_h $atom:qz_oh_45 $atom:qz_ho_21
+    $bond:b790 @bond:quartzslab_o_h $atom:qz_oh_46 $atom:qz_ho_22
+    $bond:b791 @bond:quartzslab_o_h $atom:qz_oh_47 $atom:qz_ho_23
+    $bond:b792 @bond:quartzslab_o_h $atom:qz_oh_48 $atom:qz_ho_24
+    $bond:b793 @bond:quartzslab_o_h $atom:qz_oh_53 $atom:qz_ho_25
+    $bond:b794 @bond:quartzslab_o_h $atom:qz_oh_54 $atom:qz_ho_26
+    $bond:b795 @bond:quartzslab_o_h $atom:qz_oh_55 $atom:qz_ho_27
+    $bond:b796 @bond:quartzslab_o_h $atom:qz_oh_56 $atom:qz_ho_28
+    $bond:b797 @bond:quartzslab_o_h $atom:qz_oh_61 $atom:qz_ho_29
+    $bond:b798 @bond:quartzslab_o_h $atom:qz_oh_62 $atom:qz_ho_30
+    $bond:b799 @bond:quartzslab_o_h $atom:qz_oh_63 $atom:qz_ho_31
+    $bond:b800 @bond:quartzslab_o_h $atom:qz_oh_64 $atom:qz_ho_32
+    $bond:b801 @bond:quartzslab_o_h $atom:qz_oh_69 $atom:qz_ho_33
+    $bond:b802 @bond:quartzslab_o_h $atom:qz_oh_70 $atom:qz_ho_34
+    $bond:b803 @bond:quartzslab_o_h $atom:qz_oh_71 $atom:qz_ho_35
+    $bond:b804 @bond:quartzslab_o_h $atom:qz_oh_72 $atom:qz_ho_36
+    $bond:b805 @bond:quartzslab_o_h $atom:qz_oh_77 $atom:qz_ho_37
+    $bond:b806 @bond:quartzslab_o_h $atom:qz_oh_78 $atom:qz_ho_38
+    $bond:b807 @bond:quartzslab_o_h $atom:qz_oh_79 $atom:qz_ho_39
+    $bond:b808 @bond:quartzslab_o_h $atom:qz_oh_80 $atom:qz_ho_40
+    $bond:b809 @bond:quartzslab_o_h $atom:qz_oh_85 $atom:qz_ho_41
+    $bond:b810 @bond:quartzslab_o_h $atom:qz_oh_86 $atom:qz_ho_42
+    $bond:b811 @bond:quartzslab_o_h $atom:qz_oh_87 $atom:qz_ho_43
+    $bond:b812 @bond:quartzslab_o_h $atom:qz_oh_88 $atom:qz_ho_44
+    $bond:b813 @bond:quartzslab_o_h $atom:qz_oh_93 $atom:qz_ho_45
+    $bond:b814 @bond:quartzslab_o_h $atom:qz_oh_94 $atom:qz_ho_46
+    $bond:b815 @bond:quartzslab_o_h $atom:qz_oh_95 $atom:qz_ho_47
+    $bond:b816 @bond:quartzslab_o_h $atom:qz_oh_96 $atom:qz_ho_48
+    $bond:b817 @bond:quartzslab_o_h $atom:qz_oh_101 $atom:qz_ho_49
+    $bond:b818 @bond:quartzslab_o_h $atom:qz_oh_102 $atom:qz_ho_50
+    $bond:b819 @bond:quartzslab_o_h $atom:qz_oh_103 $atom:qz_ho_51
+    $bond:b820 @bond:quartzslab_o_h $atom:qz_oh_104 $atom:qz_ho_52
+    $bond:b821 @bond:quartzslab_o_h $atom:qz_oh_109 $atom:qz_ho_53
+    $bond:b822 @bond:quartzslab_o_h $atom:qz_oh_110 $atom:qz_ho_54
+    $bond:b823 @bond:quartzslab_o_h $atom:qz_oh_111 $atom:qz_ho_55
+    $bond:b824 @bond:quartzslab_o_h $atom:qz_oh_112 $atom:qz_ho_56
+    $bond:b825 @bond:quartzslab_o_h $atom:qz_oh_117 $atom:qz_ho_57
+    $bond:b826 @bond:quartzslab_o_h $atom:qz_oh_118 $atom:qz_ho_58
+    $bond:b827 @bond:quartzslab_o_h $atom:qz_oh_119 $atom:qz_ho_59
+    $bond:b828 @bond:quartzslab_o_h $atom:qz_oh_120 $atom:qz_ho_60
+    $bond:b829 @bond:quartzslab_o_h $atom:qz_oh_125 $atom:qz_ho_61
+    $bond:b830 @bond:quartzslab_o_h $atom:qz_oh_126 $atom:qz_ho_62
+    $bond:b831 @bond:quartzslab_o_h $atom:qz_oh_127 $atom:qz_ho_63
+    $bond:b832 @bond:quartzslab_o_h $atom:qz_oh_128 $atom:qz_ho_64
+    $bond:b833 @bond:quartzslab_o_h $atom:qz_oh_133 $atom:qz_ho_65
+    $bond:b834 @bond:quartzslab_o_h $atom:qz_oh_134 $atom:qz_ho_66
+    $bond:b835 @bond:quartzslab_o_h $atom:qz_oh_135 $atom:qz_ho_67
+    $bond:b836 @bond:quartzslab_o_h $atom:qz_oh_136 $atom:qz_ho_68
+    $bond:b837 @bond:quartzslab_o_h $atom:qz_oh_141 $atom:qz_ho_69
+    $bond:b838 @bond:quartzslab_o_h $atom:qz_oh_142 $atom:qz_ho_70
+    $bond:b839 @bond:quartzslab_o_h $atom:qz_oh_143 $atom:qz_ho_71
+    $bond:b840 @bond:quartzslab_o_h $atom:qz_oh_144 $atom:qz_ho_72
+    $bond:b841 @bond:quartzslab_o_h $atom:qz_oh_149 $atom:qz_ho_73
+    $bond:b842 @bond:quartzslab_o_h $atom:qz_oh_150 $atom:qz_ho_74
+    $bond:b843 @bond:quartzslab_o_h $atom:qz_oh_151 $atom:qz_ho_75
+    $bond:b844 @bond:quartzslab_o_h $atom:qz_oh_152 $atom:qz_ho_76
+    $bond:b845 @bond:quartzslab_o_h $atom:qz_oh_157 $atom:qz_ho_77
+    $bond:b846 @bond:quartzslab_o_h $atom:qz_oh_158 $atom:qz_ho_78
+    $bond:b847 @bond:quartzslab_o_h $atom:qz_oh_159 $atom:qz_ho_79
+    $bond:b848 @bond:quartzslab_o_h $atom:qz_oh_160 $atom:qz_ho_80
+    $bond:b849 @bond:quartzslab_o_h $atom:qz_oh_165 $atom:qz_ho_81
+    $bond:b850 @bond:quartzslab_o_h $atom:qz_oh_166 $atom:qz_ho_82
+    $bond:b851 @bond:quartzslab_o_h $atom:qz_oh_167 $atom:qz_ho_83
+    $bond:b852 @bond:quartzslab_o_h $atom:qz_oh_168 $atom:qz_ho_84
+    $bond:b853 @bond:quartzslab_o_h $atom:qz_oh_173 $atom:qz_ho_85
+    $bond:b854 @bond:quartzslab_o_h $atom:qz_oh_174 $atom:qz_ho_86
+    $bond:b855 @bond:quartzslab_o_h $atom:qz_oh_175 $atom:qz_ho_87
+    $bond:b856 @bond:quartzslab_o_h $atom:qz_oh_176 $atom:qz_ho_88
+    $bond:b857 @bond:quartzslab_o_h $atom:qz_oh_181 $atom:qz_ho_89
+    $bond:b858 @bond:quartzslab_o_h $atom:qz_oh_182 $atom:qz_ho_90
+    $bond:b859 @bond:quartzslab_o_h $atom:qz_oh_183 $atom:qz_ho_91
+    $bond:b860 @bond:quartzslab_o_h $atom:qz_oh_184 $atom:qz_ho_92
+    $bond:b861 @bond:quartzslab_o_h $atom:qz_oh_189 $atom:qz_ho_93
+    $bond:b862 @bond:quartzslab_o_h $atom:qz_oh_190 $atom:qz_ho_94
+    $bond:b863 @bond:quartzslab_o_h $atom:qz_oh_191 $atom:qz_ho_95
+    $bond:b864 @bond:quartzslab_o_h $atom:qz_oh_192 $atom:qz_ho_96
+    $bond:b865 @bond:quartzslab_o_h $atom:qz_oh_1 $atom:qz_ho_97
+    $bond:b866 @bond:quartzslab_o_h $atom:qz_oh_2 $atom:qz_ho_98
+    $bond:b867 @bond:quartzslab_o_h $atom:qz_oh_3 $atom:qz_ho_99
+    $bond:b868 @bond:quartzslab_o_h $atom:qz_oh_4 $atom:qz_ho_100
+    $bond:b869 @bond:quartzslab_o_h $atom:qz_oh_9 $atom:qz_ho_101
+    $bond:b870 @bond:quartzslab_o_h $atom:qz_oh_10 $atom:qz_ho_102
+    $bond:b871 @bond:quartzslab_o_h $atom:qz_oh_11 $atom:qz_ho_103
+    $bond:b872 @bond:quartzslab_o_h $atom:qz_oh_12 $atom:qz_ho_104
+    $bond:b873 @bond:quartzslab_o_h $atom:qz_oh_17 $atom:qz_ho_105
+    $bond:b874 @bond:quartzslab_o_h $atom:qz_oh_18 $atom:qz_ho_106
+    $bond:b875 @bond:quartzslab_o_h $atom:qz_oh_19 $atom:qz_ho_107
+    $bond:b876 @bond:quartzslab_o_h $atom:qz_oh_20 $atom:qz_ho_108
+    $bond:b877 @bond:quartzslab_o_h $atom:qz_oh_25 $atom:qz_ho_109
+    $bond:b878 @bond:quartzslab_o_h $atom:qz_oh_26 $atom:qz_ho_110
+    $bond:b879 @bond:quartzslab_o_h $atom:qz_oh_27 $atom:qz_ho_111
+    $bond:b880 @bond:quartzslab_o_h $atom:qz_oh_28 $atom:qz_ho_112
+    $bond:b881 @bond:quartzslab_o_h $atom:qz_oh_33 $atom:qz_ho_113
+    $bond:b882 @bond:quartzslab_o_h $atom:qz_oh_34 $atom:qz_ho_114
+    $bond:b883 @bond:quartzslab_o_h $atom:qz_oh_35 $atom:qz_ho_115
+    $bond:b884 @bond:quartzslab_o_h $atom:qz_oh_36 $atom:qz_ho_116
+    $bond:b885 @bond:quartzslab_o_h $atom:qz_oh_41 $atom:qz_ho_117
+    $bond:b886 @bond:quartzslab_o_h $atom:qz_oh_42 $atom:qz_ho_118
+    $bond:b887 @bond:quartzslab_o_h $atom:qz_oh_43 $atom:qz_ho_119
+    $bond:b888 @bond:quartzslab_o_h $atom:qz_oh_44 $atom:qz_ho_120
+    $bond:b889 @bond:quartzslab_o_h $atom:qz_oh_49 $atom:qz_ho_121
+    $bond:b890 @bond:quartzslab_o_h $atom:qz_oh_50 $atom:qz_ho_122
+    $bond:b891 @bond:quartzslab_o_h $atom:qz_oh_51 $atom:qz_ho_123
+    $bond:b892 @bond:quartzslab_o_h $atom:qz_oh_52 $atom:qz_ho_124
+    $bond:b893 @bond:quartzslab_o_h $atom:qz_oh_57 $atom:qz_ho_125
+    $bond:b894 @bond:quartzslab_o_h $atom:qz_oh_58 $atom:qz_ho_126
+    $bond:b895 @bond:quartzslab_o_h $atom:qz_oh_59 $atom:qz_ho_127
+    $bond:b896 @bond:quartzslab_o_h $atom:qz_oh_60 $atom:qz_ho_128
+    $bond:b897 @bond:quartzslab_o_h $atom:qz_oh_65 $atom:qz_ho_129
+    $bond:b898 @bond:quartzslab_o_h $atom:qz_oh_66 $atom:qz_ho_130
+    $bond:b899 @bond:quartzslab_o_h $atom:qz_oh_67 $atom:qz_ho_131
+    $bond:b900 @bond:quartzslab_o_h $atom:qz_oh_68 $atom:qz_ho_132
+    $bond:b901 @bond:quartzslab_o_h $atom:qz_oh_73 $atom:qz_ho_133
+    $bond:b902 @bond:quartzslab_o_h $atom:qz_oh_74 $atom:qz_ho_134
+    $bond:b903 @bond:quartzslab_o_h $atom:qz_oh_75 $atom:qz_ho_135
+    $bond:b904 @bond:quartzslab_o_h $atom:qz_oh_76 $atom:qz_ho_136
+    $bond:b905 @bond:quartzslab_o_h $atom:qz_oh_81 $atom:qz_ho_137
+    $bond:b906 @bond:quartzslab_o_h $atom:qz_oh_82 $atom:qz_ho_138
+    $bond:b907 @bond:quartzslab_o_h $atom:qz_oh_83 $atom:qz_ho_139
+    $bond:b908 @bond:quartzslab_o_h $atom:qz_oh_84 $atom:qz_ho_140
+    $bond:b909 @bond:quartzslab_o_h $atom:qz_oh_89 $atom:qz_ho_141
+    $bond:b910 @bond:quartzslab_o_h $atom:qz_oh_90 $atom:qz_ho_142
+    $bond:b911 @bond:quartzslab_o_h $atom:qz_oh_91 $atom:qz_ho_143
+    $bond:b912 @bond:quartzslab_o_h $atom:qz_oh_92 $atom:qz_ho_144
+    $bond:b913 @bond:quartzslab_o_h $atom:qz_oh_97 $atom:qz_ho_145
+    $bond:b914 @bond:quartzslab_o_h $atom:qz_oh_98 $atom:qz_ho_146
+    $bond:b915 @bond:quartzslab_o_h $atom:qz_oh_99 $atom:qz_ho_147
+    $bond:b916 @bond:quartzslab_o_h $atom:qz_oh_100 $atom:qz_ho_148
+    $bond:b917 @bond:quartzslab_o_h $atom:qz_oh_105 $atom:qz_ho_149
+    $bond:b918 @bond:quartzslab_o_h $atom:qz_oh_106 $atom:qz_ho_150
+    $bond:b919 @bond:quartzslab_o_h $atom:qz_oh_107 $atom:qz_ho_151
+    $bond:b920 @bond:quartzslab_o_h $atom:qz_oh_108 $atom:qz_ho_152
+    $bond:b921 @bond:quartzslab_o_h $atom:qz_oh_113 $atom:qz_ho_153
+    $bond:b922 @bond:quartzslab_o_h $atom:qz_oh_114 $atom:qz_ho_154
+    $bond:b923 @bond:quartzslab_o_h $atom:qz_oh_115 $atom:qz_ho_155
+    $bond:b924 @bond:quartzslab_o_h $atom:qz_oh_116 $atom:qz_ho_156
+    $bond:b925 @bond:quartzslab_o_h $atom:qz_oh_121 $atom:qz_ho_157
+    $bond:b926 @bond:quartzslab_o_h $atom:qz_oh_122 $atom:qz_ho_158
+    $bond:b927 @bond:quartzslab_o_h $atom:qz_oh_123 $atom:qz_ho_159
+    $bond:b928 @bond:quartzslab_o_h $atom:qz_oh_124 $atom:qz_ho_160
+    $bond:b929 @bond:quartzslab_o_h $atom:qz_oh_129 $atom:qz_ho_161
+    $bond:b930 @bond:quartzslab_o_h $atom:qz_oh_130 $atom:qz_ho_162
+    $bond:b931 @bond:quartzslab_o_h $atom:qz_oh_131 $atom:qz_ho_163
+    $bond:b932 @bond:quartzslab_o_h $atom:qz_oh_132 $atom:qz_ho_164
+    $bond:b933 @bond:quartzslab_o_h $atom:qz_oh_137 $atom:qz_ho_165
+    $bond:b934 @bond:quartzslab_o_h $atom:qz_oh_138 $atom:qz_ho_166
+    $bond:b935 @bond:quartzslab_o_h $atom:qz_oh_139 $atom:qz_ho_167
+    $bond:b936 @bond:quartzslab_o_h $atom:qz_oh_140 $atom:qz_ho_168
+    $bond:b937 @bond:quartzslab_o_h $atom:qz_oh_145 $atom:qz_ho_169
+    $bond:b938 @bond:quartzslab_o_h $atom:qz_oh_146 $atom:qz_ho_170
+    $bond:b939 @bond:quartzslab_o_h $atom:qz_oh_147 $atom:qz_ho_171
+    $bond:b940 @bond:quartzslab_o_h $atom:qz_oh_148 $atom:qz_ho_172
+    $bond:b941 @bond:quartzslab_o_h $atom:qz_oh_153 $atom:qz_ho_173
+    $bond:b942 @bond:quartzslab_o_h $atom:qz_oh_154 $atom:qz_ho_174
+    $bond:b943 @bond:quartzslab_o_h $atom:qz_oh_155 $atom:qz_ho_175
+    $bond:b944 @bond:quartzslab_o_h $atom:qz_oh_156 $atom:qz_ho_176
+    $bond:b945 @bond:quartzslab_o_h $atom:qz_oh_161 $atom:qz_ho_177
+    $bond:b946 @bond:quartzslab_o_h $atom:qz_oh_162 $atom:qz_ho_178
+    $bond:b947 @bond:quartzslab_o_h $atom:qz_oh_163 $atom:qz_ho_179
+    $bond:b948 @bond:quartzslab_o_h $atom:qz_oh_164 $atom:qz_ho_180
+    $bond:b949 @bond:quartzslab_o_h $atom:qz_oh_169 $atom:qz_ho_181
+    $bond:b950 @bond:quartzslab_o_h $atom:qz_oh_170 $atom:qz_ho_182
+    $bond:b951 @bond:quartzslab_o_h $atom:qz_oh_171 $atom:qz_ho_183
+    $bond:b952 @bond:quartzslab_o_h $atom:qz_oh_172 $atom:qz_ho_184
+    $bond:b953 @bond:quartzslab_o_h $atom:qz_oh_177 $atom:qz_ho_185
+    $bond:b954 @bond:quartzslab_o_h $atom:qz_oh_178 $atom:qz_ho_186
+    $bond:b955 @bond:quartzslab_o_h $atom:qz_oh_179 $atom:qz_ho_187
+    $bond:b956 @bond:quartzslab_o_h $atom:qz_oh_180 $atom:qz_ho_188
+    $bond:b957 @bond:quartzslab_o_h $atom:qz_oh_185 $atom:qz_ho_189
+    $bond:b958 @bond:quartzslab_o_h $atom:qz_oh_186 $atom:qz_ho_190
+    $bond:b959 @bond:quartzslab_o_h $atom:qz_oh_187 $atom:qz_ho_191
+    $bond:b960 @bond:quartzslab_o_h $atom:qz_oh_188 $atom:qz_ho_192
+  }
+
+}
