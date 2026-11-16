@@ -622,24 +622,30 @@ class NanocompositeMCStrategy(PlacementStrategy):
     def _nearest(pos: np.ndarray, owner: np.ndarray, is_filler: np.ndarray,
                  lengths: np.ndarray) -> Optional[float]:
         """Minimum-image nearest distance between filler-core atoms and
-        non-core atoms of other bodies (orthorhombic box); None without
-        scipy."""
+        non-core atoms of other bodies (orthorhombic box)."""
         try:
             from scipy.spatial import cKDTree
         except ImportError:
-            return None
+            cKDTree = None
         # wrapped into [0, L) as cKDTree(boxsize=...) requires
         wrapped = np.mod(pos - pos.min(axis=0), lengths)
         wrapped = np.minimum(wrapped, np.nextafter(lengths, 0.0))
         best = None
         for k in np.unique(owner[is_filler]):
-            core = is_filler & (owner == k)
-            other = ~is_filler & (owner != k)
-            if not other.any():
+            core = wrapped[is_filler & (owner == k)]
+            other = wrapped[~is_filler & (owner != k)]
+            if not len(other):
                 continue
-            d, _ = cKDTree(wrapped[other], boxsize=lengths).query(
-                wrapped[core], k=1)
-            best = float(d.min()) if best is None else min(best, float(d.min()))
+            if cKDTree is not None:
+                dmin = float(cKDTree(other, boxsize=lengths).query(core, k=1)[0].min())
+            else:
+                dmin = np.inf
+                for c in range(0, len(core), 32):     # bounded memory
+                    d = core[c:c + 32, None, :] - other[None, :, :]
+                    d -= lengths * np.round(d / lengths)
+                    dmin = min(dmin, float(np.sqrt(
+                        np.einsum("ijk,ijk->ij", d, d).min())))
+            best = dmin if best is None else min(best, dmin)
         return best
 
     @staticmethod

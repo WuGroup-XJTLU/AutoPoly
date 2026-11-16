@@ -8,7 +8,6 @@ backends.
 """
 import numpy as np
 import pytest
-from scipy.spatial import cKDTree
 
 from AutoPoly import System
 from AutoPoly.mc.collision import CollisionDetector, ObstacleCollisionDetector
@@ -34,6 +33,21 @@ def _system(tmp_path, fillers, density=0.3, n_chains=30, n_beads=20,
     return bss
 
 
+def _distances(a, b=None, L=None):
+    """All pair distances (numpy only; scipy is optional in AutoPoly)."""
+    b = a if b is None else b
+    d = a[:, None, :] - b[None, :, :]
+    if L is not None:
+        d -= L * np.round(d / L)
+    return np.sqrt((d ** 2).sum(-1))
+
+
+def _nn_distances(pos):
+    d = _distances(pos)
+    np.fill_diagonal(d, np.inf)
+    return d.min(axis=1)
+
+
 def _read_data(path):
     text = path.read_text()
     lo, hi = (float(v) for v in
@@ -57,8 +71,7 @@ def _read_data(path):
 def test_fcc_sphere_geometry():
     pos = fcc_sphere(4.0, 1.0)
     assert np.linalg.norm(pos, axis=1).max() <= 4.0 + 1e-9
-    d, _ = cKDTree(pos).query(pos, k=2)
-    assert np.allclose(d[:, 1], 1.0)
+    assert np.allclose(_nn_distances(pos), 1.0)
     expected = np.sqrt(2.0) * 4.0 / 3.0 * np.pi * 4.0 ** 3
     assert abs(len(pos) - expected) / expected < 0.2
     assert np.allclose(pos.mean(axis=0), 0.0, atol=1e-9)
@@ -67,8 +80,8 @@ def test_fcc_sphere_geometry():
 def test_shell_geometry():
     pos = sphere_shell(5.0, 1.0)
     assert np.allclose(np.linalg.norm(pos, axis=1), 5.0)
-    d, _ = cKDTree(pos).query(pos, k=2)
-    assert d[:, 1].min() > 0.7 and np.median(d[:, 1]) < 1.3
+    nn = _nn_distances(pos)
+    assert nn.min() > 0.7 and np.median(nn) < 1.3
 
 
 def test_cgfiller_validation():
@@ -134,8 +147,8 @@ def test_direct_backend_with_fillers(tmp_path):
     mol, typ, x = rows[:, 1], rows[:, 2], rows[:, 3:]
     assert sorted(set(mol[typ == 2])) == [31.0, 32.0]
     # no polymer bead inside a filler envelope; no cross-boundary clashes
-    tree = cKDTree(np.mod(x + L / 2, L), boxsize=L)
-    for i, j in tree.query_pairs(0.85):
+    close = np.triu(_distances(x, L=L) < 0.85, k=1)
+    for i, j in zip(*np.nonzero(close)):
         same_filler = typ[i] == typ[j] == 2 and mol[i] == mol[j]
         assert (min(i, j), max(i, j)) in bonds or same_filler
     for p in bss._placed_fillers:

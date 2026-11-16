@@ -87,9 +87,22 @@ def compare_rows(name: str, rows_a, rows_b, tol: float = 1e-6) -> List[str]:
     return diffs
 
 
-def compare_data(a: Path, b: Path, tol: float = 1e-6) -> List[str]:
-    """Physical differences between two data files ([] if equivalent)."""
+def compare_data(a: Path, b: Path, tol: float = 1e-6,
+                 coordinates_only_for: Optional[set] = None) -> List[str]:
+    """
+    Physical differences between two data files ([] if equivalent).
+
+    coordinates_only_for: optional set of molecule IDs whose atom
+    coordinates are compared; the other molecules' Atoms rows are compared
+    without coordinates (id, molecule, type, charge) -- e.g. RDKit-embedded
+    organic films, whose conformers depend on the RDKit version.
+    """
     pa, pb = parse_data(a), parse_data(b)
+    if coordinates_only_for is not None:
+        for p in (pa, pb):
+            p["sections"]["Atoms"] = [
+                r if int(r[1]) in coordinates_only_for else r[:4]
+                for r in p["sections"].get("Atoms", [])]
     diffs = []
     if pa["counts"] != pb["counts"]:
         diffs.append(f"header counts {pa['counts']} != {pb['counts']}")

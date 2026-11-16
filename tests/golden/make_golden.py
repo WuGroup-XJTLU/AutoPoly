@@ -191,9 +191,10 @@ def record_pipelines():
             energies = None
             if lmp is not None:
                 energies = run_lammps_energies(project, lmp)
+        import rdkit
         (out / "energies.json").write_text(
-            json.dumps({"lammps": lmp is not None, "run0": energies},
-                       indent=2) + "\n")
+            json.dumps({"lammps": lmp is not None, "rdkit": rdkit.__version__,
+                        "run0": energies}, indent=2) + "\n")
         print(f"pipeline {name}: energies {energies}")
 
 
